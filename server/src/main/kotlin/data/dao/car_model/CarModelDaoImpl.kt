@@ -1,9 +1,7 @@
 package com.carspotter.data.dao.car_model
 
 import com.carspotter.data.model.CarModel
-import com.carspotter.data.model.User
 import com.carspotter.data.table.CarModels
-import com.carspotter.data.table.Users
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertReturning
@@ -54,7 +52,7 @@ class CarModelDaoImpl: CarModelDAO {
 
     override suspend fun deleteCarModel(carModelId: Int) {
         return transaction {
-            Users
+            CarModels
                 .deleteWhere { id eq carModelId }
         }
     }

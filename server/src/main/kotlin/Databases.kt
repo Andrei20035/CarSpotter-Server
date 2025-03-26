@@ -1,39 +1,24 @@
 package com.carspotter
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
-import io.ktor.client.*
-import io.ktor.client.engine.apache.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.plugins.calllogging.*
-import io.ktor.server.plugins.compression.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.cors.routing.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.server.sessions.*
-import io.ktor.server.websocket.*
-import io.ktor.websocket.*
-import org.jetbrains.exposed.sql.*
-import org.slf4j.event.*
+import org.jetbrains.exposed.sql.Database
 
 fun Application.configureDatabases() {
     val environmentType = environment.config.propertyOrNull("ktor.environment")?.getString() ?: "development"
     val dbConfig = environment.config.config("database.$environmentType")
 
-    val database = Database.connect(
-        url = dbConfig.property("url").getString(),
-        driver = "org.postgresql.Driver",
-        user = dbConfig.property("user").getString(),
-        password = dbConfig.property("password").getString()
-    )
-
-//    val userService = UserService(database)
+    try {
+        val database = Database.connect(
+            url = dbConfig.property("url").getString(),
+            driver = "org.postgresql.Driver",
+            user = dbConfig.property("user").getString(),
+            password = dbConfig.property("password").getString()
+        )
+        println("Database connected successfully.")
+    } catch (e: Exception) {
+        println("Error connecting to the database: ${e.message}")
+    }
 }
+
 
 

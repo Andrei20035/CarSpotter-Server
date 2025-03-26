@@ -19,6 +19,11 @@ repositories {
     mavenCentral()
 }
 
+tasks.test {
+    useJUnitPlatform() // This enables JUnit 5
+}
+
+
 dependencies {
     implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.core)
@@ -38,10 +43,18 @@ dependencies {
     implementation(libs.h2)
     implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.netty)
-    implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
-    implementation("org.postgresql:postgresql:42.5.4")
     implementation("io.ktor:ktor-server-host-common:3.1.1")
+    implementation("org.postgresql:postgresql:42.7.3") // PostgreSQL driver
+    implementation("ch.qos.logback:logback-classic:1.5.6") // Logback for logging
+
+    testImplementation ("org.jetbrains.kotlin:kotlin-test-junit5:2.1.20")
+    testImplementation("org.testcontainers:testcontainers:1.17.6")
+    testImplementation("org.testcontainers:junit-jupiter:1.17.6")
+    testImplementation("org.testcontainers:postgresql:1.17.6")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+    testImplementation(libs.kotlinTestJunit5)
     testImplementation(libs.ktor.server.test.host)
-    testImplementation(libs.kotlin.test.junit)
+
 }
