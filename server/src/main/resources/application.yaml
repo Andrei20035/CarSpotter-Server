@@ -1,0 +1,18 @@
+ktor:
+  application:
+    modules:
+      - com.carspotter.ApplicationKt.module
+  deployment:
+    port: 9291
+  environment: development
+
+database:
+  development:
+    url: "jdbc:postgresql://localhost:5432/CarSpotter"
+    user: "postgres"
+    password: "Andrei2003."
+
+  testing:
+    url: "jdbc:postgresql://localhost:5432/test_db"
+    user: "test_user"
+    password: "test_password"

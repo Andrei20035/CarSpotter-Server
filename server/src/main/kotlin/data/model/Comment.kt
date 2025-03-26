@@ -1,0 +1,11 @@
+package com.carspotter.data.model
+
+import java.time.Instant
+
+data class Comment(
+    val id: Int = 0,
+    val userId: Int,
+    val postId: Int,
+    val commentText: String,
+    val timestamp: Instant? = null,
+)

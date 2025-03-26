@@ -1,0 +1,103 @@
+package com.carspotter.data.dao.user_car
+
+import com.carspotter.data.model.CarModel
+import com.carspotter.data.model.User
+import com.carspotter.data.model.UserCar
+import com.carspotter.data.table.Users
+import com.carspotter.data.table.UsersCars
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insertReturning
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
+
+class UserCarDaoImpl : UserCarDAO {
+    override suspend fun createUserCar(userCar: UserCar): Int {
+        return transaction {
+            UsersCars.insertReturning(listOf(UsersCars.id)) {
+                it[userId] = userCar.userId
+                it[carModelId] = userCar.carModelId
+                it[imagePath] = userCar.imagePath
+            }.singleOrNull()?.get(Users.id) ?: error("Failed to create user car")
+        }
+    }
+
+    override suspend fun getUserCarById(userCarId: Int): UserCar? {
+        return transaction {
+            UsersCars
+                .select(UsersCars.id eq userCarId)
+                .mapNotNull { row ->
+                    UserCar(
+                        userId = row[UsersCars.id],
+                        carModelId = row[UsersCars.carModelId],
+                        imagePath = row[UsersCars.imagePath]
+                    )
+                }.singleOrNull()
+        }
+    }
+
+    override suspend fun getUserCarByUserId(userId: Int): UserCar? {
+        return transaction {
+            UsersCars
+                .select(UsersCars.userId eq userId)
+                .mapNotNull { row ->
+                    UserCar(
+                        userId = row[UsersCars.id],
+                        carModelId = row[UsersCars.carModelId],
+                        imagePath = row[UsersCars.imagePath]
+                    )
+                }.singleOrNull()
+        }
+    }
+
+    override suspend fun getUserByUserCarId(userCarId: Int): User {
+        return transaction {
+            (UsersCars innerJoin Users)
+                .select(UsersCars.id eq userCarId)
+                .mapNotNull { row ->
+                    User(
+                        id = row[Users.id],
+                        firstName = row[Users.firstName],
+                        lastName = row[Users.lastName],
+                        profilePicturePath = row[Users.profilePicturePath],
+                        birthDate = row[Users.birthDate],
+                        username = row[Users.username],
+                        country = row[Users.country],
+                        password = row[Users.password],
+                        spotScore = row[Users.spotScore]
+                    )
+                }.singleOrNull() ?: error("User with userCarId: $userCarId not found")
+        }
+    }
+
+    override suspend fun updateUserCar(userId: Int, imagePath: String, carModelId: Int) {
+        return transaction {
+            UsersCars.update({ UsersCars.userId eq userId }) { row ->
+                row[UsersCars.imagePath] = imagePath
+                row[UsersCars.carModelId] = carModelId
+            }
+        }
+    }
+
+    override suspend fun deleteUserCar(userId: Int) {
+        return transaction {
+            UsersCars.deleteWhere { UsersCars.userId eq userId }
+        }
+    }
+
+    override suspend fun getAllUserCars(): List<UserCar> {
+        return transaction {
+            UsersCars
+                .selectAll()
+                .mapNotNull { row ->
+                    UserCar(
+                        userId = row[UsersCars.userId],
+                        carModelId = row[UsersCars.carModelId],
+                        imagePath = row[UsersCars.imagePath],
+                    )
+                }
+        }
+    }
+
+}
