@@ -4,7 +4,6 @@ import com.carspotter.data.model.User
 import com.carspotter.data.table.Users
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class UserDaoImpl : UserDAO {
@@ -67,8 +66,8 @@ class UserDaoImpl : UserDAO {
     override suspend fun getAllUsers(): List<User> {
         return transaction {
             Users
-                .selectAll()  // Select all rows from the Users table
-                .mapNotNull { row -> // Map each row to a User object
+                .selectAll()
+                .mapNotNull { row ->
                     User(
                         id = row[Users.id],
                         firstName = row[Users.firstName],

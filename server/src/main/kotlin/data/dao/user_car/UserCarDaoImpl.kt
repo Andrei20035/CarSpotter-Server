@@ -1,6 +1,5 @@
 package com.carspotter.data.dao.user_car
 
-import com.carspotter.data.model.CarModel
 import com.carspotter.data.model.User
 import com.carspotter.data.model.UserCar
 import com.carspotter.data.table.Users

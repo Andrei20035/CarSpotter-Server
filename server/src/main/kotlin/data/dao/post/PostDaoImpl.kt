@@ -38,7 +38,7 @@ class PostDaoImpl: PostDAO {
                         description = row[Posts.description]
                     )
                 }
-                .singleOrNull() // Will return the post if found, or null if not found
+                .singleOrNull()
         }
     }
 

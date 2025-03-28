@@ -45,9 +45,9 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.config.yaml)
     implementation("io.ktor:ktor-server-host-common:3.1.1")
-    implementation("org.postgresql:postgresql:42.7.3") // PostgreSQL driver
-    implementation("ch.qos.logback:logback-classic:1.5.18") // Logback for logging
-    implementation("org.apache.commons:commons-compress:1.26")
+    implementation("org.postgresql:postgresql:42.7.3")
+    implementation("ch.qos.logback:logback-classic:1.5.18")
+    implementation("org.apache.commons:commons-compress:1.27.1")
 
     testImplementation ("org.jetbrains.kotlin:kotlin-test-junit5:2.1.20")
     testImplementation("org.testcontainers:testcontainers:1.20.6")
