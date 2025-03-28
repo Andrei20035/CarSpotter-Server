@@ -2,10 +2,8 @@ package com.carspotter.data.dao.car_model
 
 import com.carspotter.data.model.CarModel
 import com.carspotter.data.table.CarModels
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insertReturning
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class CarModelDaoImpl: CarModelDAO {
@@ -22,8 +20,10 @@ class CarModelDaoImpl: CarModelDAO {
 
     override suspend fun getCarModel(carModelId: Int): CarModel? {
         return transaction {
+            addLogger(StdOutSqlLogger)
             CarModels
-                .select (CarModels.id eq carModelId)
+                .selectAll()
+                .where { CarModels.id eq carModelId }
                 .mapNotNull { row ->
                     CarModel(
                         id = row[CarModels.id],

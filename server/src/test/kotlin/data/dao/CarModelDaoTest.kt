@@ -1,15 +1,15 @@
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
+import com.carspotter.data.dao.car_model.CarModelDaoImpl
+import com.carspotter.data.model.CarModel
+import com.carspotter.data.table.CarModels
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.junit.jupiter.api.*
+import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.sql.Connection
-import java.sql.DriverManager
 
 @Testcontainers
 class CarModelDaoImplTest {
@@ -21,54 +21,79 @@ class CarModelDaoImplTest {
         withPassword("Andrei2003.")
     }
 
-    private lateinit var connection: Connection
+    private lateinit var carModelDao: CarModelDaoImpl
 
     @BeforeEach
     fun setUp() {
-        // Start the PostgreSQL container
         postgresContainer.start()
 
-        // Connect to the database
-        connection = DriverManager.getConnection(
-            postgresContainer.jdbcUrl,
-            postgresContainer.username,
-            postgresContainer.password
+        // Connect Exposed ORM to the TestContainers PostgreSQL instance
+        Database.connect(
+            url = postgresContainer.jdbcUrl,
+            driver = "org.postgresql.Driver",
+            user = postgresContainer.username,
+            password = postgresContainer.password
         )
 
-        val sqlFilePath = "src/test/resources/dbConfig.sql"
-        val sql = String(Files.readAllBytes(Paths.get(sqlFilePath)))
-        connection.createStatement().execute(sql)
+        transaction {
+            SchemaUtils.create(CarModels) // Ensure the table exists
+        }
 
-        // Insert some hardcoded data for testing
-        val statement = connection.createStatement()
-        statement.executeUpdate(
-            "INSERT INTO car_models (brand, model, year) VALUES ('BMW', 'M3', 2020), ('Audi', 'A4', 2021)"
-        )
+        carModelDao = CarModelDaoImpl()
     }
 
     @Test
-    fun `verify hardcoded data is inserted correctly`() {
-        // Query the database to check if the data was inserted
-        val statement = connection.createStatement()
-        val resultSet = statement.executeQuery("SELECT * FROM car_models WHERE brand IN ('BMW', 'Audi')")
+    fun `create and retrieve a car model`() = runBlocking {
+        // Insert a car model
+        val carModelId = carModelDao.createCarModel(CarModel(id = 0,"Tesla", "Model S", 2023))
 
-        val carModels = mutableListOf<String>()
-        while (resultSet.next()) {
-            val brand = resultSet.getString("brand")
-            val model = resultSet.getString("model")
-            val year = resultSet.getInt("year")
-            carModels.add("$brand $model ($year)")
-        }
+        // Retrieve it
+        val retrievedCarModel = carModelDao.getCarModel(carModelId)
 
-        // Verify that the hardcoded data is correct
-        assertTrue(carModels.contains("BMW M3 (2020)"))
-        assertTrue(carModels.contains("Audi A4 (2021)"))
+        println(retrievedCarModel)
+
+        // Verify
+        assertNotNull(retrievedCarModel)
+        Assertions.assertEquals("Tesla", retrievedCarModel.brand)
+        Assertions.assertEquals("Model S", retrievedCarModel.model)
+        Assertions.assertEquals(2023, retrievedCarModel.year)
+    }
+
+    @Test
+    fun `get all car models`() = runBlocking {
+        // Insert car models
+        carModelDao.createCarModel(CarModel(0, "BMW", "M3", 2020))
+        carModelDao.createCarModel(CarModel(0, "Audi", "A4", 2021))
+
+        // Retrieve all
+        val carModels = carModelDao.getAllCarModels()
+
+        // Verify
+        Assertions.assertEquals(2, carModels.size)
+        Assertions.assertTrue(carModels.any { it.brand == "BMW" && it.model == "M3" && it.year == 2020 })
+        Assertions.assertTrue(carModels.any { it.brand == "Audi" && it.model == "A4" && it.year == 2021 })
+    }
+
+    @Test
+    fun `delete a car model`() = runBlocking {
+        // Insert a car model
+        val carModelId = carModelDao.createCarModel(CarModel(0, "Mercedes", "C-Class", 2019))
+
+        // Delete it
+        carModelDao.deleteCarModel(carModelId)
+
+        // Try to retrieve it
+        val deletedCarModel = carModelDao.getCarModel(carModelId)
+
+        // Verify it's gone
+        assertNull(deletedCarModel)
     }
 
     @AfterEach
     fun tearDown() {
-        // Clean up by stopping the container after tests
-        connection.close()
+        transaction {
+            SchemaUtils.drop(CarModels) // Clean up the database
+        }
         postgresContainer.stop()
     }
 }
