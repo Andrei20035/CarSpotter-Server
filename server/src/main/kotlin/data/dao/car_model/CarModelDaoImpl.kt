@@ -37,6 +37,7 @@ class CarModelDaoImpl: CarModelDAO {
 
     override suspend fun getAllCarModels(): List<CarModel> {
         return transaction {
+            addLogger(StdOutSqlLogger)
             CarModels
                 .selectAll()
                 .mapNotNull { row ->
@@ -52,6 +53,7 @@ class CarModelDaoImpl: CarModelDAO {
 
     override suspend fun deleteCarModel(carModelId: Int) {
         return transaction {
+            addLogger(StdOutSqlLogger)
             CarModels
                 .deleteWhere { id eq carModelId }
         }

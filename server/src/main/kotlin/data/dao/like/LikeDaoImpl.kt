@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class LikeDaoImpl : LikeDAO {
     override suspend fun likePost(userId: Int, postId: Int) {
         return transaction {
+            addLogger(StdOutSqlLogger)
             Likes
                 .insertIgnore {
                     it[Likes.userId] = userId
@@ -20,6 +21,7 @@ class LikeDaoImpl : LikeDAO {
 
     override suspend fun unlikePost(userId: Int, postId: Int) {
         return transaction {
+            addLogger(StdOutSqlLogger)
             Likes.deleteWhere {
                 (Likes.userId eq userId) and (Likes.postId eq postId)
             }
@@ -29,7 +31,8 @@ class LikeDaoImpl : LikeDAO {
     override suspend fun getLikesForPost(postId: Int): List<User> {
         return transaction {
             (Likes innerJoin Users)
-                .select (Likes.postId eq postId)
+                .selectAll()
+                .where { Likes.postId eq postId }
                 .mapNotNull { row ->
                     User(
                         id = row[Users.id],

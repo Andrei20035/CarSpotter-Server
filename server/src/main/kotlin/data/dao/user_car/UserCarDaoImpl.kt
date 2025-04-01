@@ -4,12 +4,9 @@ import com.carspotter.data.model.User
 import com.carspotter.data.model.UserCar
 import com.carspotter.data.table.Users
 import com.carspotter.data.table.UsersCars
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insertReturning
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
 
 class UserCarDaoImpl : UserCarDAO {
     override suspend fun createUserCar(userCar: UserCar): Int {
@@ -25,7 +22,8 @@ class UserCarDaoImpl : UserCarDAO {
     override suspend fun getUserCarById(userCarId: Int): UserCar? {
         return transaction {
             UsersCars
-                .select(UsersCars.id eq userCarId)
+                .selectAll()
+                .where{ UsersCars.id eq userCarId }
                 .mapNotNull { row ->
                     UserCar(
                         userId = row[UsersCars.id],
@@ -39,7 +37,8 @@ class UserCarDaoImpl : UserCarDAO {
     override suspend fun getUserCarByUserId(userId: Int): UserCar? {
         return transaction {
             UsersCars
-                .select(UsersCars.userId eq userId)
+                .selectAll()
+                .where{ UsersCars.userId eq userId }
                 .mapNotNull { row ->
                     UserCar(
                         userId = row[UsersCars.id],
@@ -52,8 +51,10 @@ class UserCarDaoImpl : UserCarDAO {
 
     override suspend fun getUserByUserCarId(userCarId: Int): User {
         return transaction {
+            addLogger(StdOutSqlLogger)
             (UsersCars innerJoin Users)
-                .select(UsersCars.id eq userCarId)
+                .selectAll()
+                .where { UsersCars.id eq userCarId }
                 .mapNotNull { row ->
                     User(
                         id = row[Users.id],

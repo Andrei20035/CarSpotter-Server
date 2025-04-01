@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class UserDaoImpl : UserDAO {
     override suspend fun createUser(user: User): Int {
         return transaction {
+            addLogger(StdOutSqlLogger)
             Users.insertReturning(listOf(Users.id)) {
                 it[firstName] = user.firstName
                 it[lastName] = user.lastName
@@ -24,8 +25,10 @@ class UserDaoImpl : UserDAO {
 
     override suspend fun getUserByID(userId: Int): User? {
         return transaction {
+            addLogger(StdOutSqlLogger)
             Users
-                .select(Users.id eq userId)
+                .selectAll()
+                .where { Users.id eq userId }
                 .mapNotNull { row ->
                     User(
                         id = row[Users.id],
@@ -44,8 +47,10 @@ class UserDaoImpl : UserDAO {
 
     override suspend fun getUserByUsername(username: String): User? {
         return transaction {
+            addLogger(StdOutSqlLogger)
             Users
-                .select(Users.username eq username)
+                .selectAll()
+                .where { Users.username eq username }
                 .mapNotNull { row ->
                     User(
                         id = row[Users.id],
@@ -65,6 +70,7 @@ class UserDaoImpl : UserDAO {
 
     override suspend fun getAllUsers(): List<User> {
         return transaction {
+            addLogger(StdOutSqlLogger)
             Users
                 .selectAll()
                 .mapNotNull { row ->
@@ -85,6 +91,7 @@ class UserDaoImpl : UserDAO {
 
     override suspend fun updateProfilePicture(userId: Int, imagePath: String) {
         return transaction {
+            addLogger(StdOutSqlLogger)
             Users
                 .update({ Users.id eq userId }) {
                     it[profilePicturePath] = imagePath
@@ -94,6 +101,7 @@ class UserDaoImpl : UserDAO {
 
     override suspend fun deleteUser(userId: Int) {
         return transaction {
+            addLogger(StdOutSqlLogger)
             Users
                 .deleteWhere { id eq userId }
         }
