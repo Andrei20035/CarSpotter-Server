@@ -93,6 +93,21 @@ class FriendDaoTest {
         Assertions.assertEquals("Watson", allFriends[0].lastName)
     }
 
+    @Test
+    fun `delete a friend for a user`() = runBlocking {
+        friendDao.addFriend(userId1, userId2)
+
+        val allFriendsBeforeDelete = friendDao.getAllFriends(userId1)
+        Assertions.assertEquals(1, allFriendsBeforeDelete.size)
+        Assertions.assertEquals("Watson", allFriendsBeforeDelete[0].lastName)
+
+        friendDao.deleteFriend(userId1, userId2)
+
+        val allFriendsAfterDelete = friendDao.getAllFriends(userId1)
+        Assertions.assertEquals(0, allFriendsAfterDelete.size)
+    }
+
+
     @AfterAll
     fun tearDown() {
         transaction {

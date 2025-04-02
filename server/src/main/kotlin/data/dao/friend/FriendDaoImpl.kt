@@ -30,57 +30,66 @@ class FriendDaoImpl: FriendDAO {
     }
 
     override suspend fun deleteFriend(userId: Int, friendId: Int) {
-        return transaction {
+        transaction {
             Friends.deleteWhere {
-                (Friends.userId eq userId) and (Friends.friendId eq friendId)
-            }
-
-            Friends.deleteWhere {
-                (Friends.userId eq friendId) and (Friends.friendId eq userId)
+                ((Friends.userId eq userId) and (Friends.friendId eq friendId)) or
+                        ((Friends.userId eq friendId) and (Friends.friendId eq userId))
             }
         }
     }
+
 
     override suspend fun getAllFriends(userId: Int): List<User> {
         return transaction {
-            val friendsAsUser = (Friends innerJoin Users)
-                .selectAll()
-                .where { Friends.userId eq userId and (Friends.friendId eq Users.id) }
-                .map { row ->
-                    User(
-                        id = row[Users.id],
-                        firstName = row[Users.firstName],
-                        lastName = row[Users.lastName],
-                        profilePicturePath = row[Users.profilePicturePath],
-                        birthDate = row[Users.birthDate],
-                        username = row[Users.username],
-                        country = row[Users.country],
-                        password = row[Users.password],
-                        spotScore = row[Users.spotScore]
-                    )
-                }
+            // Query for friends where `userId` is the initiator
+            val friendsAsInitiator = Users.alias("u1").let { usersAlias ->
+                Friends
+                    .join(usersAlias, JoinType.INNER, additionalConstraint = { Friends.friendId eq usersAlias[Users.id] })
+                    .selectAll()
+                    .where { Friends.userId eq userId }
+                    .map { row ->
+                        User(
+                            id = row[usersAlias[Users.id]],
+                            firstName = row[usersAlias[Users.firstName]],
+                            lastName = row[usersAlias[Users.lastName]],
+                            profilePicturePath = row[usersAlias[Users.profilePicturePath]],
+                            birthDate = row[usersAlias[Users.birthDate]],
+                            username = row[usersAlias[Users.username]],
+                            country = row[usersAlias[Users.country]],
+                            password = row[usersAlias[Users.password]],
+                            spotScore = row[usersAlias[Users.spotScore]]
+                        )
+                    }
+            }
 
-            val friendsAsFriend = (Friends innerJoin Users)
-                .selectAll()
-                .where { Friends.friendId eq userId and (Friends.userId eq Users.id) }
-                .map { row ->
-                    User(
-                        id = row[Users.id],
-                        firstName = row[Users.firstName],
-                        lastName = row[Users.lastName],
-                        profilePicturePath = row[Users.profilePicturePath],
-                        birthDate = row[Users.birthDate],
-                        username = row[Users.username],
-                        country = row[Users.country],
-                        password = row[Users.password],
-                        spotScore = row[Users.spotScore]
-                    )
-                }
+            // Query for friends where `userId` is the recipient
+            val friendsAsRecipient = Users.alias("u2").let { usersAlias ->
+                Friends
+                    .join(usersAlias, JoinType.INNER, additionalConstraint = { Friends.userId eq usersAlias[Users.id] })
+                    .selectAll()
+                    .where { Friends.friendId eq userId }
+                    .map { row ->
+                        User(
+                            id = row[usersAlias[Users.id]],
+                            firstName = row[usersAlias[Users.firstName]],
+                            lastName = row[usersAlias[Users.lastName]],
+                            profilePicturePath = row[usersAlias[Users.profilePicturePath]],
+                            birthDate = row[usersAlias[Users.birthDate]],
+                            username = row[usersAlias[Users.username]],
+                            country = row[usersAlias[Users.country]],
+                            password = row[usersAlias[Users.password]],
+                            spotScore = row[usersAlias[Users.spotScore]]
+                        )
+                    }
+            }
 
-            // Combine results from both queries
-            (friendsAsUser + friendsAsFriend).distinctBy { it.id }
+            // Combine results and remove duplicates
+            (friendsAsInitiator + friendsAsRecipient).distinctBy { it.id }
         }
     }
+
+
+
 
 
     override suspend fun getAllFriendsInDb(): List<Friend> {
