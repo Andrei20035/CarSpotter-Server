@@ -1,5 +1,6 @@
 package com.carspotter.data.dao.friend_request
 
+import com.carspotter.data.model.FriendRequest
 import com.carspotter.data.model.User
 import com.carspotter.data.table.FriendRequests
 import com.carspotter.data.table.Friends
@@ -11,6 +12,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class FriendRequestDaoImpl : FriendRequestDAO {
     override suspend fun sendFriendRequest(senderId: Int, receiverId: Int): Int {
         return transaction {
+            addLogger(StdOutSqlLogger)
             FriendRequests
                 .insertReturning(listOf(FriendRequests.senderId, FriendRequests.receiverId)) {
                     it[this.senderId] = senderId
@@ -21,6 +23,7 @@ class FriendRequestDaoImpl : FriendRequestDAO {
 
     override suspend fun acceptFriendRequest(senderId: Int, receiverId: Int) {
         return transaction {
+            addLogger(StdOutSqlLogger)
             FriendRequests.deleteWhere {
                 (FriendRequests.senderId eq senderId) and (FriendRequests.receiverId eq receiverId)
             }
@@ -50,19 +53,61 @@ class FriendRequestDaoImpl : FriendRequestDAO {
 
     override suspend fun getAllFriendRequests(userId: Int): List<User> {
         return transaction {
-            (FriendRequests innerJoin Users)
-                .select((FriendRequests.receiverId eq userId) or (FriendRequests.senderId eq userId))
+            // Query for friends where `userId` is the initiator
+            val friendsAsInitiator = Users.alias("u1").let { usersAlias ->
+                FriendRequests
+                    .join(usersAlias, JoinType.INNER, additionalConstraint = { FriendRequests.senderId eq usersAlias[Users.id] })
+                    .selectAll()
+                    .where { FriendRequests.receiverId eq userId }
+                    .map { row ->
+                        User(
+                            id = row[usersAlias[Users.id]],
+                            firstName = row[usersAlias[Users.firstName]],
+                            lastName = row[usersAlias[Users.lastName]],
+                            profilePicturePath = row[usersAlias[Users.profilePicturePath]],
+                            birthDate = row[usersAlias[Users.birthDate]],
+                            username = row[usersAlias[Users.username]],
+                            country = row[usersAlias[Users.country]],
+                            password = row[usersAlias[Users.password]],
+                            spotScore = row[usersAlias[Users.spotScore]]
+                        )
+                    }
+            }
+
+            // Query for friends where `userId` is the recipient
+            val friendsAsRecipient = Users.alias("u2").let { usersAlias ->
+                FriendRequests
+                    .join(usersAlias, JoinType.INNER, additionalConstraint = { FriendRequests.receiverId eq usersAlias[Users.id] })
+                    .selectAll()
+                    .where { FriendRequests.senderId eq userId }
+                    .map { row ->
+                        User(
+                            id = row[usersAlias[Users.id]],
+                            firstName = row[usersAlias[Users.firstName]],
+                            lastName = row[usersAlias[Users.lastName]],
+                            profilePicturePath = row[usersAlias[Users.profilePicturePath]],
+                            birthDate = row[usersAlias[Users.birthDate]],
+                            username = row[usersAlias[Users.username]],
+                            country = row[usersAlias[Users.country]],
+                            password = row[usersAlias[Users.password]],
+                            spotScore = row[usersAlias[Users.spotScore]]
+                        )
+                    }
+            }
+
+            // Combine results and remove duplicates
+            (friendsAsInitiator + friendsAsRecipient).distinctBy { it.id }
+        }
+    }
+
+    override suspend fun getAllFriendReqFromDB(): List<FriendRequest> {
+        return transaction {
+            FriendRequests
+                .selectAll()
                 .mapNotNull { row ->
-                    User(
-                        id = row[Users.id],
-                        firstName = row[Users.firstName],
-                        lastName = row[Users.lastName],
-                        profilePicturePath = row[Users.profilePicturePath],
-                        birthDate = row[Users.birthDate],
-                        username = row[Users.username],
-                        country = row[Users.country],
-                        password = row[Users.password],
-                        spotScore = row[Users.spotScore]
+                    FriendRequest(
+                        senderId = row[FriendRequests.senderId],
+                        receiverId = row[FriendRequests.receiverId]
                     )
                 }
         }
