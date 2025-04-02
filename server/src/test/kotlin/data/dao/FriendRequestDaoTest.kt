@@ -1,21 +1,17 @@
 package data.dao
 
-import com.carspotter.data.dao.car_model.CarModelDaoImpl
 import com.carspotter.data.dao.friend.FriendDaoImpl
 import com.carspotter.data.dao.friend_request.FriendRequestDaoImpl
 import com.carspotter.data.dao.user.UserDaoImpl
-import com.carspotter.data.dao.user_car.UserCarDaoImpl
 import com.carspotter.data.model.User
 import com.carspotter.data.table.FriendRequests
 import com.carspotter.data.table.Friends
 import com.carspotter.data.table.Users
-import com.carspotter.data.table.UsersCars
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
