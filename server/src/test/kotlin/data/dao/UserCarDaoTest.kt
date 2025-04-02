@@ -15,6 +15,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -31,8 +32,10 @@ class UserCarDaoTest {
 
 
     private var userId1: Int = 0
+    private var userId2: Int = 0
     private var userCarId1: Int = 0
     private var carModelId1: Int = 0
+    private var carModelId2: Int = 0
 
 
     @BeforeAll
@@ -63,11 +66,28 @@ class UserCarDaoTest {
                     country = "USA"
                 )
             )
+            userId2 = userDao.createUser(
+                User(
+                    firstName = "Mary Jane",
+                    lastName = "Watson",
+                    birthDate = LocalDate.of(2004, 4, 1),
+                    username = "Socate321",
+                    password = "VALIbRAT2",
+                    country = "USA"
+                )
+            )
             carModelId1 = carModelDao.createCarModel(
                 CarModel(
                     brand = "BMW",
                     model = "M3",
                     year = 2020
+                )
+            )
+            carModelId2 = carModelDao.createCarModel(
+                CarModel(
+                    brand = "Tesla",
+                    model = "Model 3",
+                    year = 2023
                 )
             )
         }
@@ -99,16 +119,31 @@ class UserCarDaoTest {
 
     @Test
     fun `get user car by user ID`() = runBlocking {
+        userCarId1 = userCarDao.createUserCar(
+            UserCar(
+                userId = userId1,
+                carModelId = carModelId1,
+                imagePath = "path/to/car/image"
+            )
+        )
         val userCar = userCarDao.getUserCarByUserId(userId1)
 
         assertNotNull(userCar)
         assertEquals(userId1, userCar?.userId)
-        assertEquals(1, userCar?.carModelId)
+        assertEquals(carModelId1, userCar?.carModelId)
         assertEquals("path/to/car/image", userCar?.imagePath)
     }
 
     @Test
     fun `get user by user car ID`() = runBlocking {
+        userCarId1 = userCarDao.createUserCar(
+            UserCar(
+                userId = userId1,
+                carModelId = carModelId1,
+                imagePath = "path/to/car/image"
+            )
+        )
+
         val user = userCarDao.getUserByUserCarId(userCarId1)
 
         assertNotNull(user)
@@ -119,46 +154,78 @@ class UserCarDaoTest {
 
     @Test
     fun `update user car`() = runBlocking {
-        // Update the user car
-        userCarDao.updateUserCar(userId1, "new/path/to/car/image", 2)
+        userCarDao.createUserCar(
+            UserCar(
+                userId = userId1,
+                carModelId = carModelId1,
+                imagePath = "path/to/car/image"
+            )
+        )
+        // Update only image path
+        userCarDao.updateUserCar(userId1, "new/path/to/car/image", null)
 
-        // Verify the update
-        val userCar = userCarDao.getUserCarByUserId(userId1)
+        var userCar = userCarDao.getUserCarByUserId(userId1)
+
         assertNotNull(userCar)
         assertEquals("new/path/to/car/image", userCar?.imagePath)
-        assertEquals(2, userCar?.carModelId)
+        assertEquals(carModelId1, userCar?.carModelId)
+
+        // Update only the carModelId
+        userCarDao.updateUserCar(userId1, null, carModelId2)
+
+        userCar = userCarDao.getUserCarByUserId(userId1)
+
+        assertNotNull(userCar)
+        assertEquals("new/path/to/car/image", userCar?.imagePath)
+        assertEquals(carModelId2, userCar?.carModelId)
     }
 
     @Test
     fun `delete user car`() = runBlocking {
+        userCarId1 = userCarDao.createUserCar(
+            UserCar(
+                userId = userId1,
+                carModelId = carModelId1,
+                imagePath = "path/to/car/image"
+            )
+        )
+        var userCars = userCarDao.getAllUserCars()
+        assertTrue(userCars.size == 1)
+
         // Delete the user car
         userCarDao.deleteUserCar(userId1)
 
         // Verify the deletion
-        val userCar = userCarDao.getUserCarByUserId(userId1)
-        assertNull(userCar) // It should be null since the car was deleted
+        userCars = userCarDao.getAllUserCars()
+        assertTrue(userCars.isEmpty())
     }
 
     @Test
     fun `get all user cars`() = runBlocking {
-        // Create additional user cars
         userCarDao.createUserCar(
             UserCar(
-                userId = 2,
-                carModelId = 1,
-                imagePath = "path/to/another/car/image"
+                userId = userId1,
+                carModelId = carModelId1,
+                imagePath = "path/to/car/image1"
+            )
+        )
+        userCarDao.createUserCar(
+            UserCar(
+                userId = userId2,
+                carModelId = carModelId2,
+                imagePath = "path/to/car/image2"
             )
         )
 
         val allUserCars = userCarDao.getAllUserCars()
 
-        assertTrue(allUserCars.size >= 1) // We should have at least one user car
+        assertTrue(allUserCars.size == 2)
     }
 
     @AfterAll
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(UsersCars) // Drop the UsersCars table after tests
+            SchemaUtils.drop(UsersCars, Users)
         }
     }
 }

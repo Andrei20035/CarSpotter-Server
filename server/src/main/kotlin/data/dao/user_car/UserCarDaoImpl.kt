@@ -11,19 +11,21 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class UserCarDaoImpl : UserCarDAO {
     override suspend fun createUserCar(userCar: UserCar): Int {
         return transaction {
+            addLogger(StdOutSqlLogger)
             UsersCars.insertReturning(listOf(UsersCars.id)) {
                 it[userId] = userCar.userId
                 it[carModelId] = userCar.carModelId
                 it[imagePath] = userCar.imagePath
-            }.singleOrNull()?.get(Users.id) ?: error("Failed to create user car")
+            }.singleOrNull()?.get(UsersCars.id) ?: error("Failed to create user car")
         }
     }
 
     override suspend fun getUserCarById(userCarId: Int): UserCar? {
         return transaction {
+            addLogger(StdOutSqlLogger)
             UsersCars
                 .selectAll()
-                .where{ UsersCars.id eq userCarId }
+                .where { UsersCars.id eq userCarId }
                 .mapNotNull { row ->
                     UserCar(
                         userId = row[UsersCars.id],
@@ -36,6 +38,7 @@ class UserCarDaoImpl : UserCarDAO {
 
     override suspend fun getUserCarByUserId(userId: Int): UserCar? {
         return transaction {
+            addLogger(StdOutSqlLogger)
             UsersCars
                 .selectAll()
                 .where{ UsersCars.userId eq userId }
@@ -71,11 +74,11 @@ class UserCarDaoImpl : UserCarDAO {
         }
     }
 
-    override suspend fun updateUserCar(userId: Int, imagePath: String, carModelId: Int) {
+    override suspend fun updateUserCar(userId: Int, imagePath: String?, carModelId: Int?) {
         return transaction {
             UsersCars.update({ UsersCars.userId eq userId }) { row ->
-                row[UsersCars.imagePath] = imagePath
-                row[UsersCars.carModelId] = carModelId
+                if(imagePath != null) row[UsersCars.imagePath] = imagePath
+                if(carModelId != null) row[UsersCars.carModelId] = carModelId
             }
         }
     }
