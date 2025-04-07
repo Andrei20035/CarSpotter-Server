@@ -1,5 +1,6 @@
 package data.dao
 
+import at.favre.lib.crypto.bcrypt.BCrypt
 import com.carspotter.data.dao.user.UserDaoImpl
 import com.carspotter.data.model.User
 import com.carspotter.data.table.Users
@@ -62,7 +63,6 @@ class UserDaoTest {
         Assertions.assertEquals(null, retrievedUser.profilePicturePath)
         Assertions.assertEquals(LocalDate.of(2003, 11, 8), retrievedUser.birthDate)
         Assertions.assertEquals("Socate123", retrievedUser.username)
-        Assertions.assertEquals("VALIbRAT1", retrievedUser.password)
         Assertions.assertEquals("USA", retrievedUser.country)
         Assertions.assertEquals(0, retrievedUser.spotScore)
 
@@ -89,7 +89,6 @@ class UserDaoTest {
         Assertions.assertEquals(null, retrievedUser.profilePicturePath)
         Assertions.assertEquals(LocalDate.of(2003, 11, 8), retrievedUser.birthDate)
         Assertions.assertEquals("Socate123", retrievedUser.username)
-        Assertions.assertEquals("VALIbRAT1", retrievedUser.password)
         Assertions.assertEquals("USA", retrievedUser.country)
         Assertions.assertEquals(0, retrievedUser.spotScore)
 

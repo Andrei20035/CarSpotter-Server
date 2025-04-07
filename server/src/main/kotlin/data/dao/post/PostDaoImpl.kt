@@ -60,15 +60,16 @@ class PostDaoImpl: PostDAO {
     }
 
     override suspend fun getCurrentDayPostsForUser(userId: Int): List<Post> {
-        val todayStartOfDay = LocalDate.now().atStartOfDay().toInstant(ZoneOffset.UTC)
-        val tomorrowStartOfDay = LocalDate.now().plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+        val todayStartOfDayUTC = LocalDate.now(ZoneOffset.UTC).atStartOfDay().toInstant(ZoneOffset.UTC)
+        val tomorrowStartOfDayUTC = LocalDate.now(ZoneOffset.UTC).plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+
         return transaction {
             addLogger(StdOutSqlLogger)
             Posts
                 .select (
                     (Posts.userId eq userId) and
-                            (Posts.timestamp greaterEq todayStartOfDay) and
-                            (Posts.timestamp less tomorrowStartOfDay)
+                            (Posts.timestamp greaterEq todayStartOfDayUTC) and
+                            (Posts.timestamp less tomorrowStartOfDayUTC)
                 )
                 .map { row ->
                     Post(

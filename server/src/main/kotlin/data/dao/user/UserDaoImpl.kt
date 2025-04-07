@@ -1,29 +1,35 @@
 package com.carspotter.data.dao.user
 
+import at.favre.lib.crypto.bcrypt.BCrypt
+import com.carspotter.data.dto.UserDTO
+import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.User
 import com.carspotter.data.table.Users
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
+
 class UserDaoImpl : UserDAO {
     override suspend fun createUser(user: User): Int {
         return transaction {
             addLogger(StdOutSqlLogger)
+            val hashedPassword = BCrypt.withDefaults().hashToString(12, user.password.toCharArray())
+
             Users.insertReturning(listOf(Users.id)) {
                 it[firstName] = user.firstName
                 it[lastName] = user.lastName
                 it[profilePicturePath] = user.profilePicturePath
                 it[birthDate] = user.birthDate
                 it[username] = user.username
-                it[password] = user.password // Make sure to hash passwords!
+                it[password] = hashedPassword
                 it[country] = user.country
                 it[spotScore] = user.spotScore
             }.singleOrNull()?.get(Users.id) ?: error("Failed to insert user")
         }
     }
 
-    override suspend fun getUserByID(userId: Int): User? {
+    override suspend fun getUserByID(userId: Int): UserDTO? {
         return transaction {
             addLogger(StdOutSqlLogger)
             Users
@@ -40,12 +46,12 @@ class UserDaoImpl : UserDAO {
                         password = row[Users.password],
                         country = row[Users.country],
                         spotScore = row[Users.spotScore]
-                    )
+                    ).toDTO()
                 }.singleOrNull()
         }
     }
 
-    override suspend fun getUserByUsername(username: String): User? {
+    override suspend fun getUserByUsername(username: String): UserDTO? {
         return transaction {
             addLogger(StdOutSqlLogger)
             Users
@@ -62,13 +68,13 @@ class UserDaoImpl : UserDAO {
                         password = row[Users.password],
                         country = row[Users.country],
                         spotScore = row[Users.spotScore]
-                    )
+                    ).toDTO()
                 }
                 .singleOrNull()
         }
     }
 
-    override suspend fun getAllUsers(): List<User> {
+    override suspend fun getAllUsers(): List<UserDTO> {
         return transaction {
             addLogger(StdOutSqlLogger)
             Users
@@ -84,7 +90,7 @@ class UserDaoImpl : UserDAO {
                         password = row[Users.password],
                         country = row[Users.country],
                         spotScore = row[Users.spotScore]
-                    )
+                    ).toDTO()
                 }
         }
     }

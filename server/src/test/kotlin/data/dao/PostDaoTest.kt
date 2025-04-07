@@ -139,30 +139,30 @@ class PostDaoTest {
         Assertions.assertTrue(posts.any { it.userId == userId2 && it.imagePath == "path/to/image2" && it.description == "Description2" && it.carModelId == carModelId2 })
     }
 
-//    @Test
-//    fun `get current day posts`() = runBlocking {
-//        postDao.createPost(
-//            Post(
-//                userId = userId1,
-//                imagePath = "path/to/image1",
-//                description = "Description1",
-//                carModelId = carModelId1
-//            )
-//        )
-//        postDao.createPost(
-//            Post(
-//                userId = userId1,
-//                imagePath = "path/to/image2",
-//                description = "Description2",
-//                carModelId = carModelId2
-//            )
-//        )
-//
-//        val currentDayPosts = postDao.getCurrentDayPostsForUser(userId1)
-//        Assertions.assertNotNull(currentDayPosts)
-//        Assertions.assertTrue(currentDayPosts[0].timestamp)
-//
-//    }
+    @Test
+    fun `get current day posts`() = runBlocking {
+        postDao.createPost(
+            Post(
+                userId = userId1,
+                imagePath = "path/to/image1",
+                description = "Description1",
+                carModelId = carModelId1
+            )
+        )
+        postDao.createPost(
+            Post(
+                userId = userId1,
+                imagePath = "path/to/image2",
+                description = "Description2",
+                carModelId = carModelId2
+            )
+        )
+
+        val currentDayPosts = postDao.getCurrentDayPostsForUser(userId1)
+        Assertions.assertNotNull(currentDayPosts)
+        Assertions.assertTrue(currentDayPosts[0].timestamp)
+
+    }
 
     @Test
     fun `delete post`() = runBlocking {
