@@ -36,7 +36,8 @@ class CommentDaoImpl: CommentDAO {
                         userId = row[Comments.userId],
                         postId = row[Comments.postId],
                         commentText = row[Comments.commentText],
-                        timestamp = row[Comments.timestamp]
+                        createdAt = row[Comments.createdAt],
+                        updatedAt = row[Comments.updatedAt],
                     )
                 }
         }

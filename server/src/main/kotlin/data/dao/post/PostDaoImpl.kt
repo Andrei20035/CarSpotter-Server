@@ -7,8 +7,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.time.LocalDate
-import java.time.ZoneOffset
+import java.time.*
 
 class PostDaoImpl: PostDAO {
     override suspend fun createPost(post: Post): Int {
@@ -35,7 +34,9 @@ class PostDaoImpl: PostDAO {
                         userId = row[Posts.userId],
                         carModelId = row[Posts.carModelId],
                         imagePath = row[Posts.imagePath],
-                        description = row[Posts.description]
+                        description = row[Posts.description],
+                        createdAt = row[Posts.createdAt],
+                        updatedAt = row[Posts.updatedAt]
                     )
                 }
                 .singleOrNull()
@@ -46,31 +47,7 @@ class PostDaoImpl: PostDAO {
         return transaction {
             addLogger(StdOutSqlLogger)
             Posts
-                .selectAll() // Selects all posts
-                .map { row ->
-                    Post(
-                        id = row[Posts.id],
-                        userId = row[Posts.userId],
-                        carModelId = row[Posts.carModelId],
-                        imagePath = row[Posts.imagePath],
-                        description = row[Posts.description]
-                    )
-                }
-        }
-    }
-
-    override suspend fun getCurrentDayPostsForUser(userId: Int): List<Post> {
-        val todayStartOfDayUTC = LocalDate.now(ZoneOffset.UTC).atStartOfDay().toInstant(ZoneOffset.UTC)
-        val tomorrowStartOfDayUTC = LocalDate.now(ZoneOffset.UTC).plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
-
-        return transaction {
-            addLogger(StdOutSqlLogger)
-            Posts
-                .select (
-                    (Posts.userId eq userId) and
-                            (Posts.timestamp greaterEq todayStartOfDayUTC) and
-                            (Posts.timestamp less tomorrowStartOfDayUTC)
-                )
+                .selectAll()
                 .map { row ->
                     Post(
                         id = row[Posts.id],
@@ -78,9 +55,57 @@ class PostDaoImpl: PostDAO {
                         carModelId = row[Posts.carModelId],
                         imagePath = row[Posts.imagePath],
                         description = row[Posts.description],
-                        timestamp = row[Posts.timestamp]
+                        createdAt = row[Posts.createdAt],
+                        updatedAt = row[Posts.updatedAt]
                     )
                 }
+        }
+    }
+
+    override suspend fun getCurrentDayPostsForUser(userId: Int, userTimeZone: ZoneId): List<Post> {
+        // Get the user's current time in their local time zone
+        val nowInUserTimeZone = ZonedDateTime.now(userTimeZone)
+
+        // Get the start of today and the end of today in the user's local time zone
+        val startOfDayInUserTimeZone = nowInUserTimeZone.toLocalDate().atStartOfDay(userTimeZone)
+        val endOfDayInUserTimeZone = nowInUserTimeZone.toLocalDate().atTime(23, 59, 59).atZone(userTimeZone)
+
+        // Convert the start and end of the day to UTC
+        val startOfDayInUTC = startOfDayInUserTimeZone.toInstant()
+        val endOfDayInUTC = endOfDayInUserTimeZone.toInstant()
+
+        // Now use these UTC timestamps to filter the posts
+        return transaction {
+            addLogger(StdOutSqlLogger)
+            Posts
+                .selectAll()
+                .where {
+                    (Posts.userId eq userId) and
+                            (Posts.createdAt greaterEq startOfDayInUTC) and
+                            (Posts.createdAt less endOfDayInUTC)
+                }
+                .map { row ->
+                    Post(
+                        id = row[Posts.id],
+                        userId = row[Posts.userId],
+                        carModelId = row[Posts.carModelId],
+                        imagePath = row[Posts.imagePath],
+                        description = row[Posts.description],
+                        createdAt = row[Posts.createdAt],
+                        updatedAt = row[Posts.updatedAt]
+                    )
+                }
+        }
+    }
+
+
+    override suspend fun editPost(postId: Int, postText: String): Int {
+        return transaction {
+            addLogger(StdOutSqlLogger)
+            Posts.update({ Posts.id eq postId }) {
+                it[description] = postText
+                it[updatedAt] = Instant.now()
+            }
         }
     }
 

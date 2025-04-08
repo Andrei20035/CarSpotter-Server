@@ -1,6 +1,5 @@
 package com.carspotter.data.model
 
-import java.sql.Timestamp
 import java.time.Instant
 
 data class Post(
@@ -9,6 +8,7 @@ data class Post(
     val carModelId: Int,
     val imagePath: String,
     val description: String? = null,
-    val timestamp: Instant? = null,
-//    val timestamp: Timestamp? = null,
+    val createdAt: Instant? = null,
+    val updatedAt: Instant? = null,
+//    val created_at: Timestamp? = null,
 )

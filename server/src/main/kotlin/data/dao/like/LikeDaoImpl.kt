@@ -43,7 +43,9 @@ class LikeDaoImpl : LikeDAO {
                         username = row[Users.username],
                         country = row[Users.country],
                         password = row[Users.password],
-                        spotScore = row[Users.spotScore]
+                        spotScore = row[Users.spotScore],
+                        createdAt = row[Users.createdAt],
+                        updatedAt = row[Users.updatedAt]
                     )
                 }
         }

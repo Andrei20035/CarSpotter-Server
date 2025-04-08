@@ -7,5 +7,6 @@ data class Comment(
     val userId: Int,
     val postId: Int,
     val commentText: String,
-    val timestamp: Instant? = null,
+    val createdAt: Instant? = null,
+    val updatedAt: Instant? = null,
 )

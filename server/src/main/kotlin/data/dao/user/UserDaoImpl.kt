@@ -45,7 +45,9 @@ class UserDaoImpl : UserDAO {
                         username = row[Users.username],
                         password = row[Users.password],
                         country = row[Users.country],
-                        spotScore = row[Users.spotScore]
+                        spotScore = row[Users.spotScore],
+                        createdAt = row[Users.createdAt],
+                        updatedAt = row[Users.updatedAt]
                     ).toDTO()
                 }.singleOrNull()
         }
@@ -67,7 +69,9 @@ class UserDaoImpl : UserDAO {
                         username = row[Users.username],
                         password = row[Users.password],
                         country = row[Users.country],
-                        spotScore = row[Users.spotScore]
+                        spotScore = row[Users.spotScore],
+                        createdAt = row[Users.createdAt],
+                        updatedAt = row[Users.updatedAt]
                     ).toDTO()
                 }
                 .singleOrNull()
@@ -89,7 +93,9 @@ class UserDaoImpl : UserDAO {
                         username = row[Users.username],
                         password = row[Users.password],
                         country = row[Users.country],
-                        spotScore = row[Users.spotScore]
+                        spotScore = row[Users.spotScore],
+                        createdAt = row[Users.createdAt],
+                        updatedAt = row[Users.updatedAt]
                     ).toDTO()
                 }
         }

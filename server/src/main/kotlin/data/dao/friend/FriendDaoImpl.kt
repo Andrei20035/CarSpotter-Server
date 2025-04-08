@@ -57,7 +57,9 @@ class FriendDaoImpl: FriendDAO {
                             username = row[usersAlias[Users.username]],
                             country = row[usersAlias[Users.country]],
                             password = row[usersAlias[Users.password]],
-                            spotScore = row[usersAlias[Users.spotScore]]
+                            spotScore = row[usersAlias[Users.spotScore]],
+                            createdAt = row[usersAlias[Users.createdAt]],
+                            updatedAt = row[usersAlias[Users.updatedAt]],
                         )
                     }
             }
@@ -78,7 +80,9 @@ class FriendDaoImpl: FriendDAO {
                             username = row[usersAlias[Users.username]],
                             country = row[usersAlias[Users.country]],
                             password = row[usersAlias[Users.password]],
-                            spotScore = row[usersAlias[Users.spotScore]]
+                            spotScore = row[usersAlias[Users.spotScore]],
+                            createdAt = row[usersAlias[Users.createdAt]],
+                            updatedAt = row[usersAlias[Users.updatedAt]],
                         )
                     }
             }
@@ -100,6 +104,7 @@ class FriendDaoImpl: FriendDAO {
                     Friend(
                         userId = row[Friends.userId],
                         friendId = row[Friends.friendId],
+                        createdAt = row[Friends.createdAt]
                     )
                 }
         }

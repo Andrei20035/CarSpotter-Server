@@ -1,5 +1,6 @@
 package com.carspotter.data.table
 
+import com.carspotter.data.table.Users.defaultExpression
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.CurrentTimestamp
@@ -9,7 +10,7 @@ object Likes: Table("likes") {
     val id = integer("id").autoIncrement()
     val userId = integer("user_id").references(Users.id, onDelete = ReferenceOption.CASCADE)
     val postId = integer("post_id").references(Posts.id, onDelete = ReferenceOption.CASCADE)
-    val timestamp = timestamp("timestamp").defaultExpression(CurrentTimestamp)
+    val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
 
     override val primaryKey = PrimaryKey(id)
 

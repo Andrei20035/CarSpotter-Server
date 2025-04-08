@@ -16,6 +16,8 @@ import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
 import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PostDaoTest {
@@ -139,30 +141,63 @@ class PostDaoTest {
         Assertions.assertTrue(posts.any { it.userId == userId2 && it.imagePath == "path/to/image2" && it.description == "Description2" && it.carModelId == carModelId2 })
     }
 
-//    @Test
-//    fun `get current day posts`() = runBlocking {
-//        postDao.createPost(
-//            Post(
-//                userId = userId1,
-//                imagePath = "path/to/image1",
-//                description = "Description1",
-//                carModelId = carModelId1
-//            )
-//        )
-//        postDao.createPost(
-//            Post(
-//                userId = userId1,
-//                imagePath = "path/to/image2",
-//                description = "Description2",
-//                carModelId = carModelId2
-//            )
-//        )
-//
-//        val currentDayPosts = postDao.getCurrentDayPostsForUser(userId1)
-//        Assertions.assertNotNull(currentDayPosts)
-//        Assertions.assertTrue(currentDayPosts[0].timestamp)
-//
-//    }
+    @Test
+    fun `get current day posts`() = runBlocking {
+        postDao.createPost(
+            Post(
+                userId = userId1,
+                imagePath = "path/to/image1",
+                description = "Description1",
+                carModelId = carModelId1
+            )
+        )
+        postDao.createPost(
+            Post(
+                userId = userId1,
+                imagePath = "path/to/image2",
+                description = "Description2",
+                carModelId = carModelId2
+            )
+        )
+
+        // Assuming you have a way to get user's time zone, let's use UTC for the example.
+        val userTimeZone = ZoneId.of("UTC") // Replace with actual user's time zone if available.
+
+        // Fetch posts for the current day for the user
+        val currentDayPosts = postDao.getCurrentDayPostsForUser(userId1, userTimeZone)
+
+        // Assertions
+        Assertions.assertNotNull(currentDayPosts)
+        Assertions.assertTrue(currentDayPosts.isNotEmpty(), "There should be posts returned for the current day.")
+
+        // Verify the createdAt timestamp falls within today's range
+        val now = ZonedDateTime.now(userTimeZone).toLocalDate().atStartOfDay(userTimeZone).toInstant()
+        currentDayPosts.forEach { post ->
+            // Verify that createdAt is on the current day
+            Assertions.assertTrue(post.createdAt!! >= now, "Post createdAt should be after the start of today.")
+        }
+    }
+
+
+    @Test
+    fun `edit post description`() = runBlocking {
+        val postId = postDao.createPost(
+            Post(
+                userId = userId1,
+                imagePath = "path/to/image1",
+                description = "Description1",
+                carModelId = carModelId1
+            )
+        )
+
+        val postDescription = postDao.getPostById(postId)?.description
+        Assertions.assertEquals("Description1", postDescription)
+
+        postDao.editPost(postId, "New description")
+
+        val newDescription = postDao.getPostById(postId)?.description
+        Assertions.assertEquals("New description", newDescription)
+    }
 
     @Test
     fun `delete post`() = runBlocking {

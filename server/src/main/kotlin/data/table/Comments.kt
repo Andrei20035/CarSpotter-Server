@@ -10,7 +10,8 @@ object Comments : Table("comments") {
     val userId = integer("user_id").references(Users.id, onDelete = ReferenceOption.CASCADE)
     val postId = integer("post_id").references(Posts.id, onDelete = ReferenceOption.CASCADE)
     val commentText = text("comment_text")
-    val timestamp = timestamp("timestamp").defaultExpression(CurrentTimestamp)
+    val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
+    val updatedAt = timestamp("updated_at").defaultExpression(CurrentTimestamp)
 
     override val primaryKey = PrimaryKey(id)
 }

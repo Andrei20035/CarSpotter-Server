@@ -6,5 +6,5 @@ data class Like(
     val id: Int = 0,
     val userId: Int,
     val postId: Int,
-    val timestamp: Timestamp? = null,
+    val createdAt: Timestamp? = null,
 )

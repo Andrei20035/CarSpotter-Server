@@ -69,7 +69,9 @@ class FriendRequestDaoImpl : FriendRequestDAO {
                             username = row[usersAlias[Users.username]],
                             country = row[usersAlias[Users.country]],
                             password = row[usersAlias[Users.password]],
-                            spotScore = row[usersAlias[Users.spotScore]]
+                            spotScore = row[usersAlias[Users.spotScore]],
+                            createdAt = row[usersAlias[Users.createdAt]],
+                            updatedAt = row[usersAlias[Users.updatedAt]],
                         )
                     }
             }
@@ -90,7 +92,9 @@ class FriendRequestDaoImpl : FriendRequestDAO {
                             username = row[usersAlias[Users.username]],
                             country = row[usersAlias[Users.country]],
                             password = row[usersAlias[Users.password]],
-                            spotScore = row[usersAlias[Users.spotScore]]
+                            spotScore = row[usersAlias[Users.spotScore]],
+                            createdAt = row[usersAlias[Users.createdAt]],
+                            updatedAt = row[usersAlias[Users.updatedAt]],
                         )
                     }
             }
@@ -107,7 +111,8 @@ class FriendRequestDaoImpl : FriendRequestDAO {
                 .mapNotNull { row ->
                     FriendRequest(
                         senderId = row[FriendRequests.senderId],
-                        receiverId = row[FriendRequests.receiverId]
+                        receiverId = row[FriendRequests.receiverId],
+                        createdAt = row[FriendRequests.createdAt]
                     )
                 }
         }

@@ -11,7 +11,8 @@ object Posts : Table("posts") {
     val carModelId = integer("car_model_id").references(CarModels.id, onDelete = ReferenceOption.NO_ACTION)
     val imagePath = text("image_path")
     val description = text("description").nullable()
-    val timestamp = timestamp("timestamp").defaultExpression(CurrentTimestamp)
+    val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
+    val updatedAt = timestamp("updated_at").defaultExpression(CurrentTimestamp)
 
     override val primaryKey = PrimaryKey(id)
 }

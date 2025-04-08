@@ -30,7 +30,9 @@ class UserCarDaoImpl : UserCarDAO {
                     UserCar(
                         userId = row[UsersCars.id],
                         carModelId = row[UsersCars.carModelId],
-                        imagePath = row[UsersCars.imagePath]
+                        imagePath = row[UsersCars.imagePath],
+                        createdAt = row[UsersCars.createdAt],
+                        updatedAt = row[UsersCars.updatedAt]
                     )
                 }.singleOrNull()
         }
@@ -46,7 +48,9 @@ class UserCarDaoImpl : UserCarDAO {
                     UserCar(
                         userId = row[UsersCars.id],
                         carModelId = row[UsersCars.carModelId],
-                        imagePath = row[UsersCars.imagePath]
+                        imagePath = row[UsersCars.imagePath],
+                        createdAt = row[UsersCars.createdAt],
+                        updatedAt = row[UsersCars.updatedAt]
                     )
                 }.singleOrNull()
         }
@@ -68,7 +72,9 @@ class UserCarDaoImpl : UserCarDAO {
                         username = row[Users.username],
                         country = row[Users.country],
                         password = row[Users.password],
-                        spotScore = row[Users.spotScore]
+                        spotScore = row[Users.spotScore],
+                        createdAt = row[Users.createdAt],
+                        updatedAt = row[Users.updatedAt]
                     )
                 }.singleOrNull() ?: error("User with userCarId: $userCarId not found")
         }

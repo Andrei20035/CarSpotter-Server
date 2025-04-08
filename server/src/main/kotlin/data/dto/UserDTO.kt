@@ -1,6 +1,7 @@
 package com.carspotter.data.dto
 
 import com.carspotter.data.model.User
+import java.time.Instant
 import java.time.LocalDate
 
 data class UserDTO (
@@ -11,7 +12,9 @@ data class UserDTO (
     val birthDate: LocalDate,
     val username: String,
     val country: String,
-    val spotScore: Int = 0
+    val spotScore: Int = 0,
+    val createdAt: Instant? = null,
+    val updatedAt: Instant? = null
 )
 
 fun User.toDTO(): UserDTO {
@@ -23,6 +26,8 @@ fun User.toDTO(): UserDTO {
         birthDate = this.birthDate,
         username = this.username,
         country = this.country,
-        spotScore = this.spotScore
+        spotScore = this.spotScore,
+        createdAt = this.createdAt,
+        updatedAt = this.updatedAt
     )
 }
