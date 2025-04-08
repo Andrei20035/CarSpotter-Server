@@ -1,4 +1,4 @@
-package com.carspotter.data.repository.friendrequest
+package com.carspotter.data.repository.friend_request
 
 import com.carspotter.data.dao.friend_request.FriendRequestDaoImpl
 import com.carspotter.data.model.FriendRequest
@@ -6,7 +6,7 @@ import com.carspotter.data.model.User
 
 class FriendRequestRepositoryImpl(
     private val friendRequestDao: FriendRequestDaoImpl,
-): IFriendRequestRepository {
+) : IFriendRequestRepository {
     override suspend fun sendFriendRequest(senderId: Int, receiverId: Int): Int {
         return friendRequestDao.sendFriendRequest(senderId, receiverId)
     }

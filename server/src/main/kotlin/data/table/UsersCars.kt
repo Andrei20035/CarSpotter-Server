@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.CurrentTimestamp
 import org.jetbrains.exposed.sql.javatime.timestamp
 
-object UsersCars: Table("users_cars") {
+object UsersCars : Table("users_cars") {
     val id = integer("id").autoIncrement()
     val userId = integer("user_id").references(Users.id, onDelete = ReferenceOption.CASCADE).uniqueIndex()
     val carModelId = integer("car_model_id").references(CarModels.id, onDelete = ReferenceOption.CASCADE)

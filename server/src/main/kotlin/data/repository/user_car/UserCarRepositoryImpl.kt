@@ -1,13 +1,13 @@
-package com.carspotter.data.repository.usercar
+package com.carspotter.data.repository.user_car
 
 import com.carspotter.data.dao.user_car.UserCarDaoImpl
 import com.carspotter.data.model.User
 import com.carspotter.data.model.UserCar
-import com.carspotter.data.repository.UserRepository.IUserRepository
+import com.carspotter.data.repository.user_car.IUserCarRepository
 
 class UserCarRepositoryImpl(
     private val userCarDao: UserCarDaoImpl,
-): IUserCarRepository {
+) : IUserCarRepository {
     override suspend fun createUserCar(userCar: UserCar): Int {
         return userCarDao.createUserCar(userCar)
     }

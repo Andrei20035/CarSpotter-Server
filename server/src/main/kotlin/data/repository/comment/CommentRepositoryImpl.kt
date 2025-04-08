@@ -5,7 +5,7 @@ import com.carspotter.data.model.Comment
 
 class CommentRepositoryImpl(
     private val commentDao: CommentDaoImpl,
-): ICommentRepository {
+) : ICommentRepository {
     override suspend fun addComment(userId: Int, postId: Int, commentText: String): Int {
         return commentDao.addComment(userId, postId, commentText)
     }

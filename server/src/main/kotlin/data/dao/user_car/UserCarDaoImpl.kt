@@ -43,7 +43,7 @@ class UserCarDaoImpl : UserCarDAO {
             addLogger(StdOutSqlLogger)
             UsersCars
                 .selectAll()
-                .where{ UsersCars.userId eq userId }
+                .where { UsersCars.userId eq userId }
                 .mapNotNull { row ->
                     UserCar(
                         userId = row[UsersCars.id],
@@ -83,8 +83,8 @@ class UserCarDaoImpl : UserCarDAO {
     override suspend fun updateUserCar(userId: Int, imagePath: String?, carModelId: Int?) {
         return transaction {
             UsersCars.update({ UsersCars.userId eq userId }) { row ->
-                if(imagePath != null) row[UsersCars.imagePath] = imagePath
-                if(carModelId != null) row[UsersCars.carModelId] = carModelId
+                if (imagePath != null) row[UsersCars.imagePath] = imagePath
+                if (carModelId != null) row[UsersCars.carModelId] = carModelId
             }
         }
     }

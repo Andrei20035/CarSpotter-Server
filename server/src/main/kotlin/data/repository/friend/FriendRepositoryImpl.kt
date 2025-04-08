@@ -6,7 +6,7 @@ import com.carspotter.data.model.User
 
 class FriendRepositoryImpl(
     private val friendDao: FriendDaoImpl,
-): IFriendRepository {
+) : IFriendRepository {
     override suspend fun addFriend(userId: Int, friendId: Int): Int {
         return friendDao.addFriend(userId, friendId)
     }

@@ -4,12 +4,12 @@ import com.carspotter.data.model.Post
 import com.carspotter.data.table.Posts
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.time.*
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
-class PostDaoImpl: PostDAO {
+class PostDaoImpl : PostDAO {
     override suspend fun createPost(post: Post): Int {
         return transaction {
             addLogger(StdOutSqlLogger)

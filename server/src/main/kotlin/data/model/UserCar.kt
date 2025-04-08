@@ -2,7 +2,7 @@ package com.carspotter.data.model
 
 import java.time.Instant
 
-data class UserCar (
+data class UserCar(
     val id: Int = 0,
     val userId: Int,
     val carModelId: Int,

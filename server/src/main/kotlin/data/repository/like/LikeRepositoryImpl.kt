@@ -5,7 +5,7 @@ import com.carspotter.data.model.User
 
 class LikeRepositoryImpl(
     private val likeDao: LikeDaoImpl,
-): ILikeRepository {
+) : ILikeRepository {
     override suspend fun likePost(userId: Int, postId: Int) {
         likeDao.likePost(userId, postId)
     }

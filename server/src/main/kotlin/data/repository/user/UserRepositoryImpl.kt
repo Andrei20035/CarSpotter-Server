@@ -6,7 +6,7 @@ import com.carspotter.data.model.User
 
 class UserRepositoryImpl(
     private val userDao: UserDaoImpl
-): IUserRepository {
+) : IUserRepository {
     override suspend fun createUser(user: User): Int {
         return userDao.createUser(user)
     }

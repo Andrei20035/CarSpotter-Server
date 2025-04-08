@@ -56,7 +56,10 @@ class FriendRequestDaoImpl : FriendRequestDAO {
             // Query for friends where `userId` is the initiator
             val friendsAsInitiator = Users.alias("u1").let { usersAlias ->
                 FriendRequests
-                    .join(usersAlias, JoinType.INNER, additionalConstraint = { FriendRequests.senderId eq usersAlias[Users.id] })
+                    .join(
+                        usersAlias,
+                        JoinType.INNER,
+                        additionalConstraint = { FriendRequests.senderId eq usersAlias[Users.id] })
                     .selectAll()
                     .where { FriendRequests.receiverId eq userId }
                     .map { row ->
@@ -79,7 +82,10 @@ class FriendRequestDaoImpl : FriendRequestDAO {
             // Query for friends where `userId` is the recipient
             val friendsAsRecipient = Users.alias("u2").let { usersAlias ->
                 FriendRequests
-                    .join(usersAlias, JoinType.INNER, additionalConstraint = { FriendRequests.receiverId eq usersAlias[Users.id] })
+                    .join(
+                        usersAlias,
+                        JoinType.INNER,
+                        additionalConstraint = { FriendRequests.receiverId eq usersAlias[Users.id] })
                     .selectAll()
                     .where { FriendRequests.senderId eq userId }
                     .map { row ->

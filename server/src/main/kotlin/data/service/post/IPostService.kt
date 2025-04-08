@@ -1,9 +1,9 @@
-package com.carspotter.data.repository.post
+package com.carspotter.data.service.post
 
 import com.carspotter.data.model.Post
 import java.time.ZoneId
 
-interface IPostRepository {
+interface IPostService {
     suspend fun createPost(post: Post): Int
     suspend fun getPostById(postId: Int): Post?
     suspend fun getAllPosts(): List<Post>

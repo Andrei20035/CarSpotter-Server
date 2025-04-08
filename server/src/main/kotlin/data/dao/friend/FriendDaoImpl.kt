@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class FriendDaoImpl: FriendDAO {
+class FriendDaoImpl : FriendDAO {
     override suspend fun addFriend(userId: Int, friendId: Int): Int {
         return transaction {
             addLogger(StdOutSqlLogger)
@@ -44,7 +44,10 @@ class FriendDaoImpl: FriendDAO {
             // Query for friends where `userId` is the initiator
             val friendsAsInitiator = Users.alias("u1").let { usersAlias ->
                 Friends
-                    .join(usersAlias, JoinType.INNER, additionalConstraint = { Friends.friendId eq usersAlias[Users.id] })
+                    .join(
+                        usersAlias,
+                        JoinType.INNER,
+                        additionalConstraint = { Friends.friendId eq usersAlias[Users.id] })
                     .selectAll()
                     .where { Friends.userId eq userId }
                     .map { row ->
@@ -91,9 +94,6 @@ class FriendDaoImpl: FriendDAO {
             (friendsAsInitiator + friendsAsRecipient).distinctBy { it.id }
         }
     }
-
-
-
 
 
     override suspend fun getAllFriendsInDb(): List<Friend> {

@@ -1,9 +1,9 @@
-package com.carspotter.data.repository.usercar
+package com.carspotter.data.service.user_car
 
 import com.carspotter.data.model.User
 import com.carspotter.data.model.UserCar
 
-interface IUserCarRepository {
+interface IUserCarService {
     suspend fun createUserCar(userCar: UserCar): Int
     suspend fun getUserCarById(userCarId: Int): UserCar?
     suspend fun getUserCarByUserId(userId: Int): UserCar?

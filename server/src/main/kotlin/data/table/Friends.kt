@@ -1,12 +1,11 @@
 package com.carspotter.data.table
 
-import com.carspotter.data.table.Users.defaultExpression
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.CurrentTimestamp
 import org.jetbrains.exposed.sql.javatime.timestamp
 
-object Friends: Table("friends") {
+object Friends : Table("friends") {
     val userId = integer("user_id").references(Users.id, onDelete = ReferenceOption.CASCADE)
     val friendId = integer("friend_id").references(Users.id, onDelete = ReferenceOption.CASCADE)
     val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)

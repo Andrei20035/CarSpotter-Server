@@ -4,7 +4,7 @@ import com.carspotter.data.model.User
 import java.time.Instant
 import java.time.LocalDate
 
-data class UserDTO (
+data class UserDTO(
     val id: Int = 0,
     val firstName: String,
     val lastName: String,

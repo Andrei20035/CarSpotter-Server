@@ -2,11 +2,13 @@ package com.carspotter.data.dao.comment
 
 import com.carspotter.data.model.Comment
 import com.carspotter.data.table.Comments
-import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insertReturning
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class CommentDaoImpl: CommentDAO {
+class CommentDaoImpl : CommentDAO {
     override suspend fun addComment(userId: Int, postId: Int, commentText: String): Int {
         return transaction {
             Comments

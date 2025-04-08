@@ -6,7 +6,7 @@ import java.time.ZoneId
 
 class PostRepositoryImpl(
     private val postDao: PostDaoImpl,
-): IPostRepository {
+) : IPostRepository {
     override suspend fun createPost(post: Post): Int {
         return postDao.createPost(post)
     }
@@ -21,6 +21,10 @@ class PostRepositoryImpl(
 
     override suspend fun getCurrentDayPostsForUser(userId: Int, userTimeZone: ZoneId): List<Post> {
         return postDao.getCurrentDayPostsForUser(userId, userTimeZone)
+    }
+
+    override suspend fun editPost(postId: Int, postText: String): Int {
+        return postDao.editPost(postId, postText)
     }
 
     override suspend fun deletePost(postId: Int) {

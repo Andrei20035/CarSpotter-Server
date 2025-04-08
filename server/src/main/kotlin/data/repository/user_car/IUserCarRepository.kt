@@ -1,9 +1,9 @@
-package com.carspotter.data.dao.user_car
+package com.carspotter.data.repository.user_car
 
 import com.carspotter.data.model.User
 import com.carspotter.data.model.UserCar
 
-interface UserCarDAO {
+interface IUserCarRepository {
     suspend fun createUserCar(userCar: UserCar): Int
     suspend fun getUserCarById(userCarId: Int): UserCar?
     suspend fun getUserCarByUserId(userId: Int): UserCar?
