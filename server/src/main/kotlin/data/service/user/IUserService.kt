@@ -5,6 +5,7 @@ import com.carspotter.data.model.User
 
 interface IUserService {
     suspend fun createUser(user: User): Int
+    suspend fun login(username: String, password: String): UserDTO?
     suspend fun getUserByID(userId: Int): UserDTO?
     suspend fun getUserByUsername(username: String): UserDTO?
     suspend fun getAllUsers(): List<UserDTO>

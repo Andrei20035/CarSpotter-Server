@@ -1,6 +1,5 @@
 package com.carspotter.data.dao.user
 
-import at.favre.lib.crypto.bcrypt.BCrypt
 import com.carspotter.data.dto.UserDTO
 import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.User
@@ -14,7 +13,6 @@ class UserDaoImpl : UserDAO {
     override suspend fun createUser(user: User): Int {
         return transaction {
             addLogger(StdOutSqlLogger)
-            val hashedPassword = BCrypt.withDefaults().hashToString(12, user.password.toCharArray())
 
             Users.insertReturning(listOf(Users.id)) {
                 it[firstName] = user.firstName
@@ -22,7 +20,7 @@ class UserDaoImpl : UserDAO {
                 it[profilePicturePath] = user.profilePicturePath
                 it[birthDate] = user.birthDate
                 it[username] = user.username
-                it[password] = hashedPassword
+                it[password] = user.password
                 it[country] = user.country
                 it[spotScore] = user.spotScore
             }.singleOrNull()?.get(Users.id) ?: error("Failed to insert user")
@@ -77,6 +75,33 @@ class UserDaoImpl : UserDAO {
                 .singleOrNull()
         }
     }
+
+    override suspend fun getUserByEmail(email: String): User? {
+        return transaction {
+            addLogger(StdOutSqlLogger)
+            Users
+                .selectAll()
+                .where { Users.email eq email }
+                .mapNotNull { row ->
+                    User(
+                        id = row[Users.id],
+                        firstName = row[Users.firstName],
+                        lastName = row[Users.lastName],
+                        profilePicturePath = row[Users.profilePicturePath],
+                        birthDate = row[Users.birthDate],
+                        username = row[Users.username],
+                        password = row[Users.password], // exclude this from DTO
+                        country = row[Users.country],
+                        spotScore = row[Users.spotScore],
+                        createdAt = row[Users.createdAt],
+                        updatedAt = row[Users.updatedAt],
+                        email = row[Users.email]  // Add email to your DTO
+                    )
+                }
+                .singleOrNull()
+        }
+    }
+
 
     override suspend fun getAllUsers(): List<UserDTO> {
         return transaction {

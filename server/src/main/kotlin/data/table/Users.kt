@@ -12,7 +12,6 @@ object Users : Table("users") {
     val lastName = varchar("last_name", 80)
     val birthDate = date("birth_date")
     val username = varchar("username", 50)
-    val password = text("password")
     val country = varchar("country", 50)
     val spotScore = integer("spot_score").default(0)
     val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
