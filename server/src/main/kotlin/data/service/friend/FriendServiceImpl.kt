@@ -15,8 +15,8 @@ class FriendServiceImpl(
         return friendRepository.getAllFriends(userId)
     }
 
-    override suspend fun deleteFriend(userId: Int, friendId: Int) {
-        friendRepository.deleteFriend(userId, friendId)
+    override suspend fun deleteFriend(userId: Int, friendId: Int): Int {
+        return friendRepository.deleteFriend(userId, friendId)
     }
 
     override suspend fun getAllFriendsInDb(): List<Friend> {

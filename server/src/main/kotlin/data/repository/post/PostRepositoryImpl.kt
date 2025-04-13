@@ -27,7 +27,7 @@ class PostRepositoryImpl(
         return postDao.editPost(postId, postText)
     }
 
-    override suspend fun deletePost(postId: Int) {
-        postDao.deletePost(postId)
+    override suspend fun deletePost(postId: Int): Int {
+        return postDao.deletePost(postId)
     }
 }

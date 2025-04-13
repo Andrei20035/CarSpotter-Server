@@ -15,8 +15,8 @@ class FriendRepositoryImpl(
         return friendDao.getAllFriends(userId)
     }
 
-    override suspend fun deleteFriend(userId: Int, friendId: Int) {
-        friendDao.deleteFriend(userId, friendId)
+    override suspend fun deleteFriend(userId: Int, friendId: Int): Int {
+        return friendDao.deleteFriend(userId, friendId)
     }
 
     override suspend fun getAllFriendsInDb(): List<Friend> {

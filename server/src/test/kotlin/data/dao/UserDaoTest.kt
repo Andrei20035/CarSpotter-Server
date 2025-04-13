@@ -1,8 +1,10 @@
 package data.dao
 
-import at.favre.lib.crypto.bcrypt.BCrypt
+import com.carspotter.data.dao.auth_credentials.AuthCredentialDaoImpl
 import com.carspotter.data.dao.user.UserDaoImpl
+import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.User
+import com.carspotter.data.table.AuthCredentials
 import com.carspotter.data.table.Users
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
@@ -17,6 +19,10 @@ import java.time.LocalDate
 class UserDaoTest {
 
     private lateinit var userDao: UserDaoImpl
+    private lateinit var authCredentialDao: AuthCredentialDaoImpl
+
+    private var credentialId1: Int = 0
+    private var credentialId2: Int = 0
 
     @BeforeAll
     fun setupDatabase() {
@@ -28,10 +34,30 @@ class UserDaoTest {
         )
 
         transaction {
-            SchemaUtils.create(Users)
+            SchemaUtils.create(AuthCredentials, Users)
         }
 
         userDao = UserDaoImpl()
+        authCredentialDao = AuthCredentialDaoImpl()
+
+        runBlocking {
+            credentialId1 = authCredentialDao.createCredentials(
+                AuthCredential(
+                    email = "test1@test.com",
+                    password = "test1",
+                    providerId = "231122",
+                    provider = "google"
+                )
+            )
+            credentialId2 = authCredentialDao.createCredentials(
+                AuthCredential(
+                    email = "test2@test.com",
+                    password = "test2",
+                    providerId = "2311",
+                    provider = "local"
+                )
+            )
+        }
     }
 
     @BeforeEach
@@ -46,14 +72,15 @@ class UserDaoTest {
     fun `get user by ID`() = runBlocking {
         val userID = userDao.createUser(
             User(
+                authCredentialId = credentialId1,
                 firstName = "Peter",
                 lastName = "Parker",
                 birthDate = LocalDate.of(2003, 11, 8),
                 username = "Socate123",
-                password = "VALIbRAT1",
                 country = "USA"
             )
         )
+        println(userID)
         val retrievedUser = userDao.getUserByID(userID)
 
         assertNotNull(retrievedUser)
@@ -72,11 +99,11 @@ class UserDaoTest {
     fun `get user by username`() = runBlocking {
         val userID = userDao.createUser(
             User(
+                authCredentialId = credentialId1,
                 firstName = "Peter",
                 lastName = "Parker",
                 birthDate = LocalDate.of(2003, 11, 8),
                 username = "Socate123",
-                password = "VALIbRAT1",
                 country = "USA"
             )
         )
@@ -98,22 +125,22 @@ class UserDaoTest {
     fun `get all users`() = runBlocking {
         val userId1 = userDao.createUser(
             User(
+                authCredentialId = credentialId1,
                 firstName = "Peter",
                 lastName = "Parker",
                 birthDate = LocalDate.of(2003, 11, 8),
                 username = "Socate123",
-                password = "VALIbRAT1",
                 country = "USA"
             )
         )
 
         val userId2 = userDao.createUser(
             User(
+                authCredentialId = credentialId2,
                 firstName = "Mary Jane",
                 lastName = "Watson",
                 birthDate = LocalDate.of(2004, 4, 1),
                 username = "Socate321",
-                password = "VALIbRAT2",
                 country = "USA"
             )
         )
@@ -144,11 +171,11 @@ class UserDaoTest {
     fun `update profile picture`() = runBlocking {
         val userId = userDao.createUser(
             User(
+                authCredentialId = credentialId1,
                 firstName = "Peter",
                 lastName = "Parker",
                 birthDate = LocalDate.of(2003, 11, 8),
                 username = "Socate123",
-                password = "VALIbRAT1",
                 country = "USA"
             )
         )
@@ -172,11 +199,11 @@ class UserDaoTest {
     fun `delete user`() = runBlocking {
         val userId = userDao.createUser(
             User(
+                authCredentialId = credentialId1,
                 firstName = "Peter",
                 lastName = "Parker",
                 birthDate = LocalDate.of(2003, 11, 8),
                 username = "Socate123",
-                password = "VALIbRAT1",
                 country = "USA"
             )
         )
@@ -184,7 +211,7 @@ class UserDaoTest {
         val userBeforeDeletion = userDao.getUserByID(userId)
         assertNotNull(userBeforeDeletion)
 
-        userDao.deleteUser(userId)
+        userDao.deleteUser(credentialId1)
 
         val userAfterDeletion = userDao.getUserByID(userId)
         assertNull(userAfterDeletion)
@@ -193,7 +220,7 @@ class UserDaoTest {
     @AfterAll
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(Users)
+            SchemaUtils.drop(Users, AuthCredentials)
         }
     }
 }

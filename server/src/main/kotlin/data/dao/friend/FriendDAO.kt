@@ -6,6 +6,6 @@ import com.carspotter.data.model.User
 interface FriendDAO {
     suspend fun addFriend(userId: Int, friendId: Int): Int
     suspend fun getAllFriends(userId: Int): List<User>
-    suspend fun deleteFriend(userId: Int, friendId: Int)
+    suspend fun deleteFriend(userId: Int, friendId: Int): Int
     suspend fun getAllFriendsInDb(): List<Friend>
 }

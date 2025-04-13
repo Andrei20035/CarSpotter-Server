@@ -23,12 +23,12 @@ class UserCarRepositoryImpl(
         return userCarDao.getUserByUserCarId(userCarId)
     }
 
-    override suspend fun updateUserCar(userId: Int, imagePath: String?, carModelId: Int?) {
-        userCarDao.updateUserCar(userId, imagePath, carModelId)
+    override suspend fun updateUserCar(userId: Int, imagePath: String?, carModelId: Int?): Int {
+        return userCarDao.updateUserCar(userId, imagePath, carModelId)
     }
 
-    override suspend fun deleteUserCar(userId: Int) {
-        userCarDao.deleteUserCar(userId)
+    override suspend fun deleteUserCar(userId: Int): Int {
+        return userCarDao.deleteUserCar(userId)
     }
 
     override suspend fun getAllUserCars(): List<UserCar> {

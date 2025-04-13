@@ -51,7 +51,7 @@ class CarModelDaoImpl : CarModelDAO {
         }
     }
 
-    override suspend fun deleteCarModel(carModelId: Int) {
+    override suspend fun deleteCarModel(carModelId: Int): Int {
         return transaction {
             addLogger(StdOutSqlLogger)
             CarModels

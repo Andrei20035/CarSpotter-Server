@@ -65,13 +65,13 @@ class UserCarDaoImpl : UserCarDAO {
                 .mapNotNull { row ->
                     User(
                         id = row[Users.id],
+                        authCredentialId = row[Users.authCredentialId],
+                        profilePicturePath = row[Users.profilePicturePath],
                         firstName = row[Users.firstName],
                         lastName = row[Users.lastName],
-                        profilePicturePath = row[Users.profilePicturePath],
                         birthDate = row[Users.birthDate],
                         username = row[Users.username],
                         country = row[Users.country],
-                        password = row[Users.password],
                         spotScore = row[Users.spotScore],
                         createdAt = row[Users.createdAt],
                         updatedAt = row[Users.updatedAt]
@@ -80,7 +80,7 @@ class UserCarDaoImpl : UserCarDAO {
         }
     }
 
-    override suspend fun updateUserCar(userId: Int, imagePath: String?, carModelId: Int?) {
+    override suspend fun updateUserCar(userId: Int, imagePath: String?, carModelId: Int?): Int {
         return transaction {
             UsersCars.update({ UsersCars.userId eq userId }) { row ->
                 if (imagePath != null) row[UsersCars.imagePath] = imagePath
@@ -89,7 +89,7 @@ class UserCarDaoImpl : UserCarDAO {
         }
     }
 
-    override suspend fun deleteUserCar(userId: Int) {
+    override suspend fun deleteUserCar(userId: Int): Int {
         return transaction {
             UsersCars.deleteWhere { UsersCars.userId eq userId }
         }

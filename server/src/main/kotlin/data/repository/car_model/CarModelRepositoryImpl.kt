@@ -18,7 +18,7 @@ class CarModelRepositoryImpl(
         return carModelDao.getAllCarModels()
     }
 
-    override suspend fun deleteCarModel(carModelId: Int) {
-        carModelDao.deleteCarModel(carModelId)
+    override suspend fun deleteCarModel(carModelId: Int): Int {
+        return carModelDao.deleteCarModel(carModelId)
     }
 }

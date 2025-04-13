@@ -29,8 +29,8 @@ class FriendDaoImpl : FriendDAO {
         }.singleOrNull()?.get(Friends.friendId)
     }
 
-    override suspend fun deleteFriend(userId: Int, friendId: Int) {
-        transaction {
+    override suspend fun deleteFriend(userId: Int, friendId: Int): Int {
+        return transaction {
             Friends.deleteWhere {
                 ((Friends.userId eq userId) and (Friends.friendId eq friendId)) or
                         ((Friends.userId eq friendId) and (Friends.friendId eq userId))
@@ -53,13 +53,13 @@ class FriendDaoImpl : FriendDAO {
                     .map { row ->
                         User(
                             id = row[usersAlias[Users.id]],
+                            authCredentialId = row[usersAlias[Users.authCredentialId]],
+                            profilePicturePath = row[usersAlias[Users.profilePicturePath]],
                             firstName = row[usersAlias[Users.firstName]],
                             lastName = row[usersAlias[Users.lastName]],
-                            profilePicturePath = row[usersAlias[Users.profilePicturePath]],
                             birthDate = row[usersAlias[Users.birthDate]],
                             username = row[usersAlias[Users.username]],
                             country = row[usersAlias[Users.country]],
-                            password = row[usersAlias[Users.password]],
                             spotScore = row[usersAlias[Users.spotScore]],
                             createdAt = row[usersAlias[Users.createdAt]],
                             updatedAt = row[usersAlias[Users.updatedAt]],
@@ -76,13 +76,13 @@ class FriendDaoImpl : FriendDAO {
                     .map { row ->
                         User(
                             id = row[usersAlias[Users.id]],
+                            authCredentialId = row[usersAlias[Users.authCredentialId]],
+                            profilePicturePath = row[usersAlias[Users.profilePicturePath]],
                             firstName = row[usersAlias[Users.firstName]],
                             lastName = row[usersAlias[Users.lastName]],
-                            profilePicturePath = row[usersAlias[Users.profilePicturePath]],
                             birthDate = row[usersAlias[Users.birthDate]],
                             username = row[usersAlias[Users.username]],
                             country = row[usersAlias[Users.country]],
-                            password = row[usersAlias[Users.password]],
                             spotScore = row[usersAlias[Users.spotScore]],
                             createdAt = row[usersAlias[Users.createdAt]],
                             updatedAt = row[usersAlias[Users.updatedAt]],

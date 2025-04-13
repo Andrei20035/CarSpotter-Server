@@ -6,5 +6,5 @@ interface CarModelDAO {
     suspend fun createCarModel(carModel: CarModel): Int
     suspend fun getCarModel(carModelId: Int): CarModel?
     suspend fun getAllCarModels(): List<CarModel>
-    suspend fun deleteCarModel(carModelId: Int)
+    suspend fun deleteCarModel(carModelId: Int): Int
 }

@@ -10,8 +10,8 @@ class LikeServiceImpl(
         likeRepository.likePost(userId, postId)
     }
 
-    override suspend fun unlikePost(userId: Int, postId: Int) {
-        likeRepository.unlikePost(userId, postId)
+    override suspend fun unlikePost(userId: Int, postId: Int): Int {
+        return likeRepository.unlikePost(userId, postId)
     }
 
     override suspend fun getLikesForPost(postId: Int): List<User> {

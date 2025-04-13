@@ -8,7 +8,7 @@ interface IUserCarRepository {
     suspend fun getUserCarById(userCarId: Int): UserCar?
     suspend fun getUserCarByUserId(userId: Int): UserCar?
     suspend fun getUserByUserCarId(userCarId: Int): User
-    suspend fun updateUserCar(userId: Int, imagePath: String?, carModelId: Int?)
-    suspend fun deleteUserCar(userId: Int)
+    suspend fun updateUserCar(userId: Int, imagePath: String?, carModelId: Int?): Int
+    suspend fun deleteUserCar(userId: Int): Int
     suspend fun getAllUserCars(): List<UserCar>
 }

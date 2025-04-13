@@ -1,5 +1,6 @@
 package com.carspotter.data.table
 
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.CurrentTimestamp
 import org.jetbrains.exposed.sql.javatime.date
@@ -7,6 +8,7 @@ import org.jetbrains.exposed.sql.javatime.timestamp
 
 object Users : Table("users") {
     val id = integer("id").autoIncrement()
+    val authCredentialId = integer("auth_credential_id").uniqueIndex().references(AuthCredentials.id, onDelete = ReferenceOption.CASCADE)
     val profilePicturePath = text("profile_picture_path").nullable()
     val firstName = varchar("first_name", 80)
     val lastName = varchar("last_name", 80)

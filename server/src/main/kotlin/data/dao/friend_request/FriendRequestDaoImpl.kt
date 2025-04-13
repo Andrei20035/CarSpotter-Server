@@ -39,14 +39,10 @@ class FriendRequestDaoImpl : FriendRequestDAO {
         }
     }
 
-    override suspend fun declineFriendRequest(senderId: Int, receiverId: Int) {
+    override suspend fun declineFriendRequest(senderId: Int, receiverId: Int): Int {
         return transaction {
-            val deletedRows = FriendRequests.deleteWhere {
+            FriendRequests.deleteWhere {
                 (FriendRequests.senderId eq senderId) and (FriendRequests.receiverId eq receiverId)
-            }
-
-            if (deletedRows == 0) {
-                error("Friend request not found or already declined")
             }
         }
     }
@@ -65,13 +61,13 @@ class FriendRequestDaoImpl : FriendRequestDAO {
                     .map { row ->
                         User(
                             id = row[usersAlias[Users.id]],
+                            authCredentialId = row[usersAlias[Users.authCredentialId]],
+                            profilePicturePath = row[usersAlias[Users.profilePicturePath]],
                             firstName = row[usersAlias[Users.firstName]],
                             lastName = row[usersAlias[Users.lastName]],
-                            profilePicturePath = row[usersAlias[Users.profilePicturePath]],
                             birthDate = row[usersAlias[Users.birthDate]],
                             username = row[usersAlias[Users.username]],
                             country = row[usersAlias[Users.country]],
-                            password = row[usersAlias[Users.password]],
                             spotScore = row[usersAlias[Users.spotScore]],
                             createdAt = row[usersAlias[Users.createdAt]],
                             updatedAt = row[usersAlias[Users.updatedAt]],
@@ -91,13 +87,13 @@ class FriendRequestDaoImpl : FriendRequestDAO {
                     .map { row ->
                         User(
                             id = row[usersAlias[Users.id]],
+                            authCredentialId = row[usersAlias[Users.authCredentialId]],
                             firstName = row[usersAlias[Users.firstName]],
                             lastName = row[usersAlias[Users.lastName]],
                             profilePicturePath = row[usersAlias[Users.profilePicturePath]],
                             birthDate = row[usersAlias[Users.birthDate]],
                             username = row[usersAlias[Users.username]],
                             country = row[usersAlias[Users.country]],
-                            password = row[usersAlias[Users.password]],
                             spotScore = row[usersAlias[Users.spotScore]],
                             createdAt = row[usersAlias[Users.createdAt]],
                             updatedAt = row[usersAlias[Users.updatedAt]],

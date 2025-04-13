@@ -9,5 +9,5 @@ interface IPostRepository {
     suspend fun getAllPosts(): List<Post>
     suspend fun getCurrentDayPostsForUser(userId: Int, userTimeZone: ZoneId): List<Post>
     suspend fun editPost(postId: Int, postText: String): Int
-    suspend fun deletePost(postId: Int)
+    suspend fun deletePost(postId: Int): Int
 }

@@ -110,7 +110,7 @@ class PostDaoImpl : PostDAO {
     }
 
 
-    override suspend fun deletePost(postId: Int) {
+    override suspend fun deletePost(postId: Int): Int {
         return transaction {
             addLogger(StdOutSqlLogger)
             Posts

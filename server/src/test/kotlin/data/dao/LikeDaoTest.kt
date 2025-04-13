@@ -1,9 +1,11 @@
 package data.dao
 
+import com.carspotter.data.dao.auth_credentials.AuthCredentialDaoImpl
 import com.carspotter.data.dao.car_model.CarModelDaoImpl
 import com.carspotter.data.dao.like.LikeDaoImpl
 import com.carspotter.data.dao.post.PostDaoImpl
 import com.carspotter.data.dao.user.UserDaoImpl
+import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.CarModel
 import com.carspotter.data.model.Post
 import com.carspotter.data.model.User
@@ -29,8 +31,10 @@ class LikeDaoTest {
     private lateinit var userDao: UserDaoImpl
     private lateinit var postDao: PostDaoImpl
     private lateinit var carModelDao: CarModelDaoImpl
+    private lateinit var authCredentialDao: AuthCredentialDaoImpl
 
-
+    private var credentialId1: Int = 0
+    private var credentialId2: Int = 0
     private var userId1: Int = 0
     private var userId2: Int = 0
     private var postId1: Int = 0
@@ -46,32 +50,49 @@ class LikeDaoTest {
         )
 
         transaction {
-            SchemaUtils.create(Users, Posts, CarModels, Likes)
+            SchemaUtils.create(Users, Posts, CarModels, Likes, AuthCredentials)
         }
 
         likeDao = LikeDaoImpl()
         userDao = UserDaoImpl()
         postDao = PostDaoImpl()
         carModelDao = CarModelDaoImpl()
+        authCredentialDao = AuthCredentialDaoImpl()
 
         runBlocking {
+            credentialId1 = authCredentialDao.createCredentials(
+                AuthCredential(
+                    email = "test1@test.com",
+                    password = "test1",
+                    providerId = "231122",
+                    provider = "google"
+                )
+            )
+            credentialId2 = authCredentialDao.createCredentials(
+                AuthCredential(
+                    email = "test2@test.com",
+                    password = "test2",
+                    providerId = "2311",
+                    provider = "local"
+                )
+            )
             userId1 = userDao.createUser(
                 User(
+                    authCredentialId = credentialId1,
                     firstName = "Peter",
                     lastName = "Parker",
                     birthDate = LocalDate.of(2003, 11, 8),
                     username = "Socate123",
-                    password = "VALIbRAT1",
                     country = "USA"
                 )
             )
             userId2 = userDao.createUser(
                 User(
+                    authCredentialId = credentialId2,
                     firstName = "Mary Jane",
                     lastName = "Watson",
                     birthDate = LocalDate.of(2004, 4, 1),
                     username = "Socate321",
-                    password = "VALIbRAT2",
                     country = "USA"
                 )
             )
@@ -136,7 +157,7 @@ class LikeDaoTest {
     @AfterAll
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(Users, Posts, CarModels, Likes)
+            SchemaUtils.drop(Users, Posts, CarModels, Likes, AuthCredentials)
         }
     }
 }

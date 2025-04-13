@@ -18,8 +18,8 @@ class CarModelServiceImpl(
         return carModelRepository.getAllCarModels()
     }
 
-    override suspend fun deleteCarModel(carModelId: Int) {
-        carModelRepository.deleteCarModel(carModelId)
+    override suspend fun deleteCarModel(carModelId: Int): Int {
+        return carModelRepository.deleteCarModel(carModelId)
     }
 
 }

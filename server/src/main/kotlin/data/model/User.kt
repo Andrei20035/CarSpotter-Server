@@ -7,6 +7,7 @@ import java.time.LocalDate
 
 data class User(
     val id: Int = 0,
+    val authCredentialId: Int = 0,
     val profilePicturePath: String? = null,
     val firstName: String,
     val lastName: String,

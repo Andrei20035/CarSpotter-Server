@@ -3,6 +3,7 @@ package com.carspotter.data.dao.user
 import com.carspotter.data.dto.UserDTO
 import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.User
+import com.carspotter.data.table.AuthCredentials
 import com.carspotter.data.table.Users
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -15,19 +16,19 @@ class UserDaoImpl : UserDAO {
             addLogger(StdOutSqlLogger)
 
             Users.insertReturning(listOf(Users.id)) {
+                it[authCredentialId] = user.authCredentialId
+                it[profilePicturePath] = user.profilePicturePath
                 it[firstName] = user.firstName
                 it[lastName] = user.lastName
-                it[profilePicturePath] = user.profilePicturePath
                 it[birthDate] = user.birthDate
                 it[username] = user.username
-                it[password] = user.password
                 it[country] = user.country
                 it[spotScore] = user.spotScore
             }.singleOrNull()?.get(Users.id) ?: error("Failed to insert user")
         }
     }
 
-    override suspend fun getUserByID(userId: Int): UserDTO? {
+    override suspend fun getUserByID(userId: Int): User? {
         return transaction {
             addLogger(StdOutSqlLogger)
             Users
@@ -36,22 +37,22 @@ class UserDaoImpl : UserDAO {
                 .mapNotNull { row ->
                     User(
                         id = row[Users.id],
+                        authCredentialId = row[Users.authCredentialId],
+                        profilePicturePath = row[Users.profilePicturePath],
                         firstName = row[Users.firstName],
                         lastName = row[Users.lastName],
-                        profilePicturePath = row[Users.profilePicturePath],
                         birthDate = row[Users.birthDate],
                         username = row[Users.username],
-                        password = row[Users.password],
                         country = row[Users.country],
                         spotScore = row[Users.spotScore],
                         createdAt = row[Users.createdAt],
                         updatedAt = row[Users.updatedAt]
-                    ).toDTO()
+                    )
                 }.singleOrNull()
         }
     }
 
-    override suspend fun getUserByUsername(username: String): UserDTO? {
+    override suspend fun getUserByUsername(username: String): User? {
         return transaction {
             addLogger(StdOutSqlLogger)
             Users
@@ -60,50 +61,23 @@ class UserDaoImpl : UserDAO {
                 .mapNotNull { row ->
                     User(
                         id = row[Users.id],
+                        authCredentialId = row[Users.authCredentialId],
+                        profilePicturePath = row[Users.profilePicturePath],
                         firstName = row[Users.firstName],
                         lastName = row[Users.lastName],
-                        profilePicturePath = row[Users.profilePicturePath],
                         birthDate = row[Users.birthDate],
                         username = row[Users.username],
-                        password = row[Users.password],
                         country = row[Users.country],
                         spotScore = row[Users.spotScore],
                         createdAt = row[Users.createdAt],
                         updatedAt = row[Users.updatedAt]
-                    ).toDTO()
-                }
-                .singleOrNull()
-        }
-    }
-
-    override suspend fun getUserByEmail(email: String): User? {
-        return transaction {
-            addLogger(StdOutSqlLogger)
-            Users
-                .selectAll()
-                .where { Users.email eq email }
-                .mapNotNull { row ->
-                    User(
-                        id = row[Users.id],
-                        firstName = row[Users.firstName],
-                        lastName = row[Users.lastName],
-                        profilePicturePath = row[Users.profilePicturePath],
-                        birthDate = row[Users.birthDate],
-                        username = row[Users.username],
-                        password = row[Users.password], // exclude this from DTO
-                        country = row[Users.country],
-                        spotScore = row[Users.spotScore],
-                        createdAt = row[Users.createdAt],
-                        updatedAt = row[Users.updatedAt],
-                        email = row[Users.email]  // Add email to your DTO
                     )
                 }
                 .singleOrNull()
         }
     }
 
-
-    override suspend fun getAllUsers(): List<UserDTO> {
+    override suspend fun getAllUsers(): List<User> {
         return transaction {
             addLogger(StdOutSqlLogger)
             Users
@@ -111,22 +85,22 @@ class UserDaoImpl : UserDAO {
                 .mapNotNull { row ->
                     User(
                         id = row[Users.id],
+                        authCredentialId = row[Users.authCredentialId],
+                        profilePicturePath = row[Users.profilePicturePath],
                         firstName = row[Users.firstName],
                         lastName = row[Users.lastName],
-                        profilePicturePath = row[Users.profilePicturePath],
                         birthDate = row[Users.birthDate],
                         username = row[Users.username],
-                        password = row[Users.password],
                         country = row[Users.country],
                         spotScore = row[Users.spotScore],
                         createdAt = row[Users.createdAt],
                         updatedAt = row[Users.updatedAt]
-                    ).toDTO()
+                    )
                 }
         }
     }
 
-    override suspend fun updateProfilePicture(userId: Int, imagePath: String) {
+    override suspend fun updateProfilePicture(userId: Int, imagePath: String): Int {
         return transaction {
             addLogger(StdOutSqlLogger)
             Users
@@ -136,11 +110,10 @@ class UserDaoImpl : UserDAO {
         }
     }
 
-    override suspend fun deleteUser(userId: Int) {
+    override suspend fun deleteUser(credentialId: Int): Int {
         return transaction {
             addLogger(StdOutSqlLogger)
-            Users
-                .deleteWhere { id eq userId }
+            AuthCredentials.deleteWhere { id eq credentialId }
         }
     }
 

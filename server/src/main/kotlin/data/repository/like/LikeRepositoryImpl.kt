@@ -10,8 +10,8 @@ class LikeRepositoryImpl(
         likeDao.likePost(userId, postId)
     }
 
-    override suspend fun unlikePost(userId: Int, postId: Int) {
-        likeDao.unlikePost(userId, postId)
+    override suspend fun unlikePost(userId: Int, postId: Int): Int {
+        return likeDao.unlikePost(userId, postId)
     }
 
     override suspend fun getLikesForPost(postId: Int): List<User> {

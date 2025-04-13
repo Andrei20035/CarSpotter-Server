@@ -19,7 +19,7 @@ class LikeDaoImpl : LikeDAO {
         }
     }
 
-    override suspend fun unlikePost(userId: Int, postId: Int) {
+    override suspend fun unlikePost(userId: Int, postId: Int): Int {
         return transaction {
             addLogger(StdOutSqlLogger)
             Likes.deleteWhere {
@@ -36,13 +36,13 @@ class LikeDaoImpl : LikeDAO {
                 .mapNotNull { row ->
                     User(
                         id = row[Users.id],
+                        authCredentialId = row[Users.authCredentialId],
+                        profilePicturePath = row[Users.profilePicturePath],
                         firstName = row[Users.firstName],
                         lastName = row[Users.lastName],
-                        profilePicturePath = row[Users.profilePicturePath],
                         birthDate = row[Users.birthDate],
                         username = row[Users.username],
                         country = row[Users.country],
-                        password = row[Users.password],
                         spotScore = row[Users.spotScore],
                         createdAt = row[Users.createdAt],
                         updatedAt = row[Users.updatedAt]
