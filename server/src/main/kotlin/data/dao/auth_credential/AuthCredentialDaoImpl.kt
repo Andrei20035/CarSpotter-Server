@@ -1,8 +1,10 @@
-package com.carspotter.data.dao.auth_credentials
+package com.carspotter.data.dao.auth_credential
 
+import com.carspotter.data.dao.auth_credentials.AuthCredentialDAO
 import com.carspotter.data.dto.AuthCredentialDTO
 import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.AuthCredential
+import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.table.AuthCredentials
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -15,8 +17,8 @@ class AuthCredentialDaoImpl : AuthCredentialDAO {
             AuthCredentials.insertReturning(listOf(AuthCredentials.id)) {
                 it[email] = authCredential.email
                 it[password] = authCredential.password
-                it[provider] = authCredential.provider
-                it[providerId] = authCredential.providerId
+                it[provider] = authCredential.provider.name
+                it[googleId] = authCredential.googleId
             }.singleOrNull()?.get(AuthCredentials.id) ?: error("Failed to insert authCredential")
         }
     }
@@ -32,8 +34,8 @@ class AuthCredentialDaoImpl : AuthCredentialDAO {
                         id = row[AuthCredentials.id],
                         email = row[AuthCredentials.email],
                         password = row[AuthCredentials.password],
-                        provider = row[AuthCredentials.provider],
-                        providerId = row[AuthCredentials.providerId]
+                        provider = AuthProvider.valueOf(row[AuthCredentials.provider].uppercase()),
+                        googleId = row[AuthCredentials.googleId]
                     )
                 }
         }.singleOrNull()
@@ -50,8 +52,8 @@ class AuthCredentialDaoImpl : AuthCredentialDAO {
                         id = row[AuthCredentials.id],
                         email = row[AuthCredentials.email],
                         password = row[AuthCredentials.password],
-                        provider = row[AuthCredentials.provider],
-                        providerId = row[AuthCredentials.providerId]
+                        provider = AuthProvider.valueOf(row[AuthCredentials.provider].uppercase()),
+                        googleId = row[AuthCredentials.googleId]
                     ).toDTO()
                 }
         }.singleOrNull()
@@ -85,8 +87,8 @@ class AuthCredentialDaoImpl : AuthCredentialDAO {
                         id = row[AuthCredentials.id],
                         email = row[AuthCredentials.email],
                         password = row[AuthCredentials.password],
-                        provider = row[AuthCredentials.provider],
-                        providerId = row[AuthCredentials.providerId]
+                        provider = AuthProvider.valueOf(row[AuthCredentials.provider].uppercase()),
+                        googleId = row[AuthCredentials.googleId]
                     ).toDTO()
                 }
         }

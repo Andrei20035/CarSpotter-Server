@@ -1,8 +1,7 @@
-package com.carspotter.data.repository.UserRepository
+package com.carspotter.data.repository.user
 
 import com.carspotter.data.dao.user.UserDaoImpl
 import com.carspotter.data.model.User
-import com.carspotter.data.repository.user.IUserRepository
 
 class UserRepositoryImpl(
     private val userDao: UserDaoImpl

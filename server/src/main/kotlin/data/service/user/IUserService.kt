@@ -1,6 +1,5 @@
 package com.carspotter.data.service.user
 
-import com.carspotter.data.dto.UserDTO
 import com.carspotter.data.model.User
 
 interface IUserService {

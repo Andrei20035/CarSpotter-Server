@@ -1,7 +1,5 @@
 package com.carspotter.data.dao.user
 
-import com.carspotter.data.dto.UserDTO
-import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.User
 import com.carspotter.data.table.AuthCredentials
 import com.carspotter.data.table.Users

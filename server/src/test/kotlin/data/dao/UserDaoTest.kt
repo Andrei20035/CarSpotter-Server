@@ -1,8 +1,9 @@
 package data.dao
 
-import com.carspotter.data.dao.auth_credentials.AuthCredentialDaoImpl
+import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
 import com.carspotter.data.dao.user.UserDaoImpl
 import com.carspotter.data.model.AuthCredential
+import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.model.User
 import com.carspotter.data.table.AuthCredentials
 import com.carspotter.data.table.Users
@@ -39,34 +40,33 @@ class UserDaoTest {
 
         userDao = UserDaoImpl()
         authCredentialDao = AuthCredentialDaoImpl()
-
-        runBlocking {
-            credentialId1 = authCredentialDao.createCredentials(
-                AuthCredential(
-                    email = "test1@test.com",
-                    password = "test1",
-                    providerId = "231122",
-                    provider = "google"
-                )
-            )
-            credentialId2 = authCredentialDao.createCredentials(
-                AuthCredential(
-                    email = "test2@test.com",
-                    password = "test2",
-                    providerId = "2311",
-                    provider = "local"
-                )
-            )
-        }
     }
 
     @BeforeEach
     fun clearDatabase() {
         transaction {
-            Users.deleteAll()
+            AuthCredentials.deleteAll()
+
+            runBlocking {
+                credentialId1 = authCredentialDao.createCredentials(
+                    AuthCredential(
+                        email = "test1@test.com",
+                        password = "test1",
+                        googleId = "231122",
+                        provider = AuthProvider.GOOGLE
+                    )
+                )
+                credentialId2 = authCredentialDao.createCredentials(
+                    AuthCredential(
+                        email = "test2@test.com",
+                        password = "test2",
+                        googleId = "2311",
+                        provider = AuthProvider.REGULAR
+                    )
+                )
+            }
         }
     }
-
 
     @Test
     fun `get user by ID`() = runBlocking {
@@ -80,7 +80,6 @@ class UserDaoTest {
                 country = "USA"
             )
         )
-        println(userID)
         val retrievedUser = userDao.getUserByID(userID)
 
         assertNotNull(retrievedUser)

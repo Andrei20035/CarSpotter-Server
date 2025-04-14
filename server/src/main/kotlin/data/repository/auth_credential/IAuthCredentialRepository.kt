@@ -1,4 +1,4 @@
-package com.carspotter.data.repository.auth_credentials
+package com.carspotter.data.repository.auth_credential
 
 import com.carspotter.data.dto.AuthCredentialDTO
 import com.carspotter.data.model.AuthCredential

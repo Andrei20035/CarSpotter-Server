@@ -1,9 +1,7 @@
 package com.carspotter.data.service.user
 
-import at.favre.lib.crypto.bcrypt.BCrypt
-import com.carspotter.data.dto.UserDTO
 import com.carspotter.data.model.User
-import com.carspotter.data.repository.UserRepository.UserRepositoryImpl
+import com.carspotter.data.repository.user.UserRepositoryImpl
 
 class UserServiceImpl(
     private val userRepository: UserRepositoryImpl

@@ -1,13 +1,10 @@
 package data.dao
 
-import com.carspotter.data.dao.auth_credentials.AuthCredentialDaoImpl
+import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
 import com.carspotter.data.dao.car_model.CarModelDaoImpl
 import com.carspotter.data.dao.post.PostDaoImpl
 import com.carspotter.data.dao.user.UserDaoImpl
-import com.carspotter.data.model.AuthCredential
-import com.carspotter.data.model.CarModel
-import com.carspotter.data.model.Post
-import com.carspotter.data.model.User
+import com.carspotter.data.model.*
 import com.carspotter.data.table.AuthCredentials
 import com.carspotter.data.table.CarModels
 import com.carspotter.data.table.Posts
@@ -15,7 +12,6 @@ import com.carspotter.data.table.Users
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
 import java.time.LocalDate
@@ -60,16 +56,16 @@ class PostDaoTest {
                 AuthCredential(
                     email = "test1@test.com",
                     password = "test1",
-                    providerId = "231122",
-                    provider = "google"
+                    googleId = "231122",
+                    provider = AuthProvider.GOOGLE
                 )
             )
             credentialId2 = authCredentialDao.createCredentials(
                 AuthCredential(
                     email = "test2@test.com",
                     password = "test2",
-                    providerId = "2311",
-                    provider = "local"
+                    googleId = "2311",
+                    provider = AuthProvider.REGULAR
                 )
             )
             userId1 = userDao.createUser(

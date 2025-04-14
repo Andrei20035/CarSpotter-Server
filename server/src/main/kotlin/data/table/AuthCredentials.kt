@@ -7,7 +7,7 @@ object AuthCredentials: Table("auth_credentials") {
     val email = varchar("email", 255).uniqueIndex()
     val password = text("password").nullable()
     val provider = varchar("provider", 20).default("local")
-    val providerId = varchar("provider_id", 100).nullable()
+    val googleId = varchar("google_id", 100).nullable()
 
     override val primaryKey = PrimaryKey(id)
 }

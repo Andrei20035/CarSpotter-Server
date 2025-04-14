@@ -1,7 +1,8 @@
 package data.dao
 
-import com.carspotter.data.dao.auth_credentials.AuthCredentialDaoImpl
+import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
 import com.carspotter.data.model.AuthCredential
+import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.table.AuthCredentials
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
@@ -43,12 +44,12 @@ class AuthCredentialsDaoTest {
 
     @Test
     fun `get credentials for login`() = runBlocking {
-        val credentialID = authCredentialsDao.createCredentials(
+        authCredentialsDao.createCredentials(
             AuthCredential(
                 email = "test@test.com",
                 password = "test",
-                providerId = "2311",
-                provider = "google"
+                googleId = "2311",
+                provider = AuthProvider.GOOGLE
             )
         )
 
@@ -56,8 +57,8 @@ class AuthCredentialsDaoTest {
         assertNotNull(credentials)
         assertEquals("test@test.com", credentials.email)
         assertEquals("test", credentials.password)
-        assertEquals("2311", credentials.providerId)
-        assertEquals("google", credentials.provider)
+        assertEquals("2311", credentials.googleId)
+        assertEquals(AuthProvider.GOOGLE, credentials.provider)
     }
 
     @Test
@@ -66,8 +67,8 @@ class AuthCredentialsDaoTest {
             AuthCredential(
                 email = "test@test.com",
                 password = "test",
-                providerId = "2311",
-                provider = "google"
+                googleId = "2311",
+                provider = AuthProvider.GOOGLE
             )
         )
 
@@ -75,7 +76,7 @@ class AuthCredentialsDaoTest {
         assertNotNull(credentials)
         assertEquals("test@test.com", credentials.email)
         assertEquals("2311", credentials.providerId)
-        assertEquals("google", credentials.provider)
+        assertEquals(AuthProvider.GOOGLE, credentials.provider)
     }
 
     @Test
@@ -84,8 +85,8 @@ class AuthCredentialsDaoTest {
             AuthCredential(
                 email = "test@test.com",
                 password = "test",
-                providerId = "2311",
-                provider = "google"
+                googleId = "2311",
+                provider = AuthProvider.GOOGLE
             )
         )
 
@@ -102,16 +103,16 @@ class AuthCredentialsDaoTest {
             AuthCredential(
                 email = "test1@test.com",
                 password = "test1",
-                providerId = "2311",
-                provider = "google"
+                googleId = "2311",
+                provider = AuthProvider.GOOGLE
             )
         )
         authCredentialsDao.createCredentials(
             AuthCredential(
                 email = "test2@test.com",
                 password = "test2",
-                providerId = "231122",
-                provider = "local"
+                googleId = "231122",
+                provider = AuthProvider.REGULAR
             )
         )
 
@@ -125,8 +126,8 @@ class AuthCredentialsDaoTest {
             AuthCredential(
                 email = "test@test.com",
                 password = "test",
-                providerId = "2311",
-                provider = "google"
+                googleId = "2311",
+                provider = AuthProvider.GOOGLE
             )
         )
 

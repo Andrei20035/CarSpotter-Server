@@ -1,13 +1,10 @@
 package data.dao
 
-import com.carspotter.data.dao.auth_credentials.AuthCredentialDaoImpl
+import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
 import com.carspotter.data.dao.car_model.CarModelDaoImpl
 import com.carspotter.data.dao.user.UserDaoImpl
 import com.carspotter.data.dao.user_car.UserCarDaoImpl
-import com.carspotter.data.model.AuthCredential
-import com.carspotter.data.model.CarModel
-import com.carspotter.data.model.UserCar
-import com.carspotter.data.model.User
+import com.carspotter.data.model.*
 import com.carspotter.data.table.AuthCredentials
 import com.carspotter.data.table.Users
 import com.carspotter.data.table.UsersCars
@@ -18,7 +15,6 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -66,16 +62,16 @@ class UserCarDaoTest {
                 AuthCredential(
                     email = "test1@test.com",
                     password = "test1",
-                    providerId = "231122",
-                    provider = "google"
+                    googleId = "231122",
+                    provider = AuthProvider.GOOGLE
                 )
             )
             credentialId2 = authCredentialDao.createCredentials(
                 AuthCredential(
                     email = "test2@test.com",
                     password = "test2",
-                    providerId = "2311",
-                    provider = "local"
+                    googleId = "2311",
+                    provider = AuthProvider.REGULAR
                 )
             )
             userId1 = userDao.createUser(

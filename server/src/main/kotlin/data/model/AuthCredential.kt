@@ -4,6 +4,6 @@ data class AuthCredential(
     val id: Int = 0,
     val email: String,
     val password: String?,
-    val provider: String,
-    val providerId: String?,
+    val provider: AuthProvider,
+    val googleId: String?,
 )
