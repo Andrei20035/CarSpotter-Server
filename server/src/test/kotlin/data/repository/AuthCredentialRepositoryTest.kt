@@ -3,8 +3,11 @@ package data.repository
 import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
+import com.carspotter.data.repository.auth_credential.IAuthCredentialRepository
 import com.carspotter.data.repository.auth_credentials.AuthCredentialRepositoryImpl
 import com.carspotter.data.table.AuthCredentials
+import com.carspotter.di.daoModule
+import com.carspotter.di.repositoryModule
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
@@ -14,12 +17,15 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.test.KoinTest
+import org.koin.test.inject
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AuthCredentialRepositoryTest {
+class AuthCredentialRepositoryTest: KoinTest {
 
-    private lateinit var authCredentialRepository: AuthCredentialRepositoryImpl
-    private lateinit var authCredentialDao: AuthCredentialDaoImpl
+    private val authCredentialRepository: IAuthCredentialRepository by inject()
 
     @BeforeAll
     fun setup() {
@@ -30,12 +36,13 @@ class AuthCredentialRepositoryTest {
             password = TestDatabase.postgresContainer.password
         )
 
+        startKoin {
+            modules(daoModule, repositoryModule)
+        }
+
         transaction {
             SchemaUtils.create(AuthCredentials)
         }
-
-        authCredentialDao = AuthCredentialDaoImpl()
-        authCredentialRepository = AuthCredentialRepositoryImpl(authCredentialDao)
     }
 
     @BeforeEach
@@ -145,5 +152,6 @@ class AuthCredentialRepositoryTest {
         transaction {
             SchemaUtils.drop(AuthCredentials)
         }
+        stopKoin()
     }
 }

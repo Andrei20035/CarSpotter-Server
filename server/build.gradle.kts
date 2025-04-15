@@ -20,7 +20,7 @@ repositories {
 }
 
 tasks.test {
-    useJUnitPlatform() // This enables JUnit 5
+    useJUnitPlatform()
 }
 
 
@@ -49,15 +49,20 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("org.apache.commons:commons-compress:1.27.1")
     implementation("at.favre.lib:bcrypt:0.10.2")
+    // Koin BOM to manage versions centrally
+    implementation(platform("io.insert-koin:koin-bom:4.0.4"))
+    implementation("io.insert-koin:koin-core")
+    implementation("io.insert-koin:koin-ktor")
+    implementation("io.insert-koin:koin-logger-slf4j")
 
-
-    testImplementation ("org.jetbrains.kotlin:kotlin-test-junit5:2.1.20")
+//    testImplementation("io.insert-koin:koin-test")
+    testImplementation("io.insert-koin:koin-test-junit5")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:2.1.20")
     testImplementation("org.testcontainers:testcontainers:1.20.6")
     testImplementation("org.testcontainers:junit-jupiter:1.20.6")
     testImplementation("org.testcontainers:postgresql:1.20.6")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.12.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.12.0")
-    testImplementation(libs.kotlinTestJunit5)
     testImplementation(libs.ktor.server.test.host)
 
 }

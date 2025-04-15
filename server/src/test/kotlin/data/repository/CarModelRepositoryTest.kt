@@ -3,7 +3,10 @@ package data.repository
 import com.carspotter.data.dao.car_model.CarModelDaoImpl
 import com.carspotter.data.model.CarModel
 import com.carspotter.data.repository.car_model.CarModelRepositoryImpl
+import com.carspotter.data.repository.car_model.ICarModelRepository
 import com.carspotter.data.table.CarModels
+import com.carspotter.di.daoModule
+import com.carspotter.di.repositoryModule
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
@@ -13,14 +16,17 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.test.KoinTest
+import org.koin.test.inject
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class CarModelRepositoryTest {
+class CarModelRepositoryTest: KoinTest {
 
-    private lateinit var carModelDao: CarModelDaoImpl
-    private lateinit var carModelRepository: CarModelRepositoryImpl
+    private val carModelRepository: ICarModelRepository by inject()
 
     @BeforeAll
     fun setup() {
@@ -31,12 +37,13 @@ class CarModelRepositoryTest {
             password = TestDatabase.postgresContainer.password
         )
 
+        startKoin {
+            modules(daoModule, repositoryModule)
+        }
+
         transaction {
             SchemaUtils.create(CarModels)
         }
-
-        carModelDao = CarModelDaoImpl()
-        carModelRepository = CarModelRepositoryImpl(carModelDao)
     }
 
     @BeforeEach
@@ -94,5 +101,6 @@ class CarModelRepositoryTest {
         transaction {
             SchemaUtils.drop(CarModels)
         }
+        stopKoin()
     }
 }
