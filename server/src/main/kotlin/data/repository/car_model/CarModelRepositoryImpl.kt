@@ -1,10 +1,10 @@
 package com.carspotter.data.repository.car_model
 
-import com.carspotter.data.dao.car_model.CarModelDaoImpl
+import com.carspotter.data.dao.car_model.ICarModelDAO
 import com.carspotter.data.model.CarModel
 
 class CarModelRepositoryImpl(
-    private val carModelDao: CarModelDaoImpl
+    private val carModelDao: ICarModelDAO
 ) : ICarModelRepository {
     override suspend fun createCarModel(carModel: CarModel): Int {
         return carModelDao.createCarModel(carModel)

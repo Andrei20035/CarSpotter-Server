@@ -1,10 +1,10 @@
 package com.carspotter.data.repository.comment
 
-import com.carspotter.data.dao.comment.CommentDaoImpl
+import com.carspotter.data.dao.comment.ICommentDAO
 import com.carspotter.data.model.Comment
 
 class CommentRepositoryImpl(
-    private val commentDao: CommentDaoImpl,
+    private val commentDao: ICommentDAO,
 ) : ICommentRepository {
     override suspend fun addComment(userId: Int, postId: Int, commentText: String): Int {
         return commentDao.addComment(userId, postId, commentText)

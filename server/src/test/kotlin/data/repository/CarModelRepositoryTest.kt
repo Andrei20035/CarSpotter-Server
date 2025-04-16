@@ -7,6 +7,7 @@ import com.carspotter.data.repository.car_model.ICarModelRepository
 import com.carspotter.data.table.CarModels
 import com.carspotter.di.daoModule
 import com.carspotter.di.repositoryModule
+import data.testutils.SchemaSetup
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
@@ -41,9 +42,7 @@ class CarModelRepositoryTest: KoinTest {
             modules(daoModule, repositoryModule)
         }
 
-        transaction {
-            SchemaUtils.create(CarModels)
-        }
+        SchemaSetup.createCarModelsTable(CarModels)
     }
 
     @BeforeEach

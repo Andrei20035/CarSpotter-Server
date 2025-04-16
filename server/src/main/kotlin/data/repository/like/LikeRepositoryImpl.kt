@@ -1,10 +1,10 @@
 package com.carspotter.data.repository.like
 
-import com.carspotter.data.dao.like.LikeDaoImpl
+import com.carspotter.data.dao.like.ILikeDAO
 import com.carspotter.data.model.User
 
 class LikeRepositoryImpl(
-    private val likeDao: LikeDaoImpl,
+    private val likeDao: ILikeDAO,
 ) : ILikeRepository {
     override suspend fun likePost(userId: Int, postId: Int) {
         likeDao.likePost(userId, postId)

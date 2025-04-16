@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class CommentDaoImpl : CommentDAO {
+class CommentDaoImpl : ICommentDAO {
     override suspend fun addComment(userId: Int, postId: Int, commentText: String): Int {
         return transaction {
             Comments

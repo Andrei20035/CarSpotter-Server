@@ -1,6 +1,6 @@
 package com.carspotter.data.dao.auth_credential
 
-import com.carspotter.data.dao.auth_credentials.AuthCredentialDAO
+import com.carspotter.data.dao.auth_credentials.IAuthCredentialDAO
 import com.carspotter.data.dto.AuthCredentialDTO
 import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.AuthCredential
@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class AuthCredentialDaoImpl : AuthCredentialDAO {
+class AuthCredentialDaoImpl : IAuthCredentialDAO {
     override suspend fun createCredentials(authCredential: AuthCredential): Int {
         return transaction {
             addLogger(StdOutSqlLogger)

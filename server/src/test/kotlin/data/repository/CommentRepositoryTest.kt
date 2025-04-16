@@ -6,12 +6,20 @@ import com.carspotter.data.dao.comment.CommentDaoImpl
 import com.carspotter.data.dao.post.PostDaoImpl
 import com.carspotter.data.dao.user.UserDaoImpl
 import com.carspotter.data.model.*
+import com.carspotter.data.repository.auth_credential.IAuthCredentialRepository
 import com.carspotter.data.repository.auth_credentials.AuthCredentialRepositoryImpl
 import com.carspotter.data.repository.car_model.CarModelRepositoryImpl
+import com.carspotter.data.repository.car_model.ICarModelRepository
 import com.carspotter.data.repository.comment.CommentRepositoryImpl
+import com.carspotter.data.repository.comment.ICommentRepository
+import com.carspotter.data.repository.post.IPostRepository
 import com.carspotter.data.repository.post.PostRepositoryImpl
+import com.carspotter.data.repository.user.IUserRepository
 import com.carspotter.data.repository.user.UserRepositoryImpl
 import com.carspotter.data.table.*
+import com.carspotter.di.daoModule
+import com.carspotter.di.repositoryModule
+import data.testutils.SchemaSetup
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
@@ -21,22 +29,22 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.koin.core.component.inject
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.test.KoinTest
+import org.koin.test.inject
 
 import java.time.LocalDate
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class CommentRepositoryTest {
+class CommentRepositoryTest: KoinTest {
 
-    private lateinit var commentDao: CommentDaoImpl
-    private lateinit var commentRepository: CommentRepositoryImpl
-    private lateinit var userDao: UserDaoImpl
-    private lateinit var userRepository: UserRepositoryImpl
-    private lateinit var postDao: PostDaoImpl
-    private lateinit var postRepository: PostRepositoryImpl
-    private lateinit var carModelDao: CarModelDaoImpl
-    private lateinit var carModelRepository: CarModelRepositoryImpl
-    private lateinit var authCredentialDao: AuthCredentialDaoImpl
-    private lateinit var authCredentialRepository: AuthCredentialRepositoryImpl
+    private val commentRepository: ICommentRepository by inject()
+    private val userRepository: IUserRepository by inject()
+    private val postRepository: IPostRepository by inject()
+    private val carModelRepository: ICarModelRepository by inject()
+    private val authCredentialRepository: IAuthCredentialRepository by inject()
 
     private var credentialId1: Int = 0
     private var credentialId2: Int = 0
@@ -54,26 +62,21 @@ class CommentRepositoryTest {
             password = TestDatabase.postgresContainer.password
         )
 
-        transaction {
-            SchemaUtils.create(Comments, Users, AuthCredentials, Posts, CarModels)
+        startKoin {
+            modules(daoModule, repositoryModule)
         }
 
-        commentDao = CommentDaoImpl()
-        commentRepository = CommentRepositoryImpl(commentDao)
-        userDao = UserDaoImpl()
-        userRepository = UserRepositoryImpl(userDao)
-        postDao = PostDaoImpl()
-        postRepository = PostRepositoryImpl(postDao)
-        carModelDao = CarModelDaoImpl()
-        carModelRepository = CarModelRepositoryImpl(carModelDao)
-        authCredentialDao = AuthCredentialDaoImpl()
-        authCredentialRepository = AuthCredentialRepositoryImpl(authCredentialDao)
+        SchemaSetup.createCommentsTable(Comments)
+        SchemaSetup.createUsersTable(Users)
+        SchemaSetup.createAuthCredentialsTableWithConstraint(AuthCredentials)
+        SchemaSetup.createPostsTable(Posts)
+        SchemaSetup.createCarModelsTable(CarModels)
 
         runBlocking {
             credentialId1 = authCredentialRepository.createCredentials(
                 AuthCredential(
                     email = "repo1@test.com",
-                    password = "pass1",
+                    password = null,
                     googleId = "google1",
                     provider = AuthProvider.GOOGLE
                 )
@@ -82,7 +85,7 @@ class CommentRepositoryTest {
                 AuthCredential(
                     email = "repo2@test.com",
                     password = "pass2",
-                    googleId = "google2",
+                    googleId = null,
                     provider = AuthProvider.REGULAR
                 )
             )
@@ -184,5 +187,6 @@ class CommentRepositoryTest {
         transaction {
             SchemaUtils.drop(Users, Comments, Posts, CarModels, AuthCredentials)
         }
+        stopKoin()
     }
 }

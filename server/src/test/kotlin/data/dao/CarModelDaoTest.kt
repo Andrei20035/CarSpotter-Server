@@ -1,6 +1,9 @@
 import com.carspotter.data.dao.car_model.CarModelDaoImpl
+import com.carspotter.data.dao.car_model.ICarModelDAO
 import com.carspotter.data.model.CarModel
 import com.carspotter.data.table.CarModels
+import com.carspotter.di.daoModule
+import data.testutils.SchemaSetup
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
@@ -8,11 +11,15 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.test.KoinTest
+import org.koin.test.inject
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class CarModelDaoTest {
+class CarModelDaoTest: KoinTest {
 
-    private lateinit var carModelDao: CarModelDaoImpl
+    private val carModelDao: ICarModelDAO by inject()
 
     @BeforeAll
     fun setupDatabase() {
@@ -23,11 +30,12 @@ class CarModelDaoTest {
             password = TestDatabase.postgresContainer.password
         )
 
-        transaction {
-            SchemaUtils.create(CarModels)
+        startKoin {
+            modules(daoModule)
         }
 
-        carModelDao = CarModelDaoImpl()
+        SchemaSetup.createCarModelsTable(CarModels)
+
     }
 
     @BeforeEach
@@ -97,7 +105,8 @@ class CarModelDaoTest {
     @AfterAll
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(CarModels) // Drop table only once after all tests
+            SchemaUtils.drop(CarModels)
         }
+        stopKoin()
     }
 }

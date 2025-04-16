@@ -9,7 +9,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-class PostDaoImpl : PostDAO {
+class PostDaoImpl : IPostDAO {
     override suspend fun createPost(post: Post): Int {
         return transaction {
             addLogger(StdOutSqlLogger)

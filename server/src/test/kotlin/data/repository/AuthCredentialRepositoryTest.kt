@@ -1,13 +1,12 @@
 package data.repository
 
-import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.repository.auth_credential.IAuthCredentialRepository
-import com.carspotter.data.repository.auth_credentials.AuthCredentialRepositoryImpl
 import com.carspotter.data.table.AuthCredentials
 import com.carspotter.di.daoModule
 import com.carspotter.di.repositoryModule
+import data.testutils.SchemaSetup
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
@@ -17,8 +16,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
+import org.koin.core.context.GlobalContext.startKoin
+import org.koin.core.context.GlobalContext.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.inject
 
@@ -40,9 +39,7 @@ class AuthCredentialRepositoryTest: KoinTest {
             modules(daoModule, repositoryModule)
         }
 
-        transaction {
-            SchemaUtils.create(AuthCredentials)
-        }
+        SchemaSetup.createAuthCredentialsTableWithConstraint(AuthCredentials)
     }
 
     @BeforeEach
@@ -57,7 +54,7 @@ class AuthCredentialRepositoryTest: KoinTest {
         val id = authCredentialRepository.createCredentials(
             AuthCredential(
                 email = "repo@test.com",
-                password = "repoPass",
+                password = null,
                 googleId = "gID123",
                 provider = AuthProvider.GOOGLE
             )
@@ -67,6 +64,7 @@ class AuthCredentialRepositoryTest: KoinTest {
 
         assertNotNull(result)
         assertEquals(id, result.id)
+        assertEquals(null, result.password)
         assertEquals("repo@test.com", result.email)
         assertEquals("gID123", result.googleId)
     }
@@ -76,7 +74,7 @@ class AuthCredentialRepositoryTest: KoinTest {
         val id = authCredentialRepository.createCredentials(
             AuthCredential(
                 email = "dto@test.com",
-                password = "dtoPass",
+                password = null,
                 googleId = "dtoGID",
                 provider = AuthProvider.GOOGLE
             )
@@ -95,8 +93,8 @@ class AuthCredentialRepositoryTest: KoinTest {
             AuthCredential(
                 email = "update@test.com",
                 password = "oldPass",
-                googleId = "gid",
-                provider = AuthProvider.GOOGLE
+                googleId = null,
+                provider = AuthProvider.REGULAR
             )
         )
 
@@ -112,14 +110,14 @@ class AuthCredentialRepositoryTest: KoinTest {
         authCredentialRepository.createCredentials(
             AuthCredential(
                 email = "all1@test.com",
-                password = "pass1",
+                password = null,
                 googleId = "gid1",
                 provider = AuthProvider.GOOGLE)
         )
         authCredentialRepository.createCredentials(
             AuthCredential(
                 email = "all2@test.com",
-                password = null,
+                password = "passtest",
                 googleId = null,
                 provider = AuthProvider.REGULAR
             )
@@ -134,7 +132,7 @@ class AuthCredentialRepositoryTest: KoinTest {
         val id = authCredentialRepository.createCredentials(
             AuthCredential(
                 email = "delete@test.com",
-                password = "pass",
+                password = null,
                 googleId = "gid",
                 provider = AuthProvider.GOOGLE
             )

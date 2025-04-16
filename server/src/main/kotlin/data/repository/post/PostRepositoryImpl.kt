@@ -1,11 +1,11 @@
 package com.carspotter.data.repository.post
 
-import com.carspotter.data.dao.post.PostDaoImpl
+import com.carspotter.data.dao.post.IPostDAO
 import com.carspotter.data.model.Post
 import java.time.ZoneId
 
 class PostRepositoryImpl(
-    private val postDao: PostDaoImpl,
+    private val postDao: IPostDAO,
 ) : IPostRepository {
     override suspend fun createPost(post: Post): Int {
         return postDao.createPost(post)

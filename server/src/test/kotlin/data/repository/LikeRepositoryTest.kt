@@ -14,6 +14,7 @@ import com.carspotter.data.repository.user.IUserRepository
 import com.carspotter.data.table.*
 import com.carspotter.di.daoModule
 import com.carspotter.di.repositoryModule
+import data.testutils.SchemaSetup
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
@@ -61,15 +62,17 @@ class LikeRepositoryTest: KoinTest {
             modules(daoModule, repositoryModule)
         }
 
-        transaction {
-            SchemaUtils.create(Users, Posts, CarModels, Likes, AuthCredentials)
-        }
+        SchemaSetup.createUsersTable(Users)
+        SchemaSetup.createPostsTable(Posts)
+        SchemaSetup.createCarModelsTable(CarModels)
+        SchemaSetup.createLikesTable(Likes)
+        SchemaSetup.createAuthCredentialsTableWithConstraint(AuthCredentials)
 
         runBlocking {
             credentialId1 = authCredentialRepository.createCredentials(
                 AuthCredential(
                     email = "test1@test.com",
-                    password = "test1",
+                    password = null,
                     googleId = "231122",
                     provider = AuthProvider.GOOGLE
                 )
@@ -78,7 +81,7 @@ class LikeRepositoryTest: KoinTest {
                 AuthCredential(
                     email = "test2@test.com",
                     password = "test2",
-                    googleId = "2311",
+                    googleId = null,
                     provider = AuthProvider.REGULAR
                 )
             )

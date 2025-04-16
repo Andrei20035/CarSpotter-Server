@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class FriendDaoImpl : FriendDAO {
+class FriendDaoImpl : IFriendDAO {
     override suspend fun addFriend(userId: Int, friendId: Int): Int {
         return transaction {
             addLogger(StdOutSqlLogger)

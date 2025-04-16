@@ -1,13 +1,17 @@
 package data.dao
 
 import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
+import com.carspotter.data.dao.auth_credentials.IAuthCredentialDAO
 import com.carspotter.data.dao.car_model.CarModelDaoImpl
+import com.carspotter.data.dao.car_model.ICarModelDAO
+import com.carspotter.data.dao.user.IUserDAO
 import com.carspotter.data.dao.user.UserDaoImpl
+import com.carspotter.data.dao.user_car.IUserCarDAO
 import com.carspotter.data.dao.user_car.UserCarDaoImpl
 import com.carspotter.data.model.*
-import com.carspotter.data.table.AuthCredentials
-import com.carspotter.data.table.Users
-import com.carspotter.data.table.UsersCars
+import com.carspotter.data.table.*
+import com.carspotter.di.daoModule
+import data.testutils.SchemaSetup
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
@@ -20,15 +24,19 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.Assertions.*
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.test.KoinTest
+import org.koin.test.inject
 import java.time.LocalDate
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class UserCarDaoTest {
+class UserCarDaoTest: KoinTest {
 
-    private lateinit var userCarDao: UserCarDaoImpl
-    private lateinit var userDao: UserDaoImpl
-    private lateinit var carModelDao: CarModelDaoImpl
-    private lateinit var authCredentialDao: AuthCredentialDaoImpl
+    private val userCarDao: IUserCarDAO by inject()
+    private val userDao: IUserDAO by inject()
+    private val carModelDao: ICarModelDAO by inject()
+    private val authCredentialDao: IAuthCredentialDAO by inject()
 
     private var credentialId1: Int = 0
     private var credentialId2: Int = 0
@@ -48,20 +56,20 @@ class UserCarDaoTest {
             password = TestDatabase.postgresContainer.password
         )
 
-        transaction {
-            SchemaUtils.create(UsersCars, Users, AuthCredentials)
+        startKoin {
+            modules(daoModule)
         }
 
-        userCarDao = UserCarDaoImpl()
-        userDao = UserDaoImpl()
-        carModelDao = CarModelDaoImpl()
-        authCredentialDao = AuthCredentialDaoImpl()
+        SchemaSetup.createUsersTable(Users)
+        SchemaSetup.createUsersCarsTable(UsersCars)
+        SchemaSetup.createAuthCredentialsTableWithConstraint(AuthCredentials)
+        SchemaSetup.createCarModelsTable(CarModels)
 
         runBlocking {
             credentialId1 = authCredentialDao.createCredentials(
                 AuthCredential(
                     email = "test1@test.com",
-                    password = "test1",
+                    password = null,
                     googleId = "231122",
                     provider = AuthProvider.GOOGLE
                 )
@@ -70,7 +78,7 @@ class UserCarDaoTest {
                 AuthCredential(
                     email = "test2@test.com",
                     password = "test2",
-                    googleId = "2311",
+                    googleId = null,
                     provider = AuthProvider.REGULAR
                 )
             )
@@ -243,7 +251,8 @@ class UserCarDaoTest {
     @AfterAll
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(UsersCars, Users, AuthCredentials)
+            SchemaUtils.drop(UsersCars, Users, CarModels, AuthCredentials)
         }
+        stopKoin()
     }
 }

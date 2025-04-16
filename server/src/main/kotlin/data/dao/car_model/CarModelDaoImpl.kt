@@ -6,7 +6,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class CarModelDaoImpl : CarModelDAO {
+class CarModelDaoImpl : ICarModelDAO {
     override suspend fun createCarModel(carModel: CarModel): Int {
         return transaction {
             CarModels

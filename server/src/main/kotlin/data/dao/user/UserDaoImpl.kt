@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
 
-class UserDaoImpl : UserDAO {
+class UserDaoImpl : IUserDAO {
     override suspend fun createUser(user: User): Int {
         return transaction {
             addLogger(StdOutSqlLogger)

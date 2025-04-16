@@ -1,11 +1,11 @@
 package com.carspotter.data.repository.friend
 
-import com.carspotter.data.dao.friend.FriendDaoImpl
+import com.carspotter.data.dao.friend.IFriendDAO
 import com.carspotter.data.model.Friend
 import com.carspotter.data.model.User
 
 class FriendRepositoryImpl(
-    private val friendDao: FriendDaoImpl,
+    private val friendDao: IFriendDAO,
 ) : IFriendRepository {
     override suspend fun addFriend(userId: Int, friendId: Int): Int {
         return friendDao.addFriend(userId, friendId)

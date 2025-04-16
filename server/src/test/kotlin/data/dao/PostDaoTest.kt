@@ -1,30 +1,37 @@
 package data.dao
 
 import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
+import com.carspotter.data.dao.auth_credentials.IAuthCredentialDAO
 import com.carspotter.data.dao.car_model.CarModelDaoImpl
+import com.carspotter.data.dao.car_model.ICarModelDAO
+import com.carspotter.data.dao.post.IPostDAO
 import com.carspotter.data.dao.post.PostDaoImpl
+import com.carspotter.data.dao.user.IUserDAO
 import com.carspotter.data.dao.user.UserDaoImpl
 import com.carspotter.data.model.*
-import com.carspotter.data.table.AuthCredentials
-import com.carspotter.data.table.CarModels
-import com.carspotter.data.table.Posts
-import com.carspotter.data.table.Users
+import com.carspotter.data.table.*
+import com.carspotter.di.daoModule
+import data.testutils.SchemaSetup
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.test.KoinTest
+import org.koin.test.inject
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class PostDaoTest {
+class PostDaoTest: KoinTest {
 
-    private lateinit var userDao: UserDaoImpl
-    private lateinit var postDao: PostDaoImpl
-    private lateinit var carModelDao: CarModelDaoImpl
-    private lateinit var authCredentialDao: AuthCredentialDaoImpl
+    private val userDao: IUserDAO by inject()
+    private val postDao: IPostDAO by inject()
+    private val carModelDao: ICarModelDAO by inject()
+    private val authCredentialDao: IAuthCredentialDAO by inject()
 
     private var credentialId1: Int = 0
     private var credentialId2: Int = 0
@@ -42,20 +49,20 @@ class PostDaoTest {
             password = TestDatabase.postgresContainer.password
         )
 
-        transaction {
-            SchemaUtils.create(Users, Posts, CarModels, AuthCredentials)
+        startKoin {
+            modules(daoModule)
         }
 
-        userDao = UserDaoImpl()
-        postDao = PostDaoImpl()
-        carModelDao = CarModelDaoImpl()
-        authCredentialDao = AuthCredentialDaoImpl()
+        SchemaSetup.createUsersTable(Users)
+        SchemaSetup.createPostsTable(Posts)
+        SchemaSetup.createCarModelsTable(CarModels)
+        SchemaSetup.createAuthCredentialsTableWithConstraint(AuthCredentials)
 
         runBlocking {
             credentialId1 = authCredentialDao.createCredentials(
                 AuthCredential(
                     email = "test1@test.com",
-                    password = "test1",
+                    password = null,
                     googleId = "231122",
                     provider = AuthProvider.GOOGLE
                 )
@@ -64,7 +71,7 @@ class PostDaoTest {
                 AuthCredential(
                     email = "test2@test.com",
                     password = "test2",
-                    googleId = "2311",
+                    googleId = null,
                     provider = AuthProvider.REGULAR
                 )
             )
@@ -237,8 +244,8 @@ class PostDaoTest {
     @AfterAll
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(CarModels, Users, Posts, AuthCredentials)
+            SchemaUtils.drop(Posts, Users, CarModels, AuthCredentials)
         }
+        stopKoin()
     }
-
 }

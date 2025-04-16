@@ -15,6 +15,7 @@ import com.carspotter.data.table.Friends
 import com.carspotter.data.table.Users
 import com.carspotter.di.daoModule
 import com.carspotter.di.repositoryModule
+import data.testutils.SchemaSetup
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
@@ -24,7 +25,6 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
-import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.time.LocalDate
@@ -54,15 +54,15 @@ class FriendRepositoryTest: KoinTest {
             modules(daoModule, repositoryModule)
         }
 
-        transaction {
-            SchemaUtils.create(AuthCredentials, Users, Friends)
-        }
+        SchemaSetup.createAuthCredentialsTableWithConstraint(AuthCredentials)
+        SchemaSetup.createUsersTable(Users)
+        SchemaSetup.createFriendsTableWithConstraint(Friends)
 
         runBlocking {
             credentialId1 = authCredentialRepository.createCredentials(
                 AuthCredential(
                     email = "test1@test.com",
-                    password = "test1",
+                    password = null,
                     googleId = "231122",
                     provider = AuthProvider.GOOGLE
                 )
@@ -71,7 +71,7 @@ class FriendRepositoryTest: KoinTest {
                 AuthCredential(
                     email = "test2@test.com",
                     password = "test2",
-                    googleId = "2311",
+                    googleId = null,
                     provider = AuthProvider.REGULAR
                 )
             )

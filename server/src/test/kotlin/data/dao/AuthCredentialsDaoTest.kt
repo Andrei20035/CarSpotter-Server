@@ -1,9 +1,12 @@
 package data.dao
 
 import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
+import com.carspotter.data.dao.auth_credentials.IAuthCredentialDAO
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
-import com.carspotter.data.table.AuthCredentials
+import com.carspotter.data.table.*
+import com.carspotter.di.daoModule
+import data.testutils.SchemaSetup
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
@@ -12,12 +15,16 @@ import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.koin.core.component.inject
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.test.KoinTest
 import kotlin.test.assertEquals
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AuthCredentialsDaoTest {
+class AuthCredentialsDaoTest: KoinTest {
 
-    private lateinit var authCredentialsDao: AuthCredentialDaoImpl
+    private val authCredentialsDao: IAuthCredentialDAO by inject()
 
     @BeforeAll
     fun setupDatabase() {
@@ -28,11 +35,12 @@ class AuthCredentialsDaoTest {
             password = TestDatabase.postgresContainer.password
         )
 
-        transaction {
-            SchemaUtils.create(AuthCredentials)
+        startKoin {
+            modules(daoModule)
         }
 
-        authCredentialsDao = AuthCredentialDaoImpl()
+        SchemaSetup.createAuthCredentialsTableWithConstraint(AuthCredentials)
+
     }
 
     @BeforeEach
@@ -47,7 +55,7 @@ class AuthCredentialsDaoTest {
         authCredentialsDao.createCredentials(
             AuthCredential(
                 email = "test@test.com",
-                password = "test",
+                password = null,
                 googleId = "2311",
                 provider = AuthProvider.GOOGLE
             )
@@ -56,7 +64,7 @@ class AuthCredentialsDaoTest {
         val credentials = authCredentialsDao.getCredentialsForLogin("test@test.com")
         assertNotNull(credentials)
         assertEquals("test@test.com", credentials.email)
-        assertEquals("test", credentials.password)
+        assertEquals(null, credentials.password)
         assertEquals("2311", credentials.googleId)
         assertEquals(AuthProvider.GOOGLE, credentials.provider)
     }
@@ -66,7 +74,7 @@ class AuthCredentialsDaoTest {
         val credentialID = authCredentialsDao.createCredentials(
             AuthCredential(
                 email = "test@test.com",
-                password = "test",
+                password = null,
                 googleId = "2311",
                 provider = AuthProvider.GOOGLE
             )
@@ -85,8 +93,8 @@ class AuthCredentialsDaoTest {
             AuthCredential(
                 email = "test@test.com",
                 password = "test",
-                googleId = "2311",
-                provider = AuthProvider.GOOGLE
+                googleId = null,
+                provider = AuthProvider.REGULAR
             )
         )
 
@@ -102,7 +110,7 @@ class AuthCredentialsDaoTest {
         authCredentialsDao.createCredentials(
             AuthCredential(
                 email = "test1@test.com",
-                password = "test1",
+                password = null,
                 googleId = "2311",
                 provider = AuthProvider.GOOGLE
             )
@@ -111,7 +119,7 @@ class AuthCredentialsDaoTest {
             AuthCredential(
                 email = "test2@test.com",
                 password = "test2",
-                googleId = "231122",
+                googleId = null,
                 provider = AuthProvider.REGULAR
             )
         )
@@ -125,7 +133,7 @@ class AuthCredentialsDaoTest {
         val credentialID = authCredentialsDao.createCredentials(
             AuthCredential(
                 email = "test@test.com",
-                password = "test",
+                password = null,
                 googleId = "2311",
                 provider = AuthProvider.GOOGLE
             )
@@ -138,6 +146,25 @@ class AuthCredentialsDaoTest {
         assertEquals(1, rowsDeleted)
     }
 
+    @Test
+    fun `insert a credential with REGULAR provider and googleId not null`() = runBlocking {
+        try {
+            authCredentialsDao.createCredentials(
+                AuthCredential(
+                    email = "test@test.com",
+                    password = "test",
+                    googleId = "1234",
+                    provider = AuthProvider.REGULAR
+                )
+            )
+        } catch(e: Exception) {
+            println("Insert failed as expected: ${e.message}")
+        }
+
+        val allCredentials = authCredentialsDao.getAllCredentials()
+        assertEquals(0, allCredentials.size)
+    }
+
 
 
     @AfterAll
@@ -145,5 +172,6 @@ class AuthCredentialsDaoTest {
         transaction {
             SchemaUtils.drop(AuthCredentials)
         }
+        stopKoin()
     }
 }

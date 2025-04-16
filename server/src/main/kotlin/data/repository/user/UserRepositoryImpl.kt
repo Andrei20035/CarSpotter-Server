@@ -1,10 +1,10 @@
 package com.carspotter.data.repository.user
 
-import com.carspotter.data.dao.user.UserDaoImpl
+import com.carspotter.data.dao.user.IUserDAO
 import com.carspotter.data.model.User
 
 class UserRepositoryImpl(
-    private val userDao: UserDaoImpl
+    private val userDao: IUserDAO
 ) : IUserRepository {
     override suspend fun createUser(user: User): Int {
         return userDao.createUser(user)

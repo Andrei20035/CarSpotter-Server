@@ -1,7 +1,10 @@
 package data.dao
 
 import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
+import com.carspotter.data.dao.auth_credentials.IAuthCredentialDAO
 import com.carspotter.data.dao.friend.FriendDaoImpl
+import com.carspotter.data.dao.friend.IFriendDAO
+import com.carspotter.data.dao.user.IUserDAO
 import com.carspotter.data.dao.user.UserDaoImpl
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
@@ -9,6 +12,8 @@ import com.carspotter.data.model.User
 import com.carspotter.data.table.AuthCredentials
 import com.carspotter.data.table.Friends
 import com.carspotter.data.table.Users
+import com.carspotter.di.daoModule
+import data.testutils.SchemaSetup
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
@@ -16,14 +21,18 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.test.KoinTest
+import org.koin.test.inject
 import java.time.LocalDate
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class FriendDaoTest {
+class FriendDaoTest: KoinTest {
 
-    private lateinit var userDao: UserDaoImpl
-    private lateinit var friendDao: FriendDaoImpl
-    private lateinit var authCredentialDao: AuthCredentialDaoImpl
+    private val userDao: IUserDAO by inject()
+    private val friendDao: IFriendDAO by inject()
+    private val authCredentialDao: IAuthCredentialDAO by inject()
 
 
     private var credentialId1: Int = 0
@@ -40,19 +49,19 @@ class FriendDaoTest {
             password = TestDatabase.postgresContainer.password
         )
 
-        transaction {
-            SchemaUtils.create(AuthCredentials, Users, Friends)
+        startKoin {
+            modules(daoModule)
         }
 
-        userDao = UserDaoImpl()
-        friendDao = FriendDaoImpl()
-        authCredentialDao = AuthCredentialDaoImpl()
+        SchemaSetup.createAuthCredentialsTableWithConstraint(AuthCredentials)
+        SchemaSetup.createUsersTable(Users)
+        SchemaSetup.createFriendsTableWithConstraint(Friends)
 
         runBlocking {
             credentialId1 = authCredentialDao.createCredentials(
                 AuthCredential(
                     email = "test1@test.com",
-                    password = "test1",
+                    password = null,
                     googleId = "231122",
                     provider = AuthProvider.GOOGLE
                 )
@@ -61,7 +70,7 @@ class FriendDaoTest {
                 AuthCredential(
                     email = "test2@test.com",
                     password = "test2",
-                    googleId = "2311",
+                    googleId = null,
                     provider = AuthProvider.REGULAR
                 )
             )
@@ -136,7 +145,8 @@ class FriendDaoTest {
     @AfterAll
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(Users, Friends, AuthCredentials)
+            SchemaUtils.drop(Friends, Users, AuthCredentials)
         }
+        stopKoin()
     }
 }

@@ -2,7 +2,7 @@ package com.carspotter.data.dao.user
 
 import com.carspotter.data.model.User
 
-interface UserDAO {
+interface IUserDAO {
     suspend fun createUser(user: User): Int
     suspend fun getUserByID(userId: Int): User?
     suspend fun getUserByUsername(username: String): User?

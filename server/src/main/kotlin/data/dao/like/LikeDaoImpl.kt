@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class LikeDaoImpl : LikeDAO {
+class LikeDaoImpl : ILikeDAO {
     override suspend fun likePost(userId: Int, postId: Int) {
         return transaction {
             addLogger(StdOutSqlLogger)
