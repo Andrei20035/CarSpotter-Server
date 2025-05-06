@@ -1,11 +1,12 @@
 package com.carspotter.data.service.post
 
 import com.carspotter.data.model.Post
+import com.carspotter.data.repository.post.IPostRepository
 import com.carspotter.data.repository.post.PostRepositoryImpl
 import java.time.ZoneId
 
 class PostServiceImpl(
-    private val postRepository: PostRepositoryImpl
+    private val postRepository: IPostRepository
 ): IPostService {
     override suspend fun createPost(post: Post): Int {
         return postRepository.createPost(post)

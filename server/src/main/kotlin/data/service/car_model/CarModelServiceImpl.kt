@@ -2,9 +2,10 @@ package com.carspotter.data.service.car_model
 
 import com.carspotter.data.model.CarModel
 import com.carspotter.data.repository.car_model.CarModelRepositoryImpl
+import com.carspotter.data.repository.car_model.ICarModelRepository
 
 class CarModelServiceImpl(
-    private val carModelRepository: CarModelRepositoryImpl
+    private val carModelRepository: ICarModelRepository
 ): ICarModelService {
     override suspend fun createCarModel(carModel: CarModel): Int {
         return carModelRepository.createCarModel(carModel)

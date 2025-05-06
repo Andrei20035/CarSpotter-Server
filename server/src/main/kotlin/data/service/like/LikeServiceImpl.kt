@@ -1,10 +1,11 @@
 package com.carspotter.data.service.like
 
 import com.carspotter.data.model.User
+import com.carspotter.data.repository.like.ILikeRepository
 import com.carspotter.data.repository.like.LikeRepositoryImpl
 
 class LikeServiceImpl(
-    private val likeRepository: LikeRepositoryImpl
+    private val likeRepository: ILikeRepository
 ): ILikeService {
     override suspend fun likePost(userId: Int, postId: Int) {
         likeRepository.likePost(userId, postId)

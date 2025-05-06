@@ -1,10 +1,11 @@
 package com.carspotter.data.service.user
 
 import com.carspotter.data.model.User
+import com.carspotter.data.repository.user.IUserRepository
 import com.carspotter.data.repository.user.UserRepositoryImpl
 
 class UserServiceImpl(
-    private val userRepository: UserRepositoryImpl
+    private val userRepository: IUserRepository
 ): IUserService {
     override suspend fun createUser(user: User): Int {
         return userRepository.createUser(user)

@@ -3,9 +3,10 @@ package com.carspotter.data.service.friend
 import com.carspotter.data.model.Friend
 import com.carspotter.data.model.User
 import com.carspotter.data.repository.friend.FriendRepositoryImpl
+import com.carspotter.data.repository.friend.IFriendRepository
 
 class FriendServiceImpl(
-    private val friendRepository: FriendRepositoryImpl
+    private val friendRepository: IFriendRepository
 ): IFriendService {
     override suspend fun addFriend(userId: Int, friendId: Int): Int {
         return friendRepository.addFriend(userId, friendId)

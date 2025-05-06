@@ -5,10 +5,10 @@ import com.carspotter.data.dto.AuthCredentialDTO
 import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
-import com.carspotter.data.repository.auth_credentials.AuthCredentialRepositoryImpl
+import com.carspotter.data.repository.auth_credential.IAuthCredentialRepository
 
 class AuthCredentialServiceImpl(
-    private val authCredentialRepository: AuthCredentialRepositoryImpl
+    private val authCredentialRepository: IAuthCredentialRepository
 ): IAuthCredentialService {
     override suspend fun createCredentials(authCredential: AuthCredential): Int {
         val hashedPassword = when (authCredential.provider) {
