@@ -1,15 +1,10 @@
 package data.dao
 
-import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
 import com.carspotter.data.dao.auth_credentials.IAuthCredentialDAO
-import com.carspotter.data.dao.car_model.CarModelDaoImpl
 import com.carspotter.data.dao.car_model.ICarModelDAO
 import com.carspotter.data.dao.like.ILikeDAO
-import com.carspotter.data.dao.like.LikeDaoImpl
 import com.carspotter.data.dao.post.IPostDAO
-import com.carspotter.data.dao.post.PostDaoImpl
 import com.carspotter.data.dao.user.IUserDAO
-import com.carspotter.data.dao.user.UserDaoImpl
 import com.carspotter.data.model.*
 import com.carspotter.data.table.*
 import com.carspotter.di.daoModule
@@ -20,12 +15,9 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest

@@ -1,20 +1,21 @@
 package data.dao
 
-import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
 import com.carspotter.data.dao.auth_credentials.IAuthCredentialDAO
-import com.carspotter.data.dao.car_model.CarModelDaoImpl
 import com.carspotter.data.dao.car_model.ICarModelDAO
 import com.carspotter.data.dao.post.IPostDAO
-import com.carspotter.data.dao.post.PostDaoImpl
 import com.carspotter.data.dao.user.IUserDAO
-import com.carspotter.data.dao.user.UserDaoImpl
 import com.carspotter.data.model.*
-import com.carspotter.data.table.*
+import com.carspotter.data.table.AuthCredentials
+import com.carspotter.data.table.CarModels
+import com.carspotter.data.table.Posts
+import com.carspotter.data.table.Users
 import com.carspotter.di.daoModule
 import data.testutils.SchemaSetup
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
 import org.koin.core.context.startKoin

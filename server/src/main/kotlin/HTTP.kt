@@ -1,38 +1,40 @@
 package com.carspotter
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
-import io.ktor.client.*
-import io.ktor.client.engine.apache.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.compression.*
-import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.server.sessions.*
-import io.ktor.server.websocket.*
-import io.ktor.websocket.*
-import java.time.Duration
-import kotlin.time.Duration.Companion.seconds
-import org.jetbrains.exposed.sql.*
-import org.slf4j.event.*
+import io.ktor.server.plugins.defaultheaders.*
 
 fun Application.configureHTTP() {
-    install(Compression)
+    install(Compression) {
+        gzip {
+            priority = 1.0
+        }
+        deflate {
+            priority = 10.0
+            minimumSize(1024) // Minimum size in bytes to compress
+        }
+    }
+
     install(CORS) {
         allowMethod(HttpMethod.Options)
+        allowMethod(HttpMethod.Get)
+        allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Put)
         allowMethod(HttpMethod.Delete)
         allowMethod(HttpMethod.Patch)
+
         allowHeader(HttpHeaders.Authorization)
-        allowHeader("MyCustomHeader")
-        anyHost() // @TODO: Don't do this in production if possible. Try to limit it.
+        allowHeader(HttpHeaders.ContentType)
+        // For production, specify allowed origins instead of anyHost()
+        // allowHost("your-mobile-app-domain.com", schemes = listOf("https"))
+        anyHost() // Replace in production
+        allowCredentials = true
+        maxAgeInSeconds = 3600
+    }
+
+    install(DefaultHeaders) {
+        header("X-Engine", "Ktor") // will send this header with each response
     }
 }

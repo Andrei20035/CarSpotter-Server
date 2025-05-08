@@ -49,11 +49,13 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("org.apache.commons:commons-compress:1.27.1")
     implementation("at.favre.lib:bcrypt:0.10.2")
+    implementation("io.ktor:ktor-server-default-headers:2.1.20")
     // Koin BOM to manage versions centrally
     implementation(platform("io.insert-koin:koin-bom:4.0.4"))
     implementation("io.insert-koin:koin-core")
     implementation("io.insert-koin:koin-ktor")
     implementation("io.insert-koin:koin-logger-slf4j")
+    implementation("io.ktor:ktor-server-auto-head-response:3.1.1")
 
 //    testImplementation("io.insert-koin:koin-test")
     testImplementation("io.insert-koin:koin-test-junit5")

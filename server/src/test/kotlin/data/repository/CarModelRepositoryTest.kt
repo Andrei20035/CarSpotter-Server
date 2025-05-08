@@ -1,8 +1,6 @@
 package data.repository
 
-import com.carspotter.data.dao.car_model.CarModelDaoImpl
 import com.carspotter.data.model.CarModel
-import com.carspotter.data.repository.car_model.CarModelRepositoryImpl
 import com.carspotter.data.repository.car_model.ICarModelRepository
 import com.carspotter.data.table.CarModels
 import com.carspotter.di.daoModule

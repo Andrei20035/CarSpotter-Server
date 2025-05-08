@@ -1,13 +1,9 @@
 package data.dao
 
-import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
 import com.carspotter.data.dao.auth_credentials.IAuthCredentialDAO
-import com.carspotter.data.dao.friend.FriendDaoImpl
 import com.carspotter.data.dao.friend.IFriendDAO
-import com.carspotter.data.dao.friend_request.FriendRequestDaoImpl
 import com.carspotter.data.dao.friend_request.IFriendRequestDAO
 import com.carspotter.data.dao.user.IUserDAO
-import com.carspotter.data.dao.user.UserDaoImpl
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.model.User

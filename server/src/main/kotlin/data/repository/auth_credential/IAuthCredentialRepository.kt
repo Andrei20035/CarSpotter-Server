@@ -7,7 +7,7 @@ interface IAuthCredentialRepository {
     suspend fun createCredentials(authCredential: AuthCredential): Int
     suspend fun getCredentialsForLogin(email: String): AuthCredential?
     suspend fun getCredentialsById(credentialId: Int): AuthCredentialDTO?
-    suspend fun updatePassword(credentialId: Int, newHashedPassword: String): Int
+    suspend fun updatePassword(credentialId: Int, newPassword: String): Int
     suspend fun deleteCredentials(credentialId: Int): Int
     suspend fun getAllCredentials(): List<AuthCredentialDTO>
 }

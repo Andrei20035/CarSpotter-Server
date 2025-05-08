@@ -20,8 +20,8 @@ class AuthCredentialRepositoryImpl(
         return authCredentialDao.getCredentialsById(credentialId)
     }
 
-    override suspend fun updatePassword(credentialId: Int, newHashedPassword: String): Int {
-        return authCredentialDao.updatePassword(credentialId, newHashedPassword)
+    override suspend fun updatePassword(credentialId: Int, newPassword: String): Int {
+        return authCredentialDao.updatePassword(credentialId, newPassword)
     }
 
     override suspend fun deleteCredentials(credentialId: Int): Int {

@@ -49,7 +49,8 @@ class AuthCredentialServiceImpl(
         return authCredentialRepository.getCredentialsById(credentialId)
     }
 
-    override suspend fun updatePassword(credentialId: Int, newHashedPassword: String): Int {
+    override suspend fun updatePassword(credentialId: Int, newPassword: String): Int {
+        val newHashedPassword = BCrypt.withDefaults().hashToString(12, newPassword.toCharArray())
         return authCredentialRepository.updatePassword(credentialId, newHashedPassword)
     }
 

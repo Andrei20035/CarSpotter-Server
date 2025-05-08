@@ -1,20 +1,12 @@
 package data.service
 
-import com.carspotter.data.model.AuthCredential
-import com.carspotter.data.model.AuthProvider
-import com.carspotter.data.model.CarModel
-import com.carspotter.data.model.Post
-import com.carspotter.data.model.User
+import com.carspotter.data.model.*
 import com.carspotter.data.service.auth_credential.IAuthCredentialService
 import com.carspotter.data.service.car_model.ICarModelService
 import com.carspotter.data.service.comment.ICommentService
 import com.carspotter.data.service.post.IPostService
 import com.carspotter.data.service.user.IUserService
-import com.carspotter.data.table.AuthCredentials
-import com.carspotter.data.table.CarModels
-import com.carspotter.data.table.Comments
-import com.carspotter.data.table.Posts
-import com.carspotter.data.table.Users
+import com.carspotter.data.table.*
 import com.carspotter.di.daoModule
 import com.carspotter.di.repositoryModule
 import com.carspotter.di.serviceModule
@@ -25,20 +17,14 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertNotNull
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.time.LocalDate
-import kotlin.getValue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CommentServiceTest: KoinTest {

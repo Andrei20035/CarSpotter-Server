@@ -1,10 +1,9 @@
 package data.dao
 
-import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
 import com.carspotter.data.dao.auth_credentials.IAuthCredentialDAO
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
-import com.carspotter.data.table.*
+import com.carspotter.data.table.AuthCredentials
 import com.carspotter.di.daoModule
 import data.testutils.SchemaSetup
 import data.testutils.TestDatabase

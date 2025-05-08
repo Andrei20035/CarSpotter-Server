@@ -1,15 +1,10 @@
 package data.dao
 
-import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
 import com.carspotter.data.dao.auth_credentials.IAuthCredentialDAO
-import com.carspotter.data.dao.car_model.CarModelDaoImpl
 import com.carspotter.data.dao.car_model.ICarModelDAO
-import com.carspotter.data.dao.comment.CommentDaoImpl
 import com.carspotter.data.dao.comment.ICommentDAO
 import com.carspotter.data.dao.post.IPostDAO
-import com.carspotter.data.dao.post.PostDaoImpl
 import com.carspotter.data.dao.user.IUserDAO
-import com.carspotter.data.dao.user.UserDaoImpl
 import com.carspotter.data.model.*
 import com.carspotter.data.table.*
 import com.carspotter.di.daoModule
@@ -28,7 +23,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
-import org.koin.java.KoinJavaComponent
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.time.LocalDate

@@ -1,21 +1,11 @@
 package data.repo
 
-import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
-import com.carspotter.data.dao.car_model.CarModelDaoImpl
-import com.carspotter.data.dao.comment.CommentDaoImpl
-import com.carspotter.data.dao.post.PostDaoImpl
-import com.carspotter.data.dao.user.UserDaoImpl
 import com.carspotter.data.model.*
 import com.carspotter.data.repository.auth_credential.IAuthCredentialRepository
-import com.carspotter.data.repository.auth_credentials.AuthCredentialRepositoryImpl
-import com.carspotter.data.repository.car_model.CarModelRepositoryImpl
 import com.carspotter.data.repository.car_model.ICarModelRepository
-import com.carspotter.data.repository.comment.CommentRepositoryImpl
 import com.carspotter.data.repository.comment.ICommentRepository
 import com.carspotter.data.repository.post.IPostRepository
-import com.carspotter.data.repository.post.PostRepositoryImpl
 import com.carspotter.data.repository.user.IUserRepository
-import com.carspotter.data.repository.user.UserRepositoryImpl
 import com.carspotter.data.table.*
 import com.carspotter.di.daoModule
 import com.carspotter.di.repositoryModule
@@ -29,12 +19,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.koin.core.component.inject
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.inject
-
 import java.time.LocalDate
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

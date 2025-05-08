@@ -1,4 +1,3 @@
-import com.carspotter.data.dao.car_model.CarModelDaoImpl
 import com.carspotter.data.dao.car_model.ICarModelDAO
 import com.carspotter.data.model.CarModel
 import com.carspotter.data.table.CarModels

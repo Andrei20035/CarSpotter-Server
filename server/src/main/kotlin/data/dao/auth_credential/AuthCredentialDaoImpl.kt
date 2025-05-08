@@ -59,12 +59,12 @@ class AuthCredentialDaoImpl : IAuthCredentialDAO {
         }.singleOrNull()
     }
 
-    override suspend fun updatePassword(credentialId: Int, newHashedPassword: String): Int {
+    override suspend fun updatePassword(credentialId: Int, newPassword: String): Int {
         return transaction {
             addLogger(StdOutSqlLogger)
             AuthCredentials
                 .update ({AuthCredentials.id eq credentialId}) {
-                    it[password] = newHashedPassword
+                    it[password] = newPassword
             }
         }
     }

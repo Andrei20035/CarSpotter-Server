@@ -1,8 +1,8 @@
 package data.service
 
+import at.favre.lib.crypto.bcrypt.BCrypt
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
-import com.carspotter.data.service.auth_credential.AuthCredentialServiceImpl
 import com.carspotter.data.service.auth_credential.IAuthCredentialService
 import com.carspotter.data.table.AuthCredentials
 import com.carspotter.di.daoModule
@@ -15,14 +15,9 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertNotNull
 import org.koin.core.context.GlobalContext.startKoin
 import org.koin.core.context.GlobalContext.stopKoin
 import org.koin.test.KoinTest
@@ -143,7 +138,11 @@ class AuthCredentialServiceTest: KoinTest {
 
         val result = authCredentialService.getCredentialsForLogin("update@test.com")
         assertNotNull(result)
-        assertEquals("newPass", result.password)
+        val isPasswordValid = BCrypt.verifyer().verify(
+            "newPass".toCharArray(),
+            result.password?.toCharArray()
+        ).verified
+        assertTrue(isPasswordValid)
     }
 
     @Test

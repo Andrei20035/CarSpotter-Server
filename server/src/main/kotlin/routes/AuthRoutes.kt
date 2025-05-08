@@ -1,0 +1,132 @@
+package com.carspotter.routes
+
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+import com.carspotter.data.dto.AuthCredentialDTO
+import com.carspotter.data.dto.GoogleLoginRequest
+import com.carspotter.data.dto.LoginRequest
+import com.carspotter.data.dto.RegisterRequest
+import com.carspotter.data.dto.UpdatePasswordRequest
+import com.carspotter.data.model.AuthCredential
+import com.carspotter.data.service.auth_credential.IAuthCredentialService
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
+import org.koin.ktor.ext.inject
+import java.util.Date
+
+fun Route.authRoutes() {
+    val authCredentialService: IAuthCredentialService by inject()
+
+    route("/auth") {
+        post("/regular-login") {
+            val request = call.receive<LoginRequest>()
+
+            val result = authCredentialService.regularLogin(request.email, request.password)
+            if (result != null) {
+                call.respond(generateJwtToken(result))
+            } else {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid credentials"))
+            }
+        }
+
+        post("/google-login") {
+            val request = call.receive<GoogleLoginRequest>()
+
+            val result = authCredentialService.googleLogin(request.email, request.googleId)
+            if (result != null) {
+                call.respond(generateJwtToken(result))
+            } else {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid credentials"))
+            }
+        }
+
+        post("/register") {
+            val request = call.receive<RegisterRequest>()
+
+            val authCredential = AuthCredential(
+                email = request.email,
+                password = request.password,
+                googleId = request.googleId,
+                provider = request.provider,
+            )
+
+            val credentialId = authCredentialService.createCredentials(authCredential)
+
+            call.respond(HttpStatusCode.Created, mapOf("credentialId" to credentialId))
+        }
+
+        post("/update-password") {
+            val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
+
+            if (token != null) {
+                val secret = System.getenv("JWT_SECRET") ?: throw IllegalStateException("JWT_SECRET environment variable is not set")
+
+                try {
+                    val decodedJWT = JWT.require(Algorithm.HMAC256(secret))
+                        .build()
+                        .verify(token)
+
+                    val credentialId = decodedJWT.getClaim("credentialId").asInt()
+
+                    val request = call.receive<UpdatePasswordRequest>()
+                    val updatedRows = authCredentialService.updatePassword(credentialId, request.newPassword)
+
+                    if (updatedRows > 0) {
+                        call.respond(HttpStatusCode.OK, mapOf("message" to "Password updated successfully"))
+                    } else {
+                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to update password"))
+                    }
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid token"))
+                }
+            } else {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing token"))
+            }
+        }
+
+        delete("/delete-account") {
+            val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
+
+            if (token != null) {
+                val secret = System.getenv("JWT_SECRET") ?: throw IllegalStateException("JWT_SECRET environment variable is not set")
+
+                try {
+                    val decodedJWT = JWT.require(Algorithm.HMAC256(secret))
+                        .build()
+                        .verify(token)
+
+                    val credentialId = decodedJWT.getClaim("credentialId").asInt()
+
+                    val deletedRows = authCredentialService.deleteCredentials(credentialId)
+
+                    if (deletedRows > 0) {
+                        call.respond(HttpStatusCode.OK, mapOf("message" to "Account deleted successfully"))
+                    } else {
+                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to delete account"))
+                    }
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid token"))
+                }
+            } else {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing token"))
+            }
+        }
+    }
+}
+
+private fun generateJwtToken(credential: AuthCredentialDTO): Map<String, String> {
+    val secret = System.getenv("JWT_SECRET") ?: throw IllegalStateException("JWT_SECRET environment variable is not set")
+
+    val token = JWT.create()
+        .withClaim("userId", credential.id)
+        .withClaim("email", credential.email)
+        .withExpiresAt(Date(System.currentTimeMillis() + 86400000)) // 24 hours
+        .sign(Algorithm.HMAC256(secret))
+
+    return mapOf("token" to token)
+}

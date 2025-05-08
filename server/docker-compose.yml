@@ -3,12 +3,29 @@ services:
     image: postgres:latest
     container_name: test_postgres
     environment:
-      POSTGRES_USER: test_user
-      POSTGRES_PASSWORD: test_password
-      POSTGRES_DB: test_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: test_app
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    volumes:
+      - app_data:/app/data
+
 volumes:
   postgres_data:
+  app_data:

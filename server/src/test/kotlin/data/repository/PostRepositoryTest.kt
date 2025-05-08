@@ -1,9 +1,5 @@
 package data.repository
 
-import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
-import com.carspotter.data.dao.car_model.CarModelDaoImpl
-import com.carspotter.data.dao.post.PostDaoImpl
-import com.carspotter.data.dao.user.UserDaoImpl
 import com.carspotter.data.model.*
 import com.carspotter.data.repository.auth_credential.IAuthCredentialRepository
 import com.carspotter.data.repository.car_model.ICarModelRepository
@@ -18,7 +14,9 @@ import com.carspotter.di.repositoryModule
 import data.testutils.SchemaSetup
 import data.testutils.TestDatabase
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
 import org.koin.core.context.startKoin

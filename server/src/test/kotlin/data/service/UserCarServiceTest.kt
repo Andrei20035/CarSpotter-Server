@@ -1,10 +1,6 @@
 package data.service
 
-import com.carspotter.data.model.AuthCredential
-import com.carspotter.data.model.AuthProvider
-import com.carspotter.data.model.CarModel
-import com.carspotter.data.model.User
-import com.carspotter.data.model.UserCar
+import com.carspotter.data.model.*
 import com.carspotter.data.service.auth_credential.IAuthCredentialService
 import com.carspotter.data.service.car_model.ICarModelService
 import com.carspotter.data.service.user.IUserService
@@ -36,7 +32,6 @@ import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.time.LocalDate
-import kotlin.getValue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserCarServiceTest: KoinTest {

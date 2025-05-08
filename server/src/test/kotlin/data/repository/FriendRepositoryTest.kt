@@ -1,13 +1,9 @@
 package data.repository
 
-import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
-import com.carspotter.data.dao.friend.FriendDaoImpl
-import com.carspotter.data.dao.user.UserDaoImpl
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.model.User
 import com.carspotter.data.repository.auth_credential.IAuthCredentialRepository
-import com.carspotter.data.repository.friend.FriendRepositoryImpl
 import com.carspotter.data.repository.friend.IFriendRepository
 import com.carspotter.data.repository.user.IUserRepository
 import com.carspotter.data.table.AuthCredentials
