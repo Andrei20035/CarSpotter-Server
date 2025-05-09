@@ -4,12 +4,15 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.carspotter.data.dto.AuthCredentialDTO
 import com.carspotter.data.dto.GoogleLoginRequest
-import com.carspotter.data.dto.LoginRequest
 import com.carspotter.data.dto.RegisterRequest
+import com.carspotter.data.dto.RegularLoginRequest
 import com.carspotter.data.dto.UpdatePasswordRequest
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.service.auth_credential.IAuthCredentialService
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.principal
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -24,7 +27,7 @@ fun Route.authRoutes() {
 
     route("/auth") {
         post("/regular-login") {
-            val request = call.receive<LoginRequest>()
+            val request = call.receive<RegularLoginRequest>()
 
             val result = authCredentialService.regularLogin(request.email, request.password)
             if (result != null) {
@@ -89,33 +92,21 @@ fun Route.authRoutes() {
             }
         }
 
-        delete("/delete-account") {
-            val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
+        authenticate("jwt") {
+            delete("/auth/delete-account") {
+                val credentialId = call.principal<JWTPrincipal>()?.payload?.getClaim("credentialId")?.asInt()
+                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid token"))
 
-            if (token != null) {
-                val secret = System.getenv("JWT_SECRET") ?: throw IllegalStateException("JWT_SECRET environment variable is not set")
+                val deletedRows = authCredentialService.deleteCredentials(credentialId)
 
-                try {
-                    val decodedJWT = JWT.require(Algorithm.HMAC256(secret))
-                        .build()
-                        .verify(token)
-
-                    val credentialId = decodedJWT.getClaim("credentialId").asInt()
-
-                    val deletedRows = authCredentialService.deleteCredentials(credentialId)
-
-                    if (deletedRows > 0) {
-                        call.respond(HttpStatusCode.OK, mapOf("message" to "Account deleted successfully"))
-                    } else {
-                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to delete account"))
-                    }
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid token"))
+                if (deletedRows > 0) {
+                    call.respond(HttpStatusCode.OK, mapOf("message" to "Account deleted successfully"))
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to delete account"))
                 }
-            } else {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing token"))
             }
         }
+
     }
 }
 

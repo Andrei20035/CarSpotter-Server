@@ -40,6 +40,7 @@ class CarModelDaoImpl : ICarModelDAO {
             addLogger(StdOutSqlLogger)
             CarModels
                 .selectAll()
+                .orderBy(CarModels.brand to SortOrder.ASC, CarModels.model to SortOrder.ASC, CarModels.year to SortOrder.DESC)
                 .mapNotNull { row ->
                     CarModel(
                         id = row[CarModels.id],

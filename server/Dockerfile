@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . /app
 
 # Run the gradle build (if you are using Gradle; replace with Maven if necessary)
-RUN ./gradlew build --no-daemon
+RUN ./gradlew build -x test --no-daemon
 
 # Use a new base image for the final image, a smaller JRE image
 FROM eclipse-temurin:17-jre

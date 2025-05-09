@@ -1,6 +1,6 @@
 package com.carspotter.data.dto
 
-data class LoginRequest(
+data class RegularLoginRequest(
     val email: String,
     val password: String
 )
