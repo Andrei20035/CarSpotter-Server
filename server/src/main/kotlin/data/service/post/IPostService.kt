@@ -10,4 +10,5 @@ interface IPostService {
     suspend fun getCurrentDayPostsForUser(userId: Int, userTimeZone: ZoneId): List<Post>
     suspend fun editPost(postId: Int, postText: String): Int
     suspend fun deletePost(postId: Int): Int
+    suspend fun getUserIdByPost(postId: Int): Int
 }

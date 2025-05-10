@@ -2,7 +2,6 @@ package com.carspotter.data.service.post
 
 import com.carspotter.data.model.Post
 import com.carspotter.data.repository.post.IPostRepository
-import com.carspotter.data.repository.post.PostRepositoryImpl
 import java.time.ZoneId
 
 class PostServiceImpl(
@@ -30,5 +29,9 @@ class PostServiceImpl(
 
     override suspend fun deletePost(postId: Int): Int {
         return postRepository.deletePost(postId)
+    }
+
+    override suspend fun getUserIdByPost(postId: Int): Int {
+        return postRepository.getUserIdByPost(postId)
     }
 }

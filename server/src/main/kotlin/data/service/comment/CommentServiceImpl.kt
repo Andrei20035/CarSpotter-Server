@@ -11,11 +11,15 @@ class CommentServiceImpl(
         return commentRepository.addComment(userId, postId, commentText)
     }
 
-    override suspend fun removeComment(commentId: Int): Int {
-        return commentRepository.removeComment(commentId)
+    override suspend fun deleteComment(commentId: Int): Int {
+        return commentRepository.deleteComment(commentId)
     }
 
     override suspend fun getCommentsForPost(postId: Int): List<Comment> {
         return commentRepository.getCommentsForPost(postId)
+    }
+
+    override suspend fun getCommentById(commentId: Int): Comment? {
+        return commentRepository.getCommentById(commentId)
     }
 }

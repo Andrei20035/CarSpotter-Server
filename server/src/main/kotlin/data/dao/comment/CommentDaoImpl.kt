@@ -20,7 +20,7 @@ class CommentDaoImpl : ICommentDAO {
         }
     }
 
-    override suspend fun removeComment(commentId: Int): Int {
+    override suspend fun deleteComment(commentId: Int): Int {
         return transaction {
             Comments
                 .deleteWhere { id eq commentId }
@@ -42,6 +42,22 @@ class CommentDaoImpl : ICommentDAO {
                         updatedAt = row[Comments.updatedAt],
                     )
                 }
+        }
+    }
+
+    override suspend fun getCommentById(commentId: Int): Comment? {
+        return transaction {
+            Comments
+                .selectAll()
+                .where { Comments.id eq commentId }
+                .mapNotNull { row ->
+                    Comment(
+                        id = row[Comments.id],
+                        userId = row[Comments.userId],
+                        postId = row[Comments.postId],
+                        commentText = row[Comments.commentText],
+                    )
+                }.singleOrNull()
         }
     }
 

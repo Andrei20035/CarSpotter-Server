@@ -118,4 +118,17 @@ class PostDaoImpl : IPostDAO {
         }
     }
 
+    override suspend fun getUserIdByPost(postId: Int): Int {
+        return transaction {
+            Posts
+                .selectAll()
+                .where { Posts.id eq postId }
+                .mapNotNull { row ->
+                    row[Posts.userId]
+                }
+                .singleOrNull() ?: throw IllegalArgumentException("Post with ID $postId not found")
+
+        }
+    }
+
 }

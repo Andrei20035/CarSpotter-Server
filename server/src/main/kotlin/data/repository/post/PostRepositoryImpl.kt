@@ -30,4 +30,8 @@ class PostRepositoryImpl(
     override suspend fun deletePost(postId: Int): Int {
         return postDao.deletePost(postId)
     }
+
+    override suspend fun getUserIdByPost(postId: Int): Int {
+        return postDao.getUserIdByPost(postId)
+    }
 }

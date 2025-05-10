@@ -139,7 +139,7 @@ class CommentDaoTest: KoinTest {
     fun `remove comment`() = runBlocking {
         val commentId = commentDao.addComment(userId1, postId1, "Great post!")
 
-        val rowsDeleted = commentDao.removeComment(commentId)
+        val rowsDeleted = commentDao.deleteComment(commentId)
         val comments = commentDao.getCommentsForPost(postId1)
 
         assertEquals(1, rowsDeleted)
@@ -157,6 +157,26 @@ class CommentDaoTest: KoinTest {
         assertEquals(2, comments.size)
         assertTrue(comments.any { it.commentText == "Awesome car!" })
         assertTrue(comments.any { it.commentText == "Wow, great spot!" })
+    }
+
+    @Test
+    fun `get comment by Id`() = runBlocking {
+        val commId1 = commentDao.addComment(userId1, postId1, "Awesome car!")
+        val commId2 = commentDao.addComment(userId2, postId1, "Wow, great spot!")
+
+        val comments = commentDao.getCommentsForPost(postId1)
+
+        assertEquals(2, comments.size)
+
+        val comm1 = commentDao.getCommentById(commId1)
+        val comm2 = commentDao.getCommentById(commId2)
+
+        assertNotNull(comm1)
+        assertNotNull(comm2)
+
+        assertEquals("Awesome car!", comm1!!.commentText)
+        assertEquals("Wow, great spot!", comm2!!.commentText)
+
     }
 
     @AfterAll

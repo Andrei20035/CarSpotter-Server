@@ -144,7 +144,7 @@ class CommentServiceTest: KoinTest {
             postId = postId1,
             commentText = "Clean shot!"
         )
-        val rowsDeleted = commentService.removeComment(commentId)
+        val rowsDeleted = commentService.deleteComment(commentId)
         val comments = commentService.getCommentsForPost(postId1)
 
         assertEquals(1, rowsDeleted)
@@ -169,6 +169,26 @@ class CommentServiceTest: KoinTest {
         assertEquals(2, comments.size)
         assertTrue(comments.any { it.commentText == "Fast and furious!" })
         assertTrue(comments.any { it.commentText == "Classic Tony." })
+    }
+
+    @Test
+    fun `get comment by Id`() = runBlocking {
+        val commId1 = commentService.addComment(userId1, postId1, "Awesome car!")
+        val commId2 = commentService.addComment(userId2, postId1, "Wow, great spot!")
+
+        val comments = commentService.getCommentsForPost(postId1)
+
+        assertEquals(2, comments.size)
+
+        val comm1 = commentService.getCommentById(commId1)
+        val comm2 = commentService.getCommentById(commId2)
+
+        Assertions.assertNotNull(comm1)
+        Assertions.assertNotNull(comm2)
+
+        assertEquals("Awesome car!", comm1!!.commentText)
+        assertEquals("Wow, great spot!", comm2!!.commentText)
+
     }
 
     @AfterAll
