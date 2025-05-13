@@ -3,6 +3,11 @@ package com.carspotter
 import com.carspotter.routes.authRoutes
 import com.carspotter.routes.carModelRoutes
 import com.carspotter.routes.commentRoutes
+import com.carspotter.routes.friendRequestRoutes
+import com.carspotter.routes.friendRoutes
+import com.carspotter.routes.likeRoutes
+import com.carspotter.routes.postRoutes
+import com.carspotter.routes.userCarRoutes
 import com.carspotter.routes.userRoutes
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -75,9 +80,15 @@ fun Application.configureRouting() {
         // API routes
         route("/api") {
             authRoutes()
-            userRoutes()
             carModelRoutes()
             commentRoutes()
+            friendRequestRoutes()
+            friendRoutes()
+            likeRoutes()
+            postRoutes()
+            userCarRoutes()
+            userRoutes()
+
         }
     }
 }

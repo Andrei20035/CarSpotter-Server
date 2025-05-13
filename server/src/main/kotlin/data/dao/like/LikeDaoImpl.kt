@@ -8,14 +8,14 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class LikeDaoImpl : ILikeDAO {
-    override suspend fun likePost(userId: Int, postId: Int) {
+    override suspend fun likePost(userId: Int, postId: Int): Int {
         return transaction {
             addLogger(StdOutSqlLogger)
             Likes
-                .insertIgnore {
+                .insertReturning(listOf(Likes.id)) {
                     it[Likes.userId] = userId
                     it[Likes.postId] = postId
-                }
+                }.singleOrNull()?.get(Likes.id) ?: error("Failed to insert user")
         }
     }
 

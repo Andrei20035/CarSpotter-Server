@@ -7,8 +7,8 @@ import com.carspotter.data.repository.like.LikeRepositoryImpl
 class LikeServiceImpl(
     private val likeRepository: ILikeRepository
 ): ILikeService {
-    override suspend fun likePost(userId: Int, postId: Int) {
-        likeRepository.likePost(userId, postId)
+    override suspend fun likePost(userId: Int, postId: Int): Int {
+        return likeRepository.likePost(userId, postId)
     }
 
     override suspend fun unlikePost(userId: Int, postId: Int): Int {

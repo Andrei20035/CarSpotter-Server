@@ -18,6 +18,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import org.koin.ktor.ext.inject
 import java.util.Date
@@ -63,35 +64,6 @@ fun Route.authRoutes() {
             call.respond(HttpStatusCode.Created, mapOf("credentialId" to credentialId))
         }
 
-        post("/update-password") {
-            val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
-
-            if (token != null) {
-                val secret = System.getenv("JWT_SECRET") ?: throw IllegalStateException("JWT_SECRET environment variable is not set")
-
-                try {
-                    val decodedJWT = JWT.require(Algorithm.HMAC256(secret))
-                        .build()
-                        .verify(token)
-
-                    val credentialId = decodedJWT.getClaim("credentialId").asInt()
-
-                    val request = call.receive<UpdatePasswordRequest>()
-                    val updatedRows = authCredentialService.updatePassword(credentialId, request.newPassword)
-
-                    if (updatedRows > 0) {
-                        call.respond(HttpStatusCode.OK, mapOf("message" to "Password updated successfully"))
-                    } else {
-                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to update password"))
-                    }
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid token"))
-                }
-            } else {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing token"))
-            }
-        }
-
         authenticate("jwt") {
             delete("/auth/delete-account") {
                 val credentialId = call.principal<JWTPrincipal>()?.payload?.getClaim("credentialId")?.asInt()
@@ -105,8 +77,22 @@ fun Route.authRoutes() {
                     call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to delete account"))
                 }
             }
-        }
 
+            put("/update-password") {
+                val principal = call.principal<JWTPrincipal>()
+                val credentialId = principal?.payload?.getClaim("credentialId")?.asInt()
+                    ?: return@put call.respond(HttpStatusCode.Unauthorized, "Invalid token")
+
+                val request = call.receive<UpdatePasswordRequest>()
+                val updatedRows = authCredentialService.updatePassword(credentialId, request.newPassword)
+
+                if (updatedRows > 0) {
+                    call.respond(HttpStatusCode.OK, mapOf("message" to "Password updated successfully"))
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to update password"))
+                }
+            }
+        }
     }
 }
 

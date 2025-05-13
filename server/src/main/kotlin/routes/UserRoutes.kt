@@ -37,7 +37,14 @@ fun Route.userRoutes() {
                 }
             }
 
-            get {
+            get("/all") {
+                val principal = call.principal<JWTPrincipal>()
+                val userRole = principal?.payload?.getClaim("role")?.asString()
+
+                if (userRole != "admin") {
+                    return@get call.respond(HttpStatusCode.Forbidden, "Access denied")
+                }
+
                 val users = userService.getAllUsers()
                 call.respond(users.map { it.toResponse() })
             }
