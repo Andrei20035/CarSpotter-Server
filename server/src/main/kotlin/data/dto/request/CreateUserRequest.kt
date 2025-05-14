@@ -1,4 +1,4 @@
-package com.carspotter.data.dto
+package com.carspotter.data.dto.request
 
 import com.carspotter.data.model.User
 import java.time.LocalDate

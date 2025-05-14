@@ -16,7 +16,7 @@ class AuthCredentialRepositoryImpl(
         return authCredentialDao.getCredentialsForLogin(email)
     }
 
-    override suspend fun getCredentialsById(credentialId: Int): AuthCredentialDTO? {
+    override suspend fun getCredentialsById(credentialId: Int): AuthCredential? {
         return authCredentialDao.getCredentialsById(credentialId)
     }
 
@@ -28,7 +28,7 @@ class AuthCredentialRepositoryImpl(
         return authCredentialDao.deleteCredentials(credentialId)
     }
 
-    override suspend fun getAllCredentials(): List<AuthCredentialDTO> {
+    override suspend fun getAllCredentials(): List<AuthCredential> {
         return authCredentialDao.getAllCredentials()
     }
 }

@@ -18,11 +18,13 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.time.LocalDate
+import kotlin.test.assertTrue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserServiceTest: KoinTest {
@@ -103,8 +105,8 @@ class UserServiceTest: KoinTest {
     }
 
     @Test
-    fun `get user by username`() = runBlocking {
-        val userID = userService.createUser(
+    fun `get user by username should return a list of users`() = runBlocking {
+        userService.createUser(
             User(
                 authCredentialId = credentialId1,
                 firstName = "Peter",
@@ -114,18 +116,27 @@ class UserServiceTest: KoinTest {
                 country = "USA"
             )
         )
-        val retrievedUser = userService.getUserByUsername("Socate123")
 
-        assertNotNull(retrievedUser)
-        Assertions.assertEquals(userID, retrievedUser.id)
-        Assertions.assertEquals("Peter", retrievedUser.firstName)
-        Assertions.assertEquals("Parker", retrievedUser.lastName)
-        Assertions.assertEquals(null, retrievedUser.profilePicturePath)
-        Assertions.assertEquals(LocalDate.of(2003, 11, 8), retrievedUser.birthDate)
-        Assertions.assertEquals("Socate123", retrievedUser.username)
-        Assertions.assertEquals("USA", retrievedUser.country)
-        Assertions.assertEquals(0, retrievedUser.spotScore)
+        userService.createUser(
+            User(
+                authCredentialId = credentialId2,
+                firstName = "Mary Jane",
+                lastName = "Watson",
+                birthDate = LocalDate.of(2004, 4, 1),
+                username = "Socate321",
+                country = "USA"
+            )
+        )
+        val retrievedUsers1 = userService.getUserByUsername("Socate")
 
+        assertTrue(retrievedUsers1.isNotEmpty())
+        assertEquals(2, retrievedUsers1.size)
+
+        val retrievedUsers2 = userService.getUserByUsername("Socate1")
+
+        assertTrue(retrievedUsers2.isNotEmpty())
+        assertEquals(1, retrievedUsers2.size)
+        assertEquals("Peter", retrievedUsers2[0].firstName)
     }
 
     @Test

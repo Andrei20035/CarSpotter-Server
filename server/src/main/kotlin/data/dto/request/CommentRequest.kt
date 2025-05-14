@@ -1,4 +1,4 @@
-package com.carspotter.data.dto
+package com.carspotter.data.dto.request
 
 data class CommentRequest(
     val postId: Int,

@@ -1,8 +1,9 @@
 package com.carspotter.data.service.user
 
+import com.carspotter.data.dto.UserDTO
+import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.User
 import com.carspotter.data.repository.user.IUserRepository
-import com.carspotter.data.repository.user.UserRepositoryImpl
 
 class UserServiceImpl(
     private val userRepository: IUserRepository
@@ -11,21 +12,16 @@ class UserServiceImpl(
         return userRepository.createUser(user)
     }
 
-//    override suspend fun login(username: String, password: String): UserDTO? {
-//        val user = userRepository.getUserByUsername(username) ?: return null
-//        val result = BCrypt.verifyer().verify(password.toCharArray(), user.)
-//    }
-
-    override suspend fun getUserByID(userId: Int): User? {
-        return userRepository.getUserByID(userId)
+    override suspend fun getUserByID(userId: Int): UserDTO? {
+        return userRepository.getUserByID(userId)?.toDTO()
     }
 
-    override suspend fun getUserByUsername(username: String): User? {
-        return userRepository.getUserByUsername(username)
+    override suspend fun getUserByUsername(username: String): List<UserDTO> {
+        return userRepository.getUserByUsername(username).map { it.toDTO() }
     }
 
-    override suspend fun getAllUsers(): List<User> {
-        return userRepository.getAllUsers()
+    override suspend fun getAllUsers(): List<UserDTO> {
+        return userRepository.getAllUsers().map { it.toDTO() }
     }
 
     override suspend fun updateProfilePicture(userId: Int, imagePath: String): Int {

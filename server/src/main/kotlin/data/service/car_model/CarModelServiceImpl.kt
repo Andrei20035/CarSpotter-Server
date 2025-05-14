@@ -11,7 +11,7 @@ class CarModelServiceImpl(
         return carModelRepository.createCarModel(carModel)
     }
 
-    override suspend fun getCarModel(carModelId: Int): CarModel? {
+    override suspend fun getCarModelById(carModelId: Int): CarModel? {
         return carModelRepository.getCarModel(carModelId)
     }
 

@@ -12,7 +12,6 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class FriendRequestDaoImpl : IFriendRequestDAO {
     override suspend fun sendFriendRequest(senderId: Int, receiverId: Int): Int {
         return transaction {
-            addLogger(StdOutSqlLogger)
             FriendRequests
                 .insertReturning(listOf(FriendRequests.senderId, FriendRequests.receiverId)) {
                     it[this.senderId] = senderId
@@ -21,21 +20,22 @@ class FriendRequestDaoImpl : IFriendRequestDAO {
         }
     }
 
-    override suspend fun acceptFriendRequest(senderId: Int, receiverId: Int) {
+    override suspend fun acceptFriendRequest(senderId: Int, receiverId: Int): Boolean {
         return transaction {
-            addLogger(StdOutSqlLogger)
-            FriendRequests.deleteWhere {
+            val deletedRows = FriendRequests.deleteWhere {
                 (FriendRequests.senderId eq senderId) and (FriendRequests.receiverId eq receiverId)
             }
 
-            Friends.insert {
+            val firstInsert = Friends.insert {
                 it[userId] = senderId
                 it[friendId] = receiverId
             }
-            Friends.insert {
+            val secondInsert = Friends.insert {
                 it[userId] = receiverId
                 it[friendId] = senderId
             }
+
+            deletedRows == 1 && firstInsert.insertedCount == 1 && secondInsert.insertedCount == 1
         }
     }
 

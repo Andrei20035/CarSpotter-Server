@@ -11,8 +11,6 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class UserDaoImpl : IUserDAO {
     override suspend fun createUser(user: User): Int {
         return transaction {
-            addLogger(StdOutSqlLogger)
-
             Users.insertReturning(listOf(Users.id)) {
                 it[authCredentialId] = user.authCredentialId
                 it[profilePicturePath] = user.profilePicturePath
@@ -28,7 +26,6 @@ class UserDaoImpl : IUserDAO {
 
     override suspend fun getUserByID(userId: Int): User? {
         return transaction {
-            addLogger(StdOutSqlLogger)
             Users
                 .selectAll()
                 .where { Users.id eq userId }
@@ -50,13 +47,12 @@ class UserDaoImpl : IUserDAO {
         }
     }
 
-    override suspend fun getUserByUsername(username: String): User? {
+    override suspend fun getUserByUsername(username: String): List<User> {
         return transaction {
-            addLogger(StdOutSqlLogger)
             Users
                 .selectAll()
-                .where { Users.username eq username }
-                .mapNotNull { row ->
+                .where { Users.username.lowerCase() like "${username.lowercase()}%" }
+                .map { row ->
                     User(
                         id = row[Users.id],
                         authCredentialId = row[Users.authCredentialId],
@@ -71,13 +67,11 @@ class UserDaoImpl : IUserDAO {
                         updatedAt = row[Users.updatedAt]
                     )
                 }
-                .singleOrNull()
         }
     }
 
     override suspend fun getAllUsers(): List<User> {
         return transaction {
-            addLogger(StdOutSqlLogger)
             Users
                 .selectAll()
                 .mapNotNull { row ->
@@ -100,7 +94,6 @@ class UserDaoImpl : IUserDAO {
 
     override suspend fun updateProfilePicture(userId: Int, imagePath: String): Int {
         return transaction {
-            addLogger(StdOutSqlLogger)
             Users
                 .update({ Users.id eq userId }) {
                     it[profilePicturePath] = imagePath
@@ -110,7 +103,6 @@ class UserDaoImpl : IUserDAO {
 
     override suspend fun deleteUser(credentialId: Int): Int {
         return transaction {
-            addLogger(StdOutSqlLogger)
             AuthCredentials.deleteWhere { id eq credentialId }
         }
     }

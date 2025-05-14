@@ -1,6 +1,6 @@
 package com.carspotter.routes
 
-import com.carspotter.data.dto.toResponse
+import com.carspotter.data.dto.response.toResponse
 import com.carspotter.data.service.car_model.ICarModelService
 import io.ktor.http.*
 import io.ktor.server.response.*

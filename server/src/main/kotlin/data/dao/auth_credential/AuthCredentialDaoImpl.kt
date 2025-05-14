@@ -13,7 +13,6 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class AuthCredentialDaoImpl : IAuthCredentialDAO {
     override suspend fun createCredentials(authCredential: AuthCredential): Int {
         return transaction {
-            addLogger(StdOutSqlLogger)
             AuthCredentials.insertReturning(listOf(AuthCredentials.id)) {
                 it[email] = authCredential.email
                 it[password] = authCredential.password
@@ -25,7 +24,6 @@ class AuthCredentialDaoImpl : IAuthCredentialDAO {
 
     override suspend fun getCredentialsForLogin(email: String): AuthCredential? {
         return transaction {
-            addLogger(StdOutSqlLogger)
             AuthCredentials
                 .selectAll()
                 .where { AuthCredentials.email eq email }
@@ -41,9 +39,8 @@ class AuthCredentialDaoImpl : IAuthCredentialDAO {
         }.singleOrNull()
     }
 
-    override suspend fun getCredentialsById(credentialId: Int): AuthCredentialDTO? {
+    override suspend fun getCredentialsById(credentialId: Int): AuthCredential? {
         return transaction {
-            addLogger(StdOutSqlLogger)
             AuthCredentials
                 .selectAll()
                 .where { AuthCredentials.id eq credentialId }
@@ -54,14 +51,13 @@ class AuthCredentialDaoImpl : IAuthCredentialDAO {
                         password = row[AuthCredentials.password],
                         provider = AuthProvider.valueOf(row[AuthCredentials.provider].uppercase()),
                         googleId = row[AuthCredentials.googleId]
-                    ).toDTO()
+                    )
                 }
         }.singleOrNull()
     }
 
     override suspend fun updatePassword(credentialId: Int, newPassword: String): Int {
         return transaction {
-            addLogger(StdOutSqlLogger)
             AuthCredentials
                 .update ({AuthCredentials.id eq credentialId}) {
                     it[password] = newPassword
@@ -71,15 +67,13 @@ class AuthCredentialDaoImpl : IAuthCredentialDAO {
 
     override suspend fun deleteCredentials(credentialId: Int): Int {
         return transaction {
-            addLogger(StdOutSqlLogger)
             AuthCredentials
                 .deleteWhere { id eq credentialId }
         }
     }
 
-    override suspend fun getAllCredentials(): List<AuthCredentialDTO> {
+    override suspend fun getAllCredentials(): List<AuthCredential> {
         return transaction {
-            addLogger(StdOutSqlLogger)
             AuthCredentials
                 .selectAll()
                 .mapNotNull { row ->
@@ -89,7 +83,7 @@ class AuthCredentialDaoImpl : IAuthCredentialDAO {
                         password = row[AuthCredentials.password],
                         provider = AuthProvider.valueOf(row[AuthCredentials.provider].uppercase()),
                         googleId = row[AuthCredentials.googleId]
-                    ).toDTO()
+                    )
                 }
         }
     }

@@ -1,7 +1,7 @@
 package com.carspotter.routes
 
-import com.carspotter.data.dto.CommentRequest
-import com.carspotter.data.dto.toResponse
+import com.carspotter.data.dto.request.CommentRequest
+import com.carspotter.data.dto.response.toResponse
 import com.carspotter.data.service.comment.ICommentService
 import com.carspotter.data.service.post.IPostService
 import io.ktor.http.HttpStatusCode

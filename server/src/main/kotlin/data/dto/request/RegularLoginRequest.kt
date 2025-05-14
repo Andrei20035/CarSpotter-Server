@@ -1,4 +1,4 @@
-package com.carspotter.data.dto
+package com.carspotter.data.dto.request
 
 data class RegularLoginRequest(
     val email: String,

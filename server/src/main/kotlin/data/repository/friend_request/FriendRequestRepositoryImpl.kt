@@ -11,8 +11,8 @@ class FriendRequestRepositoryImpl(
         return friendRequestDao.sendFriendRequest(senderId, receiverId)
     }
 
-    override suspend fun acceptFriendRequest(senderId: Int, receiverId: Int) {
-        friendRequestDao.acceptFriendRequest(senderId, receiverId)
+    override suspend fun acceptFriendRequest(senderId: Int, receiverId: Int): Boolean {
+        return friendRequestDao.acceptFriendRequest(senderId, receiverId)
     }
 
     override suspend fun declineFriendRequest(senderId: Int, receiverId: Int): Int {

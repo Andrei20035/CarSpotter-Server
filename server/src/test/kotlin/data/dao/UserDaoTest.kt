@@ -16,11 +16,13 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.time.LocalDate
+import kotlin.test.assertTrue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserDaoTest: KoinTest {
@@ -101,8 +103,8 @@ class UserDaoTest: KoinTest {
     }
 
     @Test
-    fun `get user by username`() = runBlocking {
-        val userID = userDao.createUser(
+    fun `get user by username should return a list of users`() = runBlocking {
+        userDao.createUser(
             User(
                 authCredentialId = credentialId1,
                 firstName = "Peter",
@@ -112,18 +114,27 @@ class UserDaoTest: KoinTest {
                 country = "USA"
             )
         )
-        val retrievedUser = userDao.getUserByUsername("Socate123")
 
-        assertNotNull(retrievedUser)
-        Assertions.assertEquals(userID, retrievedUser.id)
-        Assertions.assertEquals("Peter", retrievedUser.firstName)
-        Assertions.assertEquals("Parker", retrievedUser.lastName)
-        Assertions.assertEquals(null, retrievedUser.profilePicturePath)
-        Assertions.assertEquals(LocalDate.of(2003, 11, 8), retrievedUser.birthDate)
-        Assertions.assertEquals("Socate123", retrievedUser.username)
-        Assertions.assertEquals("USA", retrievedUser.country)
-        Assertions.assertEquals(0, retrievedUser.spotScore)
+        userDao.createUser(
+            User(
+                authCredentialId = credentialId2,
+                firstName = "Mary Jane",
+                lastName = "Watson",
+                birthDate = LocalDate.of(2004, 4, 1),
+                username = "Socate321",
+                country = "USA"
+            )
+        )
+        val retrievedUsers1 = userDao.getUserByUsername("Socate")
 
+        assertTrue(retrievedUsers1.isNotEmpty())
+        assertEquals(2, retrievedUsers1.size)
+
+        val retrievedUsers2 = userDao.getUserByUsername("Socate1")
+
+        assertTrue(retrievedUsers2.isNotEmpty())
+        assertEquals(1, retrievedUsers2.size)
+        assertEquals("Peter", retrievedUsers2[0].firstName)
     }
 
     @Test

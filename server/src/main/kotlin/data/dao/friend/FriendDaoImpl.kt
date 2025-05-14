@@ -11,7 +11,6 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class FriendDaoImpl : IFriendDAO {
     override suspend fun addFriend(userId: Int, friendId: Int): Int {
         return transaction {
-            addLogger(StdOutSqlLogger)
             val primaryInsert = insertFriend(userId, friendId)
             val secondaryInsert = insertFriend(friendId, userId)
 

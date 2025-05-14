@@ -6,8 +6,8 @@ import com.carspotter.data.model.AuthCredential
 interface IAuthCredentialRepository {
     suspend fun createCredentials(authCredential: AuthCredential): Int
     suspend fun getCredentialsForLogin(email: String): AuthCredential?
-    suspend fun getCredentialsById(credentialId: Int): AuthCredentialDTO?
+    suspend fun getCredentialsById(credentialId: Int): AuthCredential?
     suspend fun updatePassword(credentialId: Int, newPassword: String): Int
     suspend fun deleteCredentials(credentialId: Int): Int
-    suspend fun getAllCredentials(): List<AuthCredentialDTO>
+    suspend fun getAllCredentials(): List<AuthCredential>
 }

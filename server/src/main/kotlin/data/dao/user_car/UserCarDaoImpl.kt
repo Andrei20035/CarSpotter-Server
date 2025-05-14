@@ -11,7 +11,6 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class UserCarDaoImpl : IUserCarDAO {
     override suspend fun createUserCar(userCar: UserCar): Int {
         return transaction {
-            addLogger(StdOutSqlLogger)
             UsersCars.insertReturning(listOf(UsersCars.id)) {
                 it[userId] = userCar.userId
                 it[carModelId] = userCar.carModelId
@@ -22,7 +21,6 @@ class UserCarDaoImpl : IUserCarDAO {
 
     override suspend fun getUserCarById(userCarId: Int): UserCar? {
         return transaction {
-            addLogger(StdOutSqlLogger)
             UsersCars
                 .selectAll()
                 .where { UsersCars.id eq userCarId }
@@ -40,7 +38,6 @@ class UserCarDaoImpl : IUserCarDAO {
 
     override suspend fun getUserCarByUserId(userId: Int): UserCar? {
         return transaction {
-            addLogger(StdOutSqlLogger)
             UsersCars
                 .selectAll()
                 .where { UsersCars.userId eq userId }
@@ -58,7 +55,6 @@ class UserCarDaoImpl : IUserCarDAO {
 
     override suspend fun getUserByUserCarId(userCarId: Int): User {
         return transaction {
-            addLogger(StdOutSqlLogger)
             (UsersCars innerJoin Users)
                 .selectAll()
                 .where { UsersCars.id eq userCarId }

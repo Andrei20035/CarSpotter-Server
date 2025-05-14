@@ -12,7 +12,6 @@ import java.time.ZonedDateTime
 class PostDaoImpl : IPostDAO {
     override suspend fun createPost(post: Post): Int {
         return transaction {
-            addLogger(StdOutSqlLogger)
             Posts.insertReturning(listOf(Posts.id)) {
                 it[userId] = post.userId
                 it[carModelId] = post.carModelId
@@ -24,7 +23,6 @@ class PostDaoImpl : IPostDAO {
 
     override suspend fun getPostById(postId: Int): Post? {
         return transaction {
-            addLogger(StdOutSqlLogger)
             Posts
                 .selectAll()
                 .where { Posts.id eq postId }
@@ -45,7 +43,6 @@ class PostDaoImpl : IPostDAO {
 
     override suspend fun getAllPosts(): List<Post> {
         return transaction {
-            addLogger(StdOutSqlLogger)
             Posts
                 .selectAll()
                 .map { row ->
@@ -62,27 +59,14 @@ class PostDaoImpl : IPostDAO {
         }
     }
 
-    override suspend fun getCurrentDayPostsForUser(userId: Int, userTimeZone: ZoneId): List<Post> {
-        // Get the user's current time in their local time zone
-        val nowInUserTimeZone = ZonedDateTime.now(userTimeZone)
-
-        // Get the start of today and the end of today in the user's local time zone
-        val startOfDayInUserTimeZone = nowInUserTimeZone.toLocalDate().atStartOfDay(userTimeZone)
-        val endOfDayInUserTimeZone = nowInUserTimeZone.toLocalDate().atTime(23, 59, 59).atZone(userTimeZone)
-
-        // Convert the start and end of the day to UTC
-        val startOfDayInUTC = startOfDayInUserTimeZone.toInstant()
-        val endOfDayInUTC = endOfDayInUserTimeZone.toInstant()
-
-        // Now use these UTC timestamps to filter the posts
+    override suspend fun getCurrentDayPostsForUser(userId: Int, startTime: Instant, endTime: Instant): List<Post> {
         return transaction {
-            addLogger(StdOutSqlLogger)
             Posts
                 .selectAll()
                 .where {
                     (Posts.userId eq userId) and
-                            (Posts.createdAt greaterEq startOfDayInUTC) and
-                            (Posts.createdAt less endOfDayInUTC)
+                    (Posts.createdAt greaterEq startTime) and
+                    (Posts.createdAt less endTime)
                 }
                 .map { row ->
                     Post(
@@ -101,7 +85,6 @@ class PostDaoImpl : IPostDAO {
 
     override suspend fun editPost(postId: Int, postText: String): Int {
         return transaction {
-            addLogger(StdOutSqlLogger)
             Posts.update({ Posts.id eq postId }) {
                 it[description] = postText
                 it[updatedAt] = Instant.now()
@@ -112,7 +95,6 @@ class PostDaoImpl : IPostDAO {
 
     override suspend fun deletePost(postId: Int): Int {
         return transaction {
-            addLogger(StdOutSqlLogger)
             Posts
                 .deleteWhere { id eq postId }
         }

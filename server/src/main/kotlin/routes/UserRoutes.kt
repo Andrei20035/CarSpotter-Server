@@ -1,9 +1,9 @@
 package com.carspotter.routes
 
-import com.carspotter.data.dto.CreateUserRequest
-import com.carspotter.data.dto.UpdateProfilePictureRequest
-import com.carspotter.data.dto.toResponse
-import com.carspotter.data.dto.toUser
+import com.carspotter.data.dto.request.CreateUserRequest
+import com.carspotter.data.dto.request.UpdateProfilePictureRequest
+import com.carspotter.data.dto.response.toResponse
+import com.carspotter.data.dto.request.toUser
 import com.carspotter.data.service.user.IUserService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
@@ -52,10 +52,10 @@ fun Route.userRoutes() {
             get("/by-username/{username}") {
                 val username = call.parameters["username"]
                     ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing username")
-                val user = userService.getUserByUsername(username)
+                val users = userService.getUserByUsername(username)
 
-                if (user != null) {
-                    call.respond(user.toResponse())
+                if (users.isNotEmpty()) {
+                    call.respond(users.map { it.toResponse() })
                 } else {
                     call.respond(HttpStatusCode.NotFound, "User not found")
                 }

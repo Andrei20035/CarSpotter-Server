@@ -1,8 +1,8 @@
 package com.carspotter.data.service.friend_request
 
+import com.carspotter.data.dto.UserDTO
+import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.FriendRequest
-import com.carspotter.data.model.User
-import com.carspotter.data.repository.friend_request.FriendRequestRepositoryImpl
 import com.carspotter.data.repository.friend_request.IFriendRequestRepository
 
 class FriendRequestServiceImpl(
@@ -12,16 +12,16 @@ class FriendRequestServiceImpl(
         return friendRequestRepository.sendFriendRequest(senderId, receiverId)
     }
 
-    override suspend fun acceptFriendRequest(senderId: Int, receiverId: Int) {
-        friendRequestRepository.acceptFriendRequest(senderId, receiverId)
+    override suspend fun acceptFriendRequest(senderId: Int, receiverId: Int): Boolean {
+        return friendRequestRepository.acceptFriendRequest(senderId, receiverId)
     }
 
     override suspend fun declineFriendRequest(senderId: Int, receiverId: Int): Int {
         return friendRequestRepository.declineFriendRequest(senderId, receiverId)
     }
 
-    override suspend fun getAllFriendRequests(userId: Int): List<User> {
-        return friendRequestRepository.getAllFriendRequests(userId)
+    override suspend fun getAllFriendRequests(userId: Int): List<UserDTO> {
+        return friendRequestRepository.getAllFriendRequests(userId).map { it.toDTO() }
     }
 
     override suspend fun getAllFriendReqFromDB(): List<FriendRequest> {

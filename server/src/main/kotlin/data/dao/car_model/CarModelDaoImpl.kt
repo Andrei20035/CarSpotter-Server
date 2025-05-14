@@ -20,7 +20,6 @@ class CarModelDaoImpl : ICarModelDAO {
 
     override suspend fun getCarModel(carModelId: Int): CarModel? {
         return transaction {
-            addLogger(StdOutSqlLogger)
             CarModels
                 .selectAll()
                 .where { CarModels.id eq carModelId }
@@ -37,7 +36,6 @@ class CarModelDaoImpl : ICarModelDAO {
 
     override suspend fun getAllCarModels(): List<CarModel> {
         return transaction {
-            addLogger(StdOutSqlLogger)
             CarModels
                 .selectAll()
                 .orderBy(CarModels.brand to SortOrder.ASC, CarModels.model to SortOrder.ASC, CarModels.year to SortOrder.DESC)
@@ -54,7 +52,6 @@ class CarModelDaoImpl : ICarModelDAO {
 
     override suspend fun deleteCarModel(carModelId: Int): Int {
         return transaction {
-            addLogger(StdOutSqlLogger)
             CarModels
                 .deleteWhere { id eq carModelId }
         }

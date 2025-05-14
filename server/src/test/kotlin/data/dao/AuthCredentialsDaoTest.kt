@@ -82,7 +82,7 @@ class AuthCredentialsDaoTest: KoinTest {
         val credentials = authCredentialsDao.getCredentialsById(credentialID)
         assertNotNull(credentials)
         assertEquals("test@test.com", credentials.email)
-        assertEquals("2311", credentials.providerId)
+        assertEquals("2311", credentials.googleId)
         assertEquals(AuthProvider.GOOGLE, credentials.provider)
     }
 

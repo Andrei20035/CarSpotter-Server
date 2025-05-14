@@ -10,5 +10,4 @@ data class Post(
     val description: String? = null,
     val createdAt: Instant? = null,
     val updatedAt: Instant? = null,
-//    val created_at: Timestamp? = null,
 )

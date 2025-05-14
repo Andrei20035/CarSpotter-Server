@@ -14,7 +14,7 @@ class UserRepositoryImpl(
         return userDao.getUserByID(userId)
     }
 
-    override suspend fun getUserByUsername(username: String): User? {
+    override suspend fun getUserByUsername(username: String): List<User> {
         return userDao.getUserByUsername(username)
     }
 

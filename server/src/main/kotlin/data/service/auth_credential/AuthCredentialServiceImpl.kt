@@ -27,7 +27,6 @@ class AuthCredentialServiceImpl(
         if(authCredential.provider == AuthProvider.REGULAR && BCrypt.verifyer().verify(password.toCharArray(),authCredential.password).verified) {
             return authCredential.toDTO()
         }
-
         return null
     }
 
@@ -41,14 +40,6 @@ class AuthCredentialServiceImpl(
         }
     }
 
-    override suspend fun getCredentialsForLogin(email: String): AuthCredential? {
-        return authCredentialRepository.getCredentialsForLogin(email)
-    }
-
-    override suspend fun getCredentialsById(credentialId: Int): AuthCredentialDTO? {
-        return authCredentialRepository.getCredentialsById(credentialId)
-    }
-
     override suspend fun updatePassword(credentialId: Int, newPassword: String): Int {
         val newHashedPassword = BCrypt.withDefaults().hashToString(12, newPassword.toCharArray())
         return authCredentialRepository.updatePassword(credentialId, newHashedPassword)
@@ -56,9 +47,5 @@ class AuthCredentialServiceImpl(
 
     override suspend fun deleteCredentials(credentialId: Int): Int {
         return authCredentialRepository.deleteCredentials(credentialId)
-    }
-
-    override suspend fun getAllCredentials(): List<AuthCredentialDTO> {
-        return authCredentialRepository.getAllCredentials()
     }
 }
