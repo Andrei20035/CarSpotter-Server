@@ -9,8 +9,8 @@ data class PostRequest(
 )
 
 fun PostRequest.toPost(userId: Int) = Post(
+    userId = userId,
     carModelId = this.carModelId,
     imagePath = this.imagePath,
     description = this.description,
-    userId = userId,
 )

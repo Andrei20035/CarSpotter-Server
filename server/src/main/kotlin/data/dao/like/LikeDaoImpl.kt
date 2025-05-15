@@ -3,8 +3,11 @@ package com.carspotter.data.dao.like
 import com.carspotter.data.model.User
 import com.carspotter.data.table.Likes
 import com.carspotter.data.table.Users
-import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insertReturning
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class LikeDaoImpl : ILikeDAO {
@@ -14,7 +17,8 @@ class LikeDaoImpl : ILikeDAO {
                 .insertReturning(listOf(Likes.id)) {
                     it[Likes.userId] = userId
                     it[Likes.postId] = postId
-                }.singleOrNull()?.get(Likes.id) ?: error("Failed to insert user")
+                }.singleOrNull()?.get(Likes.id)
+                ?: throw IllegalArgumentException("Failed to insert like for user $userId and post $postId")
         }
     }
 
@@ -46,6 +50,15 @@ class LikeDaoImpl : ILikeDAO {
                         updatedAt = row[Users.updatedAt]
                     )
                 }
+        }
+    }
+
+    override suspend fun hasUserLikedPost(userId: Int, postId: Int): Boolean {
+        return transaction {
+            Likes
+                .selectAll()
+                .where { (Likes.userId eq userId) and (Likes.postId eq postId) }
+                .any()
         }
     }
 }

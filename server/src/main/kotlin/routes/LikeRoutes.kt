@@ -18,7 +18,6 @@ fun Route.likeRoutes() {
 
     authenticate("jwt") {
         route("/like") {
-
             post("/{postId}") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
                     ?: return@post call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")

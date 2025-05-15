@@ -22,7 +22,7 @@ fun Route.friendRoutes() {
             authenticate("admin") {
                 get("/all") {
                     val allFriends = friendService.getAllFriendsInDb()
-                    call.respond(HttpStatusCode.OK, allFriends.map { it.toResponse() })
+                    call.respond(HttpStatusCode.OK, allFriends)
                 }
             }
 
@@ -38,7 +38,12 @@ fun Route.friendRoutes() {
                 }
 
                 val result = friendService.addFriend(userId, friendId)
-                call.respond(HttpStatusCode.Created, mapOf("message" to "Friend added", "id" to result))
+
+                if(result != friendId) {
+                    return@post call.respond(HttpStatusCode.Conflict, mapOf("error" to "Friendship already exists"))
+                } else {
+                    return@post call.respond(HttpStatusCode.Created, mapOf("message" to "Friend added"))
+                }
             }
 
             delete("/{friendId}") {
@@ -48,8 +53,11 @@ fun Route.friendRoutes() {
                 val friendId = call.parameters["friendId"]?.toIntOrNull()
                     ?: return@delete call.respond(HttpStatusCode.BadRequest, "Invalid or missing friendId")
 
-                val result = friendService.deleteFriend(userId, friendId)
-                call.respond(HttpStatusCode.OK, mapOf("message" to "Friend deleted", "deleted" to result))
+                val deletedRows = friendService.deleteFriend(userId, friendId)
+
+                if(deletedRows == 2) {
+                    call.respond(HttpStatusCode.OK, mapOf("message" to "Friend deleted"))
+                }
             }
 
             get {
@@ -57,7 +65,7 @@ fun Route.friendRoutes() {
                     ?: return@get call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
 
                 val friends = friendService.getAllFriends(userId)
-                call.respond(HttpStatusCode.OK, friends.map { it.toResponse() })
+                call.respond(HttpStatusCode.OK, friends)
             }
 
         }

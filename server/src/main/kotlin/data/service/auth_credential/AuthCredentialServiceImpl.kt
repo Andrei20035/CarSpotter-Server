@@ -9,8 +9,15 @@ import com.carspotter.data.repository.auth_credential.IAuthCredentialRepository
 
 class AuthCredentialServiceImpl(
     private val authCredentialRepository: IAuthCredentialRepository
-): IAuthCredentialService {
+) : IAuthCredentialService {
     override suspend fun createCredentials(authCredential: AuthCredential): Int {
+
+        val existing = authCredentialRepository.getCredentialsForLogin(authCredential.email)
+
+        if(existing != null) {
+            throw IllegalArgumentException("Email is already registered")
+        }
+
         val hashedPassword = when (authCredential.provider) {
             AuthProvider.REGULAR -> BCrypt.withDefaults().hashToString(12, authCredential.password?.toCharArray())
             AuthProvider.GOOGLE -> null
@@ -24,19 +31,39 @@ class AuthCredentialServiceImpl(
     override suspend fun regularLogin(email: String, password: String): AuthCredentialDTO? {
         val authCredential = authCredentialRepository.getCredentialsForLogin(email) ?: return null
 
-        if(authCredential.provider == AuthProvider.REGULAR && BCrypt.verifyer().verify(password.toCharArray(),authCredential.password).verified) {
+        if (authCredential.provider == AuthProvider.REGULAR && BCrypt.verifyer()
+                .verify(password.toCharArray(), authCredential.password).verified
+        ) {
             return authCredential.toDTO()
         }
         return null
     }
 
     override suspend fun googleLogin(email: String, googleId: String): AuthCredentialDTO? {
-        val authCredential = authCredentialRepository.getCredentialsForLogin(email) ?: return null
+        val authCredential = authCredentialRepository.getCredentialsForLogin(email)
 
-        return if(authCredential.provider == AuthProvider.GOOGLE && authCredential.googleId == googleId) {
-            authCredential.toDTO()
-        } else {
-            null
+        return when {
+            authCredential != null &&
+                    authCredential.provider == AuthProvider.GOOGLE &&
+                    authCredential.googleId == googleId -> {
+                authCredential.toDTO()
+            }
+
+            authCredential != null &&
+                    authCredential.provider != AuthProvider.GOOGLE -> {
+                null
+            }
+
+            else -> {
+                val newCredential = AuthCredential(
+                    email = email,
+                    password = null,
+                    provider = AuthProvider.GOOGLE,
+                    googleId = googleId
+                )
+                authCredentialRepository.createCredentials(newCredential)
+                newCredential.toDTO()
+            }
         }
     }
 

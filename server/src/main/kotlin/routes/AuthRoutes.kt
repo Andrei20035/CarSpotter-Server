@@ -8,6 +8,7 @@ import com.carspotter.data.dto.request.RegisterRequest
 import com.carspotter.data.dto.request.RegularLoginRequest
 import com.carspotter.data.dto.request.UpdatePasswordRequest
 import com.carspotter.data.model.AuthCredential
+import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.service.auth_credential.IAuthCredentialService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
@@ -30,7 +31,18 @@ fun Route.authRoutes() {
         post("/regular-login") {
             val request = call.receive<RegularLoginRequest>()
 
+            if(request.email.isBlank() || request.password.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid email or password"))
+                return@post
+            }
+
+            if(!isValidEmail(request.email)) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid email format"))
+                return@post
+            }
+
             val result = authCredentialService.regularLogin(request.email, request.password)
+
             if (result != null) {
                 call.respond(generateJwtToken(result))
             } else {
@@ -41,7 +53,18 @@ fun Route.authRoutes() {
         post("/google-login") {
             val request = call.receive<GoogleLoginRequest>()
 
+            if(request.email.isBlank() || request.googleId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Email or google id must not be empty"))
+                return@post
+            }
+
+            if(!isValidEmail(request.email)) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid email format"))
+                return@post
+            }
+
             val result = authCredentialService.googleLogin(request.email, request.googleId)
+
             if (result != null) {
                 call.respond(generateJwtToken(result))
             } else {
@@ -52,16 +75,30 @@ fun Route.authRoutes() {
         post("/register") {
             val request = call.receive<RegisterRequest>()
 
+            if (request.email.isBlank() || !isValidEmail(request.email)) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid email"))
+                return@post
+            }
+
+            if (request.provider == AuthProvider.REGULAR && request.password.isNullOrBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Password is required for regular registration"))
+                return@post
+            }
+
             val authCredential = AuthCredential(
                 email = request.email,
                 password = request.password,
-                googleId = request.googleId,
+                googleId = null,
                 provider = request.provider,
             )
 
-            val credentialId = authCredentialService.createCredentials(authCredential)
+            try {
+                val credentialId = authCredentialService.createCredentials(authCredential)
+                call.respond(HttpStatusCode.Created, mapOf("credentialId" to credentialId))
+            } catch (e: IllegalArgumentException) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to e.message))
+            }
 
-            call.respond(HttpStatusCode.Created, mapOf("credentialId" to credentialId))
         }
 
         authenticate("jwt") {
@@ -79,11 +116,15 @@ fun Route.authRoutes() {
             }
 
             put("/update-password") {
-                val principal = call.principal<JWTPrincipal>()
-                val credentialId = principal?.payload?.getClaim("credentialId")?.asInt()
+                val credentialId = call.principal<JWTPrincipal>()?.payload?.getClaim("credentialId")?.asInt()
                     ?: return@put call.respond(HttpStatusCode.Unauthorized, "Invalid token")
 
                 val request = call.receive<UpdatePasswordRequest>()
+
+                if(request.newPassword.isBlank()) {
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid new password"))
+                    return@put
+                }
                 val updatedRows = authCredentialService.updatePassword(credentialId, request.newPassword)
 
                 if (updatedRows > 0) {
@@ -106,4 +147,9 @@ private fun generateJwtToken(credential: AuthCredentialDTO): Map<String, String>
         .sign(Algorithm.HMAC256(secret))
 
     return mapOf("token" to token)
+}
+
+private fun isValidEmail(email: String): Boolean {
+    val emailRegex = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
+    return emailRegex.matches(email)
 }

@@ -1,5 +1,6 @@
 package com.carspotter.routes
 
+import com.carspotter.data.dto.request.PostEditRequest
 import com.carspotter.data.dto.request.PostRequest
 import com.carspotter.data.dto.request.toPost
 import com.carspotter.data.service.post.IPostService
@@ -24,11 +25,14 @@ fun Route.postRoutes() {
     authenticate("jwt") {
         route("/post") {
             post("/create") {
-                val principal = call.principal<JWTPrincipal>()
-                val userId = principal?.payload?.getClaim("userId")?.asInt()
+                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
                     ?: return@post call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
 
                 val postRequest = call.receive<PostRequest>()
+
+                if(postRequest.imagePath.isBlank()) {
+                    return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Image path cannot be blank"))
+                }
 
                 val postId = postService.createPost(postRequest.toPost(userId))
 
@@ -39,7 +43,6 @@ fun Route.postRoutes() {
                 }
             }
 
-            // Route to get a post by ID
             get("/{postId}") {
                 val postId = call.parameters["postId"]?.toIntOrNull()
                     ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid or missing post ID")
@@ -47,19 +50,17 @@ fun Route.postRoutes() {
                 val post = postService.getPostById(postId)
 
                 if (post != null) {
-                    call.respond(HttpStatusCode.OK, post)
+                    return@get call.respond(HttpStatusCode.OK, post)
                 } else {
-                    call.respond(HttpStatusCode.NotFound, "Post not found")
+                    return@get call.respond(HttpStatusCode.NotFound, "Post not found")
                 }
             }
 
-            // Route to get all posts
             get("/all") {
                 val posts = postService.getAllPosts()
-                call.respond(HttpStatusCode.OK, posts)
+                return@get call.respond(HttpStatusCode.OK, posts)
             }
 
-            // Route to get posts for a user on the current day, considering their time zone
             get("/current-day/{userId}") {
                 val userId = call.parameters["userId"]?.toIntOrNull()
                     ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid or missing user ID")
@@ -75,13 +76,16 @@ fun Route.postRoutes() {
                 val postId = call.parameters["postId"]?.toIntOrNull()
                     ?: return@put call.respond(HttpStatusCode.BadRequest, "Invalid or missing post ID")
 
-                val principal = call.principal<JWTPrincipal>()
-                val userId = principal?.payload?.getClaim("userId")?.asInt()
+                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
                     ?: return@put call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
 
-                val postText = call.receive<Map<String, String>>()["text"] ?: ""
+                val request = call.receive<PostEditRequest>()
 
-                val updatedRows = postService.editPost(postId, postText)
+                if(postService.getUserIdByPost(postId) != userId) {
+                    return@put call.respond(HttpStatusCode.Forbidden, "You do not have permission to edit this post")
+                }
+
+                val updatedRows = postService.editPost(postId, request.newDescription)
 
                 if (updatedRows > 0) {
                     call.respond(HttpStatusCode.OK, mapOf("message" to "Post updated successfully"))
@@ -90,10 +94,16 @@ fun Route.postRoutes() {
                 }
             }
 
-            // Route to delete a post
             delete("/{postId}") {
                 val postId = call.parameters["postId"]?.toIntOrNull()
                     ?: return@delete call.respond(HttpStatusCode.BadRequest, "Invalid or missing post ID")
+
+                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+
+                if(postService.getUserIdByPost(postId) != userId) {
+                    return@delete call.respond(HttpStatusCode.Forbidden, "You do not have permission to edit this post")
+                }
 
                 val deletedRows = postService.deletePost(postId)
 
@@ -106,5 +116,4 @@ fun Route.postRoutes() {
 
         }
     }
-    // Route to create a post
 }

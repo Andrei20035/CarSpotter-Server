@@ -21,7 +21,7 @@ fun Route.friendRequestRoutes() {
             authenticate("admin") {
                 get("/all") {
                     val allRequests = friendRequestService.getAllFriendReqFromDB()
-                    call.respond(HttpStatusCode.OK, allRequests.map { it.toResponse()} )
+                    call.respond(HttpStatusCode.OK, allRequests )
                 }
             }
 
@@ -36,8 +36,8 @@ fun Route.friendRequestRoutes() {
                     return@post call.respond(HttpStatusCode.BadRequest, "You cannot send a friend request to yourself")
                 }
 
-                val friendRequestId = friendRequestService.sendFriendRequest(senderId, receiverId)
-                call.respond(HttpStatusCode.Created, mapOf("message" to "Friend request sent", "id" to friendRequestId))
+                friendRequestService.sendFriendRequest(senderId, receiverId)
+                call.respond(HttpStatusCode.Created, mapOf("message" to "Friend request sent", "senderId" to senderId, "receiverId" to receiverId))
             }
 
             post("/accept/{senderId}") {
@@ -51,8 +51,13 @@ fun Route.friendRequestRoutes() {
                     return@post call.respond(HttpStatusCode.BadRequest, "You cannot accept a friend request from yourself")
                 }
 
-                friendRequestService.acceptFriendRequest(senderId, receiverId)
-                call.respond(HttpStatusCode.OK, mapOf("message" to "Friend request accepted"))
+                val result = friendRequestService.acceptFriendRequest(senderId, receiverId)
+
+                if (result) {
+                    call.respond(HttpStatusCode.OK, mapOf("message" to "Friend request accepted"))
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "Friend request not found")
+                }
             }
 
             post("/decline/{senderId}") {
@@ -67,6 +72,7 @@ fun Route.friendRequestRoutes() {
                 }
 
                 val rowsAffected = friendRequestService.declineFriendRequest(senderId, receiverId)
+
                 if (rowsAffected > 0) {
                     call.respond(HttpStatusCode.OK, mapOf("message" to "Friend request declined"))
                 } else {
@@ -83,7 +89,7 @@ fun Route.friendRequestRoutes() {
                     return@get call.respond(HttpStatusCode.NoContent, "No friend requests found")
                 }
 
-                call.respond(HttpStatusCode.OK, friendRequests.map { it.toResponse() })
+                call.respond(HttpStatusCode.OK, friendRequests)
             }
 
         }

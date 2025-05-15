@@ -32,7 +32,7 @@ class PostServiceImpl(
         return posts.map { it.toDTO() }
     }
 
-    override suspend fun editPost(postId: Int, postText: String): Int {
+    override suspend fun editPost(postId: Int, postText: String?): Int {
         return postRepository.editPost(postId, postText)
     }
 

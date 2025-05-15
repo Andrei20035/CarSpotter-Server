@@ -1,7 +1,6 @@
 package com.carspotter.routes
 
 import com.carspotter.data.dto.request.CommentRequest
-import com.carspotter.data.dto.response.toResponse
 import com.carspotter.data.service.comment.ICommentService
 import com.carspotter.data.service.post.IPostService
 import io.ktor.http.HttpStatusCode
@@ -21,7 +20,7 @@ fun Route.commentRoutes() {
     val commentService: ICommentService by inject()
     val postService: IPostService by inject()
 
-        get("/comment/post/{postId}") {
+        get("/comment/{postId}") {
             val postId = call.parameters["postId"]?.toIntOrNull()
                 ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid post ID")
 
@@ -31,7 +30,7 @@ fun Route.commentRoutes() {
                 return@get call.respond(HttpStatusCode.NoContent, "No comments found for this post")
             }
 
-            call.respond(HttpStatusCode.OK, comments.map { it.toResponse() })
+            call.respond(HttpStatusCode.OK, comments)
         }
 
         authenticate("jwt") {
@@ -41,11 +40,21 @@ fun Route.commentRoutes() {
                     val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
                         ?: return@post call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
 
-                    val newCommentId = commentService.addComment(userId, request.postId, request.commentText)
-                    call.respond(
-                        HttpStatusCode.Created,
-                        mapOf("message" to "Comment created with ID: $newCommentId")
-                    )
+                    if (request.commentText.isBlank()) {
+                        call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Comment text cannot be blank"))
+                        return@post
+                    }
+
+
+                    val commentId = commentService.addComment(userId, request.postId, request.commentText)
+
+                    if(commentId > 0) {
+                        call.respond(HttpStatusCode.Created, mapOf("message" to "Comment created successfully"))
+                        return@post
+                    } else {
+                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to create comment"))
+                        return@post
+                    }
                 }
 
                 delete("/{commentId}") {

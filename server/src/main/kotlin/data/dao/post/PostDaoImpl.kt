@@ -83,7 +83,7 @@ class PostDaoImpl : IPostDAO {
     }
 
 
-    override suspend fun editPost(postId: Int, postText: String): Int {
+    override suspend fun editPost(postId: Int, postText: String?): Int {
         return transaction {
             Posts.update({ Posts.id eq postId }) {
                 it[description] = postText

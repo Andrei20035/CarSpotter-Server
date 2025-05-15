@@ -1,5 +1,6 @@
 package com.carspotter.data.service.friend_request
 
+import com.carspotter.data.dto.FriendRequestDTO
 import com.carspotter.data.dto.UserDTO
 import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.FriendRequest
@@ -24,7 +25,7 @@ class FriendRequestServiceImpl(
         return friendRequestRepository.getAllFriendRequests(userId).map { it.toDTO() }
     }
 
-    override suspend fun getAllFriendReqFromDB(): List<FriendRequest> {
-        return friendRequestRepository.getAllFriendReqFromDB()
+    override suspend fun getAllFriendReqFromDB(): List<FriendRequestDTO> {
+        return friendRequestRepository.getAllFriendReqFromDB().map { it.toDTO() }
     }
 }

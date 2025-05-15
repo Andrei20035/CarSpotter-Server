@@ -1,6 +1,5 @@
 package com.carspotter.routes
 
-import com.carspotter.data.dto.response.toResponse
 import com.carspotter.data.service.car_model.ICarModelService
 import io.ktor.http.*
 import io.ktor.server.response.*
@@ -14,11 +13,24 @@ fun Route.carModelRoutes() {
         get("/all") {
             val models = carModelService.getAllCarModels()
             if (models.isNotEmpty())
-                call.respond(models.map { it.toResponse() })
+                call.respond(models)
             else
                 call.respond(
                     HttpStatusCode.NotFound,
                     mapOf("error" to "No car models found")
+                )
+        }
+        get("/{modelId}") {
+            val modelId = call.parameters["modelId"]?.toIntOrNull()
+                ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid or missing model ID")
+
+            val model = carModelService.getCarModelById(modelId)
+            if (model != null)
+                call.respond(model)
+            else
+                call.respond(
+                    HttpStatusCode.NotFound,
+                    mapOf("error" to "Car model with ID $modelId not found")
                 )
         }
     }

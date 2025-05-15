@@ -6,4 +6,5 @@ interface ILikeDAO {
     suspend fun likePost(userId: Int, postId: Int): Int
     suspend fun unlikePost(userId: Int, postId: Int): Int
     suspend fun getLikesForPost(postId: Int): List<User>
+    suspend fun hasUserLikedPost(userId: Int, postId: Int): Boolean
 }

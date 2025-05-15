@@ -23,7 +23,7 @@ class PostRepositoryImpl(
         return postDao.getCurrentDayPostsForUser(userId, userTimeZone)
     }
 
-    override suspend fun editPost(postId: Int, postText: String): Int {
+    override suspend fun editPost(postId: Int, postText: String?): Int {
         return postDao.editPost(postId, postText)
     }
 

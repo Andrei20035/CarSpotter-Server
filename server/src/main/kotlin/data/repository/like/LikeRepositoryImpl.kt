@@ -17,4 +17,8 @@ class LikeRepositoryImpl(
     override suspend fun getLikesForPost(postId: Int): List<User> {
         return likeDao.getLikesForPost(postId)
     }
+
+    override suspend fun hasUserLikedPost(userId: Int, postId: Int): Boolean {
+        return likeDao.hasUserLikedPost(userId, postId)
+    }
 }

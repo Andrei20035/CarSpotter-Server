@@ -31,9 +31,9 @@ fun Route.userRoutes() {
                 val user = userService.getUserByID(id)
 
                 if (user != null) {
-                    call.respond(user.toResponse())
+                    return@get call.respond(user)
                 } else {
-                    call.respond(HttpStatusCode.NotFound, "User not found")
+                    return@get call.respond(HttpStatusCode.NotFound, "User not found")
                 }
             }
 
@@ -46,7 +46,7 @@ fun Route.userRoutes() {
                 }
 
                 val users = userService.getAllUsers()
-                call.respond(users.map { it.toResponse() })
+                call.respond(users)
             }
 
             get("/by-username/{username}") {
@@ -55,9 +55,9 @@ fun Route.userRoutes() {
                 val users = userService.getUserByUsername(username)
 
                 if (users.isNotEmpty()) {
-                    call.respond(users.map { it.toResponse() })
+                    return@get call.respond(users)
                 } else {
-                    call.respond(HttpStatusCode.NotFound, "User not found")
+                    return@get call.respond(HttpStatusCode.NotFound, "User not found")
                 }
             }
 
@@ -65,9 +65,9 @@ fun Route.userRoutes() {
                 val request = call.receive<CreateUserRequest>()
                 val result = userService.createUser(request.toUser())
                 if (result > 0) {
-                    call.respond(HttpStatusCode.Created, "User created with ID: $result")
+                    return@post call.respond(HttpStatusCode.Created, "User created with ID: $result")
                 } else {
-                    call.respond(HttpStatusCode.InternalServerError, "Failed to create user")
+                    return@post call.respond(HttpStatusCode.InternalServerError, "Failed to create user")
                 }
             }
 
