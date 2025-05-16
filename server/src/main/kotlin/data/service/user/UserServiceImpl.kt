@@ -12,7 +12,7 @@ class UserServiceImpl(
         return userRepository.createUser(user)
     }
 
-    override suspend fun getUserByID(userId: Int): UserDTO? {
+    override suspend fun getUserById(userId: Int): UserDTO? {
         return userRepository.getUserByID(userId)?.toDTO()
     }
 

@@ -75,4 +75,8 @@ class AuthCredentialServiceImpl(
     override suspend fun deleteCredentials(credentialId: Int): Int {
         return authCredentialRepository.deleteCredentials(credentialId)
     }
+
+    override suspend fun getCredentialsById(credentialId: Int): AuthCredential? {
+        return authCredentialRepository.getCredentialsById(credentialId)
+    }
 }

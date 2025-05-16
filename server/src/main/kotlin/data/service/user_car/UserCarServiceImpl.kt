@@ -5,12 +5,19 @@ import com.carspotter.data.dto.UserDTO
 import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.UserCar
 import com.carspotter.data.repository.user_car.IUserCarRepository
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 
 class UserCarServiceImpl(
     private val userCarRepository: IUserCarRepository
 ): IUserCarService {
     override suspend fun createUserCar(userCar: UserCar): Int {
-        return userCarRepository.createUserCar(userCar)
+        return try {
+            userCarRepository.createUserCar(userCar)
+        } catch (e: ExposedSQLException) {
+            throw IllegalArgumentException("Invalid userId or carModelId", e)
+        } catch (e: Exception) {
+            throw RuntimeException("Unexpected error while creating user car", e)
+        }
     }
 
     override suspend fun getUserCarById(userCarId: Int): UserCarDTO? {

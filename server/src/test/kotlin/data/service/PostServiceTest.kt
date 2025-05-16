@@ -136,6 +136,11 @@ class PostServiceTest: KoinTest {
 
         val post = postService.getPostById(postID)
 
+        println("Post ID: $postID")
+        println("Retrieved Post: $post")
+        println("userId1: $userId1")
+
+
         Assertions.assertNotNull(post)
         Assertions.assertEquals(postID, post?.id)
         Assertions.assertEquals(userId1, post?.userId)

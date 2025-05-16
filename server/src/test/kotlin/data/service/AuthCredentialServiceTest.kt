@@ -52,75 +52,55 @@ class AuthCredentialServiceTest: KoinTest {
     }
 
     @Test
-    fun `create and get credentials for login`() = runBlocking {
+    fun `get credentials by ID`() = runBlocking {
         val id = authCredentialService.createCredentials(
             AuthCredential(
-                email = "repo@test.com",
+                email = "credentials@test.com",
                 password = null,
-                googleId = "gID123",
+                googleId = "credentialsGID",
                 provider = AuthProvider.GOOGLE
             )
         )
 
-        val result = authCredentialService.getCredentialsForLogin("repo@test.com")
+        val credentials = authCredentialService.getCredentialsById(id)
 
-        assertNotNull(result)
-        assertEquals(id, result.id)
-        assertEquals(null, result.password)
-        assertEquals("repo@test.com", result.email)
-        assertEquals("gID123", result.googleId)
-    }
-
-    @Test
-    fun `get credentials by ID returns correct DTO`() = runBlocking {
-        val id = authCredentialService.createCredentials(
-            AuthCredential(
-                email = "dto@test.com",
-                password = null,
-                googleId = "dtoGID",
-                provider = AuthProvider.GOOGLE
-            )
-        )
-
-        val dto = authCredentialService.getCredentialsById(id)
-
-        assertNotNull(dto)
-        assertEquals("dto@test.com", dto.email)
-        assertEquals("dtoGID", dto.providerId)
+        assertNotNull(credentials)
+        assertEquals("credentials@test.com", credentials.email)
+        assertEquals("credentialsGID", credentials.googleId)
     }
 
     @Test
     fun `get credentials for regular login`() = runBlocking {
         val id = authCredentialService.createCredentials(
             AuthCredential(
-                email = "dto@test.com",
+                email = "credentials@test.com",
                 password = "passwordtest",
                 googleId = null,
                 provider = AuthProvider.REGULAR
             )
         )
 
-        val authCredential = authCredentialService.regularLogin("dto@test.com", "passwordtest")
+        val authCredential = authCredentialService.regularLogin("credentials@test.com", "passwordtest")
 
         assertNotNull(authCredential)
-        assertEquals("dto@test.com", authCredential.email)
+        assertEquals("credentials@test.com", authCredential.email)
     }
 
     @Test
     fun `get credentials for google login`() = runBlocking {
         val id = authCredentialService.createCredentials(
             AuthCredential(
-                email = "dto@test.com",
+                email = "credentials@test.com",
                 password = null,
                 googleId = "gid1",
                 provider = AuthProvider.GOOGLE
             )
         )
 
-        val authCredential = authCredentialService.googleLogin("dto@test.com", "gid1")
+        val authCredential = authCredentialService.googleLogin("credentials@test.com", "gid1")
 
         assertNotNull(authCredential)
-        assertEquals("dto@test.com", authCredential.email)
+        assertEquals("credentials@test.com", authCredential.email)
     }
 
     @Test
@@ -136,35 +116,13 @@ class AuthCredentialServiceTest: KoinTest {
 
         authCredentialService.updatePassword(id, "newPass")
 
-        val result = authCredentialService.getCredentialsForLogin("update@test.com")
+        val result = authCredentialService.getCredentialsById(id)
         assertNotNull(result)
         val isPasswordValid = BCrypt.verifyer().verify(
             "newPass".toCharArray(),
             result.password?.toCharArray()
         ).verified
         assertTrue(isPasswordValid)
-    }
-
-    @Test
-    fun `get all credentials returns full list`() = runBlocking {
-        authCredentialService.createCredentials(
-            AuthCredential(
-                email = "all1@test.com",
-                password = null,
-                googleId = "gid1",
-                provider = AuthProvider.GOOGLE)
-        )
-        authCredentialService.createCredentials(
-            AuthCredential(
-                email = "all2@test.com",
-                password = "passtest",
-                googleId = null,
-                provider = AuthProvider.REGULAR
-            )
-        )
-
-        val all = authCredentialService.getAllCredentials()
-        assertEquals(2, all.size)
     }
 
     @Test
@@ -179,10 +137,8 @@ class AuthCredentialServiceTest: KoinTest {
         )
 
         val deleted = authCredentialService.deleteCredentials(id)
-        val all = authCredentialService.getAllCredentials()
 
         assertEquals(1, deleted)
-        assertTrue(all.none { it.email == "delete@test.com" })
     }
 
     @AfterAll

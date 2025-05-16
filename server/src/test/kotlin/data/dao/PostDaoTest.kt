@@ -22,6 +22,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.inject
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -170,6 +171,10 @@ class PostDaoTest: KoinTest {
 
     @Test
     fun `get current day posts`() = runBlocking {
+        val userTimeZone = ZoneId.of("UTC")
+        val startOfDay = ZonedDateTime.now(userTimeZone).toLocalDate().atStartOfDay(userTimeZone).toInstant()
+        val endOfDay = ZonedDateTime.now(userTimeZone).toLocalDate().plusDays(1).atStartOfDay(userTimeZone).toInstant()
+
         postDao.createPost(
             Post(
                 userId = userId1,
@@ -187,21 +192,16 @@ class PostDaoTest: KoinTest {
             )
         )
 
-        // Assuming you have a way to get user's time zone, let's use UTC for the example.
-        val userTimeZone = ZoneId.of("UTC") // Replace with actual user's time zone if available.
+        val currentDayPosts = postDao.getCurrentDayPostsForUser(userId1, startOfDay, endOfDay)
 
-        // Fetch posts for the current day for the user
-        val currentDayPosts = postDao.getCurrentDayPostsForUser(userId1, userTimeZone)
-
-        // Assertions
         Assertions.assertNotNull(currentDayPosts)
         Assertions.assertTrue(currentDayPosts.isNotEmpty(), "There should be posts returned for the current day.")
 
-        // Verify the createdAt timestamp falls within today's range
-        val now = ZonedDateTime.now(userTimeZone).toLocalDate().atStartOfDay(userTimeZone).toInstant()
         currentDayPosts.forEach { post ->
-            // Verify that createdAt is on the current day
-            Assertions.assertTrue(post.createdAt!! >= now, "Post createdAt should be after the start of today.")
+            Assertions.assertTrue(
+                post.createdAt!! >= startOfDay && post.createdAt < endOfDay,
+                "Post createdAt should be within the current day range."
+            )
         }
     }
 

@@ -9,4 +9,5 @@ interface IAuthCredentialService {
     suspend fun googleLogin(email: String, googleId: String): AuthCredentialDTO?
     suspend fun updatePassword(credentialId: Int, newPassword: String): Int
     suspend fun deleteCredentials(credentialId: Int): Int
+    suspend fun getCredentialsById(credentialId: Int): AuthCredential?
 }

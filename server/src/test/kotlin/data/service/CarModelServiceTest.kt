@@ -61,7 +61,7 @@ class CarModelServiceTest: KoinTest {
             )
         )
 
-        val result = carModelService.getCarModel(id)
+        val result = carModelService.getCarModelById(id)
 
         assertNotNull(result)
         assertEquals("Toyota", result?.brand)
@@ -88,7 +88,7 @@ class CarModelServiceTest: KoinTest {
         )
 
         val deletedCount = carModelService.deleteCarModel(id)
-        val result = carModelService.getCarModel(id)
+        val result = carModelService.getCarModelById(id)
 
         assertEquals(1, deletedCount)
         assertNull(result)

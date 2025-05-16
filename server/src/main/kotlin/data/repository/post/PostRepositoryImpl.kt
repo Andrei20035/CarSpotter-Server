@@ -2,7 +2,7 @@ package com.carspotter.data.repository.post
 
 import com.carspotter.data.dao.post.IPostDAO
 import com.carspotter.data.model.Post
-import java.time.ZoneId
+import java.time.Instant
 
 class PostRepositoryImpl(
     private val postDao: IPostDAO,
@@ -19,9 +19,10 @@ class PostRepositoryImpl(
         return postDao.getAllPosts()
     }
 
-    override suspend fun getCurrentDayPostsForUser(userId: Int, userTimeZone: ZoneId): List<Post> {
-        return postDao.getCurrentDayPostsForUser(userId, userTimeZone)
+    override suspend fun getCurrentDayPostsForUser(userId: Int, startOfDay: Instant, endOfDay: Instant): List<Post> {
+        return postDao.getCurrentDayPostsForUser(userId, startOfDay, endOfDay)
     }
+
 
     override suspend fun editPost(postId: Int, postText: String?): Int {
         return postDao.editPost(postId, postText)

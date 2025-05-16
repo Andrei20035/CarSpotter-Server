@@ -1,6 +1,5 @@
 package com.carspotter.routes
 
-import com.carspotter.data.dto.response.toResponse
 import com.carspotter.data.service.friend_request.IFriendRequestService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate

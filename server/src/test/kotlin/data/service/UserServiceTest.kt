@@ -90,7 +90,7 @@ class UserServiceTest: KoinTest {
                 country = "USA"
             )
         )
-        val retrievedUser = userService.getUserByID(userID)
+        val retrievedUser = userService.getUserById(userID)
 
         assertNotNull(retrievedUser)
         Assertions.assertEquals(userID, retrievedUser.id)
@@ -199,14 +199,14 @@ class UserServiceTest: KoinTest {
         )
 
         // Make sure user is not null before updating
-        val userBeforeUpdate = userService.getUserByID(userId)
+        val userBeforeUpdate = userService.getUserById(userId)
         assertNotNull(userBeforeUpdate)
         Assertions.assertNull(userBeforeUpdate.profilePicturePath)
 
         // Update profile picture
         userService.updateProfilePicture(userId, "/path/to/new/picture")
 
-        val retrievedUser = userService.getUserByID(userId)
+        val retrievedUser = userService.getUserById(userId)
 
         // Make sure the user is not null after updating
         assertNotNull(retrievedUser)
@@ -226,12 +226,12 @@ class UserServiceTest: KoinTest {
             )
         )
 
-        val userBeforeDeletion = userService.getUserByID(userId)
+        val userBeforeDeletion = userService.getUserById(userId)
         assertNotNull(userBeforeDeletion)
 
         userService.deleteUser(credentialId1)
 
-        val userAfterDeletion = userService.getUserByID(userId)
+        val userAfterDeletion = userService.getUserById(userId)
         assertNull(userAfterDeletion)
     }
 

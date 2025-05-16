@@ -80,11 +80,11 @@ class AuthCredentialRepositoryTest: KoinTest {
             )
         )
 
-        val dto = authCredentialRepository.getCredentialsById(id)
+        val credentials = authCredentialRepository.getCredentialsById(id)
 
-        assertNotNull(dto)
-        assertEquals("dto@test.com", dto.email)
-        assertEquals("dtoGID", dto.providerId)
+        assertNotNull(credentials)
+        assertEquals("dto@test.com", credentials.email)
+        assertEquals("dtoGID", credentials.googleId)
     }
 
     @Test

@@ -2,7 +2,6 @@ package com.carspotter.routes
 
 import com.carspotter.data.dto.request.CreateUserRequest
 import com.carspotter.data.dto.request.UpdateProfilePictureRequest
-import com.carspotter.data.dto.response.toResponse
 import com.carspotter.data.dto.request.toUser
 import com.carspotter.data.service.user.IUserService
 import io.ktor.http.HttpStatusCode
@@ -24,11 +23,12 @@ fun Route.userRoutes() {
     val userService: IUserService by inject()
 
     authenticate("jwt") {
-        route("/users") {
-            get("/{userId}") {
-                val id = call.parameters["userId"]?.toIntOrNull()
-                    ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid user ID")
-                val user = userService.getUserByID(id)
+        route("/user") {
+            get("/me") {
+                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                    ?: return@get call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+
+                val user = userService.getUserById(userId)
 
                 if (user != null) {
                     return@get call.respond(user)
@@ -38,8 +38,7 @@ fun Route.userRoutes() {
             }
 
             get("/all") {
-                val principal = call.principal<JWTPrincipal>()
-                val userRole = principal?.payload?.getClaim("role")?.asString()
+                val userRole = call.principal<JWTPrincipal>()?.payload?.getClaim("role")?.asString()
 
                 if (userRole != "admin") {
                     return@get call.respond(HttpStatusCode.Forbidden, "Access denied")
@@ -52,13 +51,10 @@ fun Route.userRoutes() {
             get("/by-username/{username}") {
                 val username = call.parameters["username"]
                     ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing username")
+
                 val users = userService.getUserByUsername(username)
 
-                if (users.isNotEmpty()) {
-                    return@get call.respond(users)
-                } else {
-                    return@get call.respond(HttpStatusCode.NotFound, "User not found")
-                }
+                return@get call.respond(HttpStatusCode.OK, users)
             }
 
             post {
@@ -90,6 +86,7 @@ fun Route.userRoutes() {
                     ?: return@delete call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
 
                 val result = userService.deleteUser(userId)
+
                 if (result > 0) {
                     call.respond(HttpStatusCode.OK, "User deleted")
                 } else {
