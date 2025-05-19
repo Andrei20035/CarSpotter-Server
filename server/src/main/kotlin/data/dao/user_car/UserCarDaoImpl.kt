@@ -26,6 +26,7 @@ class UserCarDaoImpl : IUserCarDAO {
                 .where { UsersCars.id eq userCarId }
                 .mapNotNull { row ->
                     UserCar(
+                        id = row[UsersCars.id],
                         userId = row[UsersCars.userId],
                         carModelId = row[UsersCars.carModelId],
                         imagePath = row[UsersCars.imagePath],
@@ -43,6 +44,7 @@ class UserCarDaoImpl : IUserCarDAO {
                 .where { UsersCars.userId eq userId }
                 .mapNotNull { row ->
                     UserCar(
+                        id = row[UsersCars.id],
                         userId = row[UsersCars.userId],
                         carModelId = row[UsersCars.carModelId],
                         imagePath = row[UsersCars.imagePath],

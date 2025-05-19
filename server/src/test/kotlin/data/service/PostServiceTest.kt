@@ -118,13 +118,16 @@ class PostServiceTest: KoinTest {
 
     @BeforeEach
     fun clearDatabase() {
+        println("Clearing database")
         transaction {
             Posts.deleteAll()
+            exec("ALTER SEQUENCE posts_id_seq RESTART WITH 1")
         }
     }
 
     @Test
     fun `create and get post by ID`() = runBlocking {
+        println("Starting test: create and get post by ID")
         val postID = postService.createPost(
             Post(
                 userId = userId1,
@@ -136,11 +139,6 @@ class PostServiceTest: KoinTest {
 
         val post = postService.getPostById(postID)
 
-        println("Post ID: $postID")
-        println("Retrieved Post: $post")
-        println("userId1: $userId1")
-
-
         Assertions.assertNotNull(post)
         Assertions.assertEquals(postID, post?.id)
         Assertions.assertEquals(userId1, post?.userId)
@@ -151,6 +149,7 @@ class PostServiceTest: KoinTest {
 
     @Test
     fun `get all posts`() = runBlocking {
+        println("Starting test: get all posts")
         postService.createPost(
             Post(
                 userId = userId1,
@@ -177,6 +176,7 @@ class PostServiceTest: KoinTest {
 
     @Test
     fun `get current day posts`() = runBlocking {
+        println("Starting test: get current day posts")
         postService.createPost(
             Post(
                 userId = userId1,
@@ -215,6 +215,7 @@ class PostServiceTest: KoinTest {
 
     @Test
     fun `edit post description`() = runBlocking {
+        println("Starting test: edit post description")
         val postId = postService.createPost(
             Post(
                 userId = userId1,
@@ -235,6 +236,7 @@ class PostServiceTest: KoinTest {
 
     @Test
     fun `delete post`() = runBlocking {
+        println("Starting test: delete post")
         val postId = postService.createPost(
             Post(
                 userId = userId1,
@@ -251,6 +253,7 @@ class PostServiceTest: KoinTest {
 
     @AfterAll
     fun tearDown() {
+        println("Tearing down test")
         transaction {
             SchemaUtils.drop(CarModels, Users, Posts, AuthCredentials)
         }

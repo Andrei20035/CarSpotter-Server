@@ -126,6 +126,7 @@ class UserCarServiceTest: KoinTest {
     fun cleanDatabase() {
         transaction {
             UsersCars.deleteAll()
+            exec("ALTER SEQUENCE users_cars_id_seq RESTART WITH 1")
         }
     }
 

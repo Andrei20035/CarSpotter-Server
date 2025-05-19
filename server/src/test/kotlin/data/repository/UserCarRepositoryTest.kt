@@ -138,7 +138,7 @@ class UserCarRepositoryTest: KoinTest {
         val userCar = userCarRepository.getUserCarById(userCarId1)
 
         assertNotNull(userCar)
-        assertEquals(userCarId1, userCar?.userId)
+        assertEquals(userId1, userCar?.userId)
         assertEquals(carModelId1, userCar?.carModelId)
         assertEquals("path/to/car/image", userCar?.imagePath)
     }
