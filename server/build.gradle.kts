@@ -56,6 +56,7 @@ dependencies {
     implementation("io.insert-koin:koin-ktor")
     implementation("io.insert-koin:koin-logger-slf4j")
     implementation("io.ktor:ktor-server-auto-head-response:3.1.1")
+    implementation("com.zaxxer:HikariCP:6.3.0")
 
 //    testImplementation("io.insert-koin:koin-test")
     testImplementation("io.insert-koin:koin-test-junit5")
@@ -66,5 +67,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.12.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.12.0")
     testImplementation(libs.ktor.server.test.host)
+    testImplementation("io.ktor:ktor-server-test-host:3.1.3")
+    testImplementation("io.mockk:mockk:1.14.2")
 
 }

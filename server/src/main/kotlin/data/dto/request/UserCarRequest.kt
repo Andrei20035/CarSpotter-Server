@@ -1,8 +1,9 @@
 package com.carspotter.data.dto.request
 
 import com.carspotter.data.model.UserCar
-import java.time.Instant
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class UserCarRequest(
     val userId: Int,
     val carModelId: Int,

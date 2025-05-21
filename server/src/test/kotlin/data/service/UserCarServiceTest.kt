@@ -187,27 +187,25 @@ class UserCarServiceTest: KoinTest {
         userCarService.createUserCar(
             UserCar(
                 userId = userId1,
-                carModelId = carModelId1,
+                carModelId = carModelId2,
                 imagePath = "path/to/car/image"
             )
         )
-        // Update only image path
         userCarService.updateUserCar(userId1, "new/path/to/car/image", null)
 
-        var userCar = userCarService.getUserCarByUserId(userId1)
-
-        assertNotNull(userCar)
-        assertEquals("new/path/to/car/image", userCar?.imagePath)
-        assertEquals(carModelId1, userCar?.carModelId)
-
-        // Update only the carModelId
-        userCarService.updateUserCar(userId1, null, carModelId2)
-
-        userCar = userCarService.getUserCarByUserId(userId1)
+        val userCar = userCarService.getUserCarByUserId(userId1)
 
         assertNotNull(userCar)
         assertEquals("new/path/to/car/image", userCar?.imagePath)
         assertEquals(carModelId2, userCar?.carModelId)
+
+        userCarService.updateUserCar(userId1, null, carModelId1)
+
+        val updatedUserCar = userCarService.getUserCarByUserId(userId1)
+
+        assertNotNull(updatedUserCar)
+        assertEquals("new/path/to/car/image", updatedUserCar?.imagePath)
+        assertEquals(carModelId1, updatedUserCar?.carModelId)
     }
 
     @Test

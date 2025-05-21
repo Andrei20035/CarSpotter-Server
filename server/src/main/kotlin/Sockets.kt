@@ -32,15 +32,24 @@ fun Application.configureSockets() {
         masking = false
     }
     routing {
-        webSocket("/ws") { // websocketSession
-            for (frame in incoming) {
-                if (frame is Frame.Text) {
-                    val text = frame.readText()
-                    outgoing.send(Frame.Text("YOU SAID: $text"))
-                    if (text.equals("bye", ignoreCase = true)) {
-                        close(CloseReason(CloseReason.Codes.NORMAL, "Client said BYE"))
+        webSocket("/ws") {
+            try {
+                for (frame in incoming) {
+                    if (frame is Frame.Text) {
+                        val text = frame.readText()
+                        // Basic echo logic:
+                        outgoing.send(Frame.Text("YOU SAID: $text"))
+
+                        if (text.equals("bye", ignoreCase = true)) {
+                            close(CloseReason(CloseReason.Codes.NORMAL, "Client said BYE"))
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                // Log or handle exceptions during WebSocket communication
+                // e.g., log.error("WebSocket error", e)
+            } finally {
+                // Clean up when connection closes if needed
             }
         }
     }

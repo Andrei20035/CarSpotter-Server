@@ -15,10 +15,10 @@ fun Application.configureSerialization() {
         })
     }
 
-    // Test route (can be removed in production)
-    routing {
-        get("/json/test") {
-            call.respond(mapOf("status" to "ok", "message" to "Serialization is working"))
-        }
-    }
+//    // Test route (can be removed in production)
+//    routing {
+//        get("/json/test") {
+//            call.respond(mapOf("status" to "ok", "message" to "Serialization is working"))
+//        }
+//    }
 }

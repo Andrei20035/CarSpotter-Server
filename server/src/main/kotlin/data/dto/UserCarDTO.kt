@@ -14,8 +14,8 @@ data class UserCarDTO(
 
 fun UserCar.toDTO() = UserCarDTO(
     id = this.id,
-    userId = this.id,
-    carModelId = this.id,
+    userId = this.userId,
+    carModelId = this.carModelId,
     imagePath = this.imagePath,
     createdAt = this.createdAt,
     updatedAt = this.updatedAt

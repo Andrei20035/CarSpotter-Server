@@ -29,7 +29,7 @@ fun Application.configureHTTP() {
         allowHeader(HttpHeaders.ContentType)
         // For production, specify allowed origins instead of anyHost()
         // allowHost("your-mobile-app-domain.com", schemes = listOf("https"))
-        anyHost() // Replace in production
+        anyHost() // TODO: Replace it in production
         allowCredentials = true
         maxAgeInSeconds = 3600
     }

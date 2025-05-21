@@ -1,13 +1,17 @@
 package com.carspotter.data.dto.request
 
 import com.carspotter.data.model.User
+import com.carspotter.serialization.LocalDateSerializer
 import java.time.LocalDate
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CreateUserRequest(
     val authCredentialId: Int,
     val profilePicturePath: String? = null,
     val firstName: String,
     val lastName: String,
+    @Serializable(with = LocalDateSerializer::class)
     val birthDate: LocalDate,
     val username: String,
     val country: String
