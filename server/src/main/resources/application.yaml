@@ -4,7 +4,8 @@ ktor:
       - com.carspotter.ApplicationKt.module
   deployment:
     port: 9291
-  environment: testing
+    host: 0.0.0.0
+  environment: development
 
 database:
   development:

@@ -2,8 +2,8 @@ package com.carspotter.data.dto.request
 
 import com.carspotter.data.model.User
 import com.carspotter.serialization.LocalDateSerializer
-import java.time.LocalDate
 import kotlinx.serialization.Serializable
+import java.time.LocalDate
 
 @Serializable
 data class CreateUserRequest(

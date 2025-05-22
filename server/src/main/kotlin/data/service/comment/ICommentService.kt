@@ -1,7 +1,6 @@
 package com.carspotter.data.service.comment
 
 import com.carspotter.data.dto.CommentDTO
-import com.carspotter.data.model.Comment
 
 interface ICommentService {
     suspend fun addComment(userId: Int, postId: Int, commentText: String): Int

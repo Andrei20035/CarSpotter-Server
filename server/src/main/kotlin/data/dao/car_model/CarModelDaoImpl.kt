@@ -2,8 +2,11 @@ package com.carspotter.data.dao.car_model
 
 import com.carspotter.data.model.CarModel
 import com.carspotter.data.table.CarModels
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insertReturning
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class CarModelDaoImpl : ICarModelDAO {

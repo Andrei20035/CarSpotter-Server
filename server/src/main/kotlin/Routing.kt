@@ -1,14 +1,6 @@
 package com.carspotter
 
-import com.carspotter.routes.authRoutes
-import com.carspotter.routes.carModelRoutes
-import com.carspotter.routes.commentRoutes
-import com.carspotter.routes.friendRequestRoutes
-import com.carspotter.routes.friendRoutes
-import com.carspotter.routes.likeRoutes
-import com.carspotter.routes.postRoutes
-import com.carspotter.routes.userCarRoutes
-import com.carspotter.routes.userRoutes
+import com.carspotter.routes.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
@@ -88,12 +80,12 @@ fun Application.configureRouting() {
             postRoutes()
             userCarRoutes()
             userRoutes()
+            get("/") {
+                call.respondText("Sugi cariciu!")
+            }
 
         }
     }
 }
-
-// Helper function to generate JWT token
-
 
 class NotFoundException(message: String) : RuntimeException(message)

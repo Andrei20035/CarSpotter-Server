@@ -2,7 +2,6 @@ package com.carspotter.data.repository.post
 
 import com.carspotter.data.model.Post
 import java.time.Instant
-import java.time.ZoneId
 
 interface IPostRepository {
     suspend fun createPost(post: Post): Int

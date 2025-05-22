@@ -3,11 +3,7 @@ package com.carspotter.data.service.friend
 import com.carspotter.data.dto.FriendDTO
 import com.carspotter.data.dto.UserDTO
 import com.carspotter.data.dto.toDTO
-import com.carspotter.data.model.Friend
-import com.carspotter.data.model.User
-import com.carspotter.data.repository.friend.FriendRepositoryImpl
 import com.carspotter.data.repository.friend.IFriendRepository
-import com.carspotter.data.table.Friends
 
 class FriendServiceImpl(
     private val friendRepository: IFriendRepository

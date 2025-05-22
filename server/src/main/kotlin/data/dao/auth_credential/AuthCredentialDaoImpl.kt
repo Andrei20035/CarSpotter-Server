@@ -1,14 +1,15 @@
 package com.carspotter.data.dao.auth_credential
 
 import com.carspotter.data.dao.auth_credentials.IAuthCredentialDAO
-import com.carspotter.data.dto.AuthCredentialDTO
-import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.table.AuthCredentials
-import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insertReturning
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 
 class AuthCredentialDaoImpl : IAuthCredentialDAO {
     override suspend fun createCredentials(authCredential: AuthCredential): Int {

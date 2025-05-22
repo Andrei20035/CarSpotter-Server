@@ -4,9 +4,12 @@ import com.carspotter.data.model.User
 import com.carspotter.data.model.UserCar
 import com.carspotter.data.table.Users
 import com.carspotter.data.table.UsersCars
-import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insertReturning
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 
 class UserCarDaoImpl : IUserCarDAO {
     override suspend fun createUserCar(userCar: UserCar): Int {

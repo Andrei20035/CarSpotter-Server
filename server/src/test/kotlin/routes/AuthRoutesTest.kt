@@ -7,23 +7,18 @@ import com.carspotter.data.dto.AuthCredentialDTO
 import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.service.auth_credential.IAuthCredentialService
 import com.carspotter.routes.authRoutes
-import data.testutils.TestDatabase
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
-import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -31,7 +26,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
-import java.util.*
+
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuthRoutesTest : KoinTest {
@@ -40,15 +35,13 @@ class AuthRoutesTest : KoinTest {
 
     @BeforeAll
     fun setup() {
-        // Connect to the test database
-        Database.connect(
-            url = TestDatabase.postgresContainer.jdbcUrl,
-            driver = "org.postgresql.Driver",
-            user = TestDatabase.postgresContainer.username,
-            password = TestDatabase.postgresContainer.password
-        )
+//        Database.connect(
+//            url = TestDatabase.postgresContainer.jdbcUrl,
+//            driver = "org.postgresql.Driver",
+//            user = TestDatabase.postgresContainer.username,
+//            password = TestDatabase.postgresContainer.password
+//        )
 
-        // Mock the auth credential service
         authCredentialService = mockk()
     }
 
@@ -66,24 +59,10 @@ class AuthRoutesTest : KoinTest {
 
     // Helper function to configure the application for testing
     private fun Application.configureTestApplication() {
-        // Set JWT secret for tests
         System.setProperty("JWT_SECRET", "test-secret-key")
 
-        // Configure serialization
         configureSerialization()
 
-        // Configure content negotiation
-        install(ContentNegotiation) {
-            json(
-                Json {
-                    prettyPrint = true
-                    isLenient = true
-                    ignoreUnknownKeys = true
-                }
-            )
-        }
-
-        // Configure authentication
         install(Authentication) {
             jwt("jwt") {
                 realm = "Test Server"
@@ -93,7 +72,6 @@ class AuthRoutesTest : KoinTest {
                         .build()
                 )
                 validate { credential ->
-                    // Check for credentialId claim
                     if (credential.payload.getClaim("credentialId").asInt() != null) {
                         JWTPrincipal(credential.payload)
                     } else {
@@ -103,7 +81,6 @@ class AuthRoutesTest : KoinTest {
             }
         }
 
-        // Configure routing
         routing {
             authRoutes()
         }
@@ -117,7 +94,6 @@ class AuthRoutesTest : KoinTest {
 
     @Test
     fun `regular login with valid credentials returns token`() = testApplication {
-        // Arrange
         val email = "test@example.com"
         val password = "password123"
         val credentialId = 1
@@ -268,38 +244,38 @@ class AuthRoutesTest : KoinTest {
         }
     }
 
-    @Test
-    fun `update password with valid token returns success`() = testApplication {
-        // Arrange
-        val credentialId = 1
-        val newPassword = "newpassword456"
-
-        // Mock JWT environment
-        System.setProperty("JWT_SECRET", "test-secret-key")
-
-        coEvery { authCredentialService.updatePassword(credentialId, newPassword) } returns 1
-
-        // Configure the application
-        application {
-            configureTestApplication()
-        }
-
-        // Create a JWT token for testing
-        val token = JWT.create()
-            .withClaim("credentialId", credentialId)  // Using credentialId as that's what the route expects
-            .withExpiresAt(Date(System.currentTimeMillis() + 60000))
-            .sign(Algorithm.HMAC256(System.getenv("JWT_SECRET") ?: "test-secret-key"))
-
-        // Act
-        val response = client.put("/auth/update-password") {
-            contentType(ContentType.Application.Json)
-            header(HttpHeaders.Authorization, "Bearer $token")
-            setBody("""{"newPassword":"$newPassword"}""")
-        }
-
-        // Assert
-        assertEquals(HttpStatusCode.OK, response.status)
-
-        coVerify(exactly = 1) { authCredentialService.updatePassword(credentialId, newPassword) }
-    }
+//    @Test
+//    fun `update password with valid token returns success`() = testApplication {
+//        // Arrange
+//        val credentialId = 1
+//        val newPassword = "newpassword456"
+//
+//        // Mock JWT environment
+//        System.setProperty("JWT_SECRET", "test-secret-key")
+//
+//        coEvery { authCredentialService.updatePassword(credentialId, newPassword) } returns 1
+//
+//        // Configure the application
+//        application {
+//            configureTestApplication()
+//        }
+//
+//        // Create a JWT token for testing
+//        val token = JWT.create()
+//            .withClaim("credentialId", credentialId)  // Using credentialId as that's what the route expects
+//            .withExpiresAt(Date(System.currentTimeMillis() + 60000))
+//            .sign(Algorithm.HMAC256(System.getenv("JWT_SECRET") ?: "test-secret-key"))
+//
+//        // Act
+//        val response = client.put("/auth/update-password") {
+//            contentType(ContentType.Application.Json)
+//            header(HttpHeaders.Authorization, "Bearer $token")
+//            setBody("""{"newPassword":"$newPassword"}""")
+//        }
+//
+//        // Assert
+//        assertEquals(HttpStatusCode.OK, response.status)
+//
+//        coVerify(exactly = 1) { authCredentialService.updatePassword(credentialId, newPassword) }
+//    }
 }

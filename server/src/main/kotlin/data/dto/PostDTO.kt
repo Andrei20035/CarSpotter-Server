@@ -1,11 +1,6 @@
 package com.carspotter.data.dto
 
 import com.carspotter.data.model.Post
-import com.carspotter.data.table.CarModels
-import com.carspotter.data.table.Users
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.javatime.CurrentTimestamp
-import org.jetbrains.exposed.sql.javatime.timestamp
 import java.time.Instant
 
 data class PostDTO(

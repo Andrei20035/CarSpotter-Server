@@ -10,22 +10,18 @@ import com.carspotter.data.dto.request.UpdatePasswordRequest
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.service.auth_credential.IAuthCredentialService
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.auth.authenticate
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.principal
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.post
-import io.ktor.server.routing.put
-import io.ktor.server.routing.route
+import io.github.cdimascio.dotenv.dotenv
+import io.ktor.http.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
-import java.util.Date
+import java.util.*
 
 fun Route.authRoutes() {
-    val authCredentialService: IAuthCredentialService by inject()
+    val authCredentialService: IAuthCredentialService by application.inject()
 
     route("/auth") {
         post("/regular-login") {
@@ -138,7 +134,8 @@ fun Route.authRoutes() {
 }
 
 private fun generateJwtToken(credential: AuthCredentialDTO): Map<String, String> {
-    val secret = System.getenv("JWT_SECRET") ?: throw IllegalStateException("JWT_SECRET environment variable is not set")
+    val dotenv = dotenv()
+    val secret = System.getenv("JWT_SECRET") ?: dotenv["JWT_SECRET"] ?: throw IllegalStateException("JWT_SECRET environment variable is not set")
 
     val token = JWT.create()
         .withClaim("userId", credential.id)

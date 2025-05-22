@@ -1,7 +1,6 @@
 package com.carspotter.data.repository.auth_credentials
 
 import com.carspotter.data.dao.auth_credentials.IAuthCredentialDAO
-import com.carspotter.data.dto.AuthCredentialDTO
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.repository.auth_credential.IAuthCredentialRepository
 

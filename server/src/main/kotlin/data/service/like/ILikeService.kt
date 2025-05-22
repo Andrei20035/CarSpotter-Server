@@ -1,7 +1,6 @@
 package com.carspotter.data.service.like
 
 import com.carspotter.data.dto.UserDTO
-import com.carspotter.data.model.User
 
 interface ILikeService {
     suspend fun likePost(userId: Int, postId: Int): Int

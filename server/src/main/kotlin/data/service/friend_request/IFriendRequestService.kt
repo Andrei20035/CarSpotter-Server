@@ -2,8 +2,6 @@ package com.carspotter.data.service.friend_request
 
 import com.carspotter.data.dto.FriendRequestDTO
 import com.carspotter.data.dto.UserDTO
-import com.carspotter.data.model.FriendRequest
-import com.carspotter.data.model.User
 
 interface IFriendRequestService {
     suspend fun sendFriendRequest(senderId: Int, receiverId: Int): Int

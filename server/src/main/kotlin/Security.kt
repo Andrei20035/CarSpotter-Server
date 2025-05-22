@@ -2,38 +2,25 @@ package com.carspotter
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import io.github.cdimascio.dotenv.dotenv
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
-import io.ktor.server.plugins.calllogging.*
-import io.ktor.server.plugins.compression.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.cors.routing.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.server.sessions.*
-import io.ktor.server.websocket.*
-import io.ktor.websocket.*
-import java.time.Duration
-import kotlin.time.Duration.Companion.seconds
-import org.jetbrains.exposed.sql.*
-import org.slf4j.event.*
 
 fun Application.configureSecurity() {
-    // Please read the jwt property from the config file if you are using EngineMain
-    val jwtAudience = environment.config.propertyOrNull("jwt.audience")?.getString() ?: "carspotter-audience"
-    val jwtIssuer = environment.config.propertyOrNull("jwt.issuer")?.getString() ?: "carspotter"
+    val dotenv = dotenv()
+
+    val jwtAudience = System.getenv("JWT_AUDIENCE") ?: dotenv["JWT_AUDIENCE"] ?: throw IllegalStateException("JWT_AUDIENCE environment variable is not set")
+    val jwtIssuer = System.getenv("JWT_ISSUER") ?: dotenv["JWT_ISSUER"] ?: throw IllegalStateException("JWT_ISSUER environment variable is not set")
     val jwtRealm = "CarSpotter app"
-    val jwtSecret = System.getenv("JWT_SECRET") ?: "default-secret"
+    val jwtSecret = System.getenv("JWT_SECRET") ?: dotenv["JWT_SECRET"] ?: throw IllegalStateException("JWT_SECRET environment variable is not set")
 
     // JWT authentication
     authentication {
-        jwt("auth-jwt") {
+        jwt("jwt") {
             realm = jwtRealm
             verifier(
                 JWT
@@ -44,6 +31,21 @@ fun Application.configureSecurity() {
             )
             validate { credential ->
                 if (credential.payload.audience.contains(jwtAudience)) JWTPrincipal(credential.payload) else null
+            }
+        }
+        jwt("admin") {
+            realm = "CarSpotter Admin"
+            verifier(
+                JWT
+                    .require(Algorithm.HMAC256(jwtSecret))
+                    .withAudience(jwtAudience)
+                    .withIssuer(jwtIssuer)
+                    .build()
+            )
+            validate { credential ->
+                if (credential.payload.getClaim("email").asString().endsWith("@admin.com")) { // TODO: Rethink the logic for admin
+                    JWTPrincipal(credential.payload)
+                } else null
             }
         }
     }
@@ -58,8 +60,8 @@ fun Application.configureSecurity() {
                     authorizeUrl = "https://accounts.google.com/o/oauth2/auth",
                     accessTokenUrl = "https://accounts.google.com/o/oauth2/token",
                     requestMethod = HttpMethod.Post,
-                    clientId = System.getenv("GOOGLE_CLIENT_ID"),
-                    clientSecret = System.getenv("GOOGLE_CLIENT_SECRET"),
+                    clientId = System.getenv("GOOGLE_CLIENT_ID"), // TODO: Register the app on Google cloud console to get this
+                    clientSecret = System.getenv("GOOGLE_CLIENT_SECRET"), // TODO: Register the app on Google cloud console to get this
                     defaultScopes = listOf("https://www.googleapis.com/auth/userinfo.profile")
                 )
             }
