@@ -15,7 +15,7 @@ class FriendDaoImpl : IFriendDAO {
             val secondaryInsert = insertFriend(friendId, userId)
 
             if (primaryInsert == null || secondaryInsert == null) {
-                error("Failed to add one or both sides of the friendship")
+                throw IllegalStateException("Failed to insert friendship: $userId <-> $friendId")
             }
             friendId
         }

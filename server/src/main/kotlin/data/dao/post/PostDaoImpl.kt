@@ -15,7 +15,7 @@ class PostDaoImpl : IPostDAO {
                 it[carModelId] = post.carModelId
                 it[imagePath] = post.imagePath
                 it[description] = post.description
-            }.singleOrNull()?.get(Posts.id) ?: error("Failed to insert post")
+            }.singleOrNull()?.get(Posts.id) ?: throw IllegalStateException("Failed to insert post")
         }
     }
 

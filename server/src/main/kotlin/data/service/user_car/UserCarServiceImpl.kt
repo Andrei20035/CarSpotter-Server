@@ -13,10 +13,8 @@ class UserCarServiceImpl(
     override suspend fun createUserCar(userCar: UserCar): Int {
         return try {
             userCarRepository.createUserCar(userCar)
-        } catch (e: ExposedSQLException) {
-            throw IllegalArgumentException("Invalid userId or carModelId", e)
-        } catch (e: Exception) {
-            throw RuntimeException("Unexpected error while creating user car", e)
+        } catch (e: IllegalStateException) {
+            throw UserCarCreationException("Invalid userId or carModelId", e)
         }
     }
 
@@ -44,3 +42,5 @@ class UserCarServiceImpl(
         return userCarRepository.getAllUserCars().map { it.toDTO() }
     }
 }
+
+class UserCarCreationException(message: String, cause: Throwable? = null): Exception(message, cause)

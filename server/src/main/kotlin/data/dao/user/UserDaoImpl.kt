@@ -20,7 +20,7 @@ class UserDaoImpl : IUserDAO {
                 it[username] = user.username
                 it[country] = user.country
                 it[spotScore] = user.spotScore
-            }.singleOrNull()?.get(Users.id) ?: error("Failed to insert user")
+            }.singleOrNull()?.get(Users.id) ?: throw UserCreationException("Failed to insert user")
         }
     }
 
@@ -108,3 +108,5 @@ class UserDaoImpl : IUserDAO {
     }
 
 }
+
+class UserCreationException(message: String) : Exception(message)

@@ -11,7 +11,11 @@ class PostServiceImpl(
     private val postRepository: IPostRepository
 ): IPostService {
     override suspend fun createPost(post: Post): Int {
-        return postRepository.createPost(post)
+        return try {
+            postRepository.createPost(post)
+        } catch (e: IllegalStateException) {
+            throw PostCreationException("Failed to create post for user ${post.userId}", e)
+        }
     }
 
     override suspend fun getPostById(postId: Int): PostDTO? {
@@ -41,6 +45,12 @@ class PostServiceImpl(
     }
 
     override suspend fun getUserIdByPost(postId: Int): Int {
-        return postRepository.getUserIdByPost(postId)
+        return try {
+            postRepository.getUserIdByPost(postId)
+        } catch (e: IllegalStateException) {
+            throw IllegalArgumentException("Cannot fetch user: post does not exist", e)
+        }
     }
 }
+
+class PostCreationException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

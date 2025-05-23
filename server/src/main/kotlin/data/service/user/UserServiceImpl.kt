@@ -1,5 +1,6 @@
 package com.carspotter.data.service.user
 
+import com.carspotter.data.dao.user.UserCreationException
 import com.carspotter.data.dto.UserDTO
 import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.User
@@ -9,7 +10,11 @@ class UserServiceImpl(
     private val userRepository: IUserRepository
 ): IUserService {
     override suspend fun createUser(user: User): Int {
-        return userRepository.createUser(user)
+        return try {
+            userRepository.createUser(user)
+        } catch (e: UserCreationException) {
+            throw IllegalArgumentException("Could not create user: ${e.message}", e)
+        }
     }
 
     override suspend fun getUserById(userId: Int): UserDTO? {

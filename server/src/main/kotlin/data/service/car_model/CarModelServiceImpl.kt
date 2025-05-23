@@ -7,7 +7,11 @@ class CarModelServiceImpl(
     private val carModelRepository: ICarModelRepository
 ): ICarModelService {
     override suspend fun createCarModel(carModel: CarModel): Int {
-        return carModelRepository.createCarModel(carModel)
+        return try {
+            carModelRepository.createCarModel(carModel)
+        } catch (e: IllegalStateException) {
+            throw IllegalArgumentException( "Failed to add car model: ${carModel.brand} ${carModel.model} (${carModel.year})", e)
+        }
     }
 
     override suspend fun getCarModelById(carModelId: Int): CarModel? {

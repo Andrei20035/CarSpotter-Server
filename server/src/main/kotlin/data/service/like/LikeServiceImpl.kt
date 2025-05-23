@@ -10,7 +10,12 @@ class LikeServiceImpl(
     override suspend fun likePost(userId: Int, postId: Int): Int {
         val exists = likeRepository.hasUserLikedPost(userId, postId)
         if(exists) return 0
-        return likeRepository.likePost(userId, postId)
+
+        return try {
+            likeRepository.likePost(userId, postId)
+        } catch (e: IllegalStateException) {
+            throw LikeCreationException("Failed to like post $postId for user $userId", e)
+        }
     }
 
     override suspend fun unlikePost(userId: Int, postId: Int): Int {
@@ -23,3 +28,5 @@ class LikeServiceImpl(
         return likeRepository.getLikesForPost(postId).map { it.toDTO() }
     }
 }
+
+class LikeCreationException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

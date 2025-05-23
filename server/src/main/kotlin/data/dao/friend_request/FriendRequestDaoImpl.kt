@@ -16,7 +16,7 @@ class FriendRequestDaoImpl : IFriendRequestDAO {
                 .insertReturning(listOf(FriendRequests.senderId, FriendRequests.receiverId)) {
                     it[this.senderId] = senderId
                     it[this.receiverId] = receiverId
-                }.singleOrNull()?.get(FriendRequests.senderId) ?: error("Failed to add friend request to database")
+                }.singleOrNull()?.get(FriendRequests.senderId) ?: throw IllegalStateException("Failed to add friend request to database")
         }
     }
 

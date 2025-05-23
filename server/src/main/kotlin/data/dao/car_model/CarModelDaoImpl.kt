@@ -17,7 +17,7 @@ class CarModelDaoImpl : ICarModelDAO {
                     it[brand] = carModel.brand
                     it[model] = carModel.model
                     it[year] = carModel.year
-                }.singleOrNull()?.get(CarModels.id) ?: error("Failed to insert car model")
+                }.singleOrNull()?.get(CarModels.id) ?: throw IllegalStateException("Failed to insert car model")
         }
     }
 

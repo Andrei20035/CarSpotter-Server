@@ -9,7 +9,13 @@ class FriendRequestServiceImpl(
     private val friendRequestRepository: IFriendRequestRepository
 ): IFriendRequestService {
     override suspend fun sendFriendRequest(senderId: Int, receiverId: Int): Int {
-        return friendRequestRepository.sendFriendRequest(senderId, receiverId)
+        try {
+            if(senderId == receiverId) throw IllegalArgumentException("Cannot send friend request to yourself")
+
+            return friendRequestRepository.sendFriendRequest(senderId, receiverId)
+        } catch(e: IllegalStateException) {
+            throw SendFriendRequestException("Failed to send friend request: $senderId <-> $receiverId", e)
+        }
     }
 
     override suspend fun acceptFriendRequest(senderId: Int, receiverId: Int): Boolean {
@@ -28,3 +34,5 @@ class FriendRequestServiceImpl(
         return friendRequestRepository.getAllFriendReqFromDB().map { it.toDTO() }
     }
 }
+
+class SendFriendRequestException(message: String, error: Throwable? = null): Exception(message, error)

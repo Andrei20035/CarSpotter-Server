@@ -9,7 +9,13 @@ class FriendServiceImpl(
     private val friendRepository: IFriendRepository
 ): IFriendService {
     override suspend fun addFriend(userId: Int, friendId: Int): Int {
-        return friendRepository.addFriend(userId, friendId)
+        try {
+            if(userId == friendId) throw IllegalArgumentException("Cannot add yourself as a friend")
+
+            return friendRepository.addFriend(userId, friendId)
+        } catch (e: IllegalStateException) {
+            throw FriendshipCreationException("Failed to add friendship: $userId <-> $friendId", e)
+        }
     }
 
     override suspend fun getAllFriends(userId: Int): List<UserDTO> {
@@ -24,3 +30,5 @@ class FriendServiceImpl(
         return friendRepository.getAllFriendsInDb().map { it.toDTO() }
     }
 }
+
+class FriendshipCreationException(message: String, error: Throwable? = null): Exception(message, error)

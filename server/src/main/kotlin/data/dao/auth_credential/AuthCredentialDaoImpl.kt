@@ -19,7 +19,7 @@ class AuthCredentialDaoImpl : IAuthCredentialDAO {
                 it[password] = authCredential.password
                 it[provider] = authCredential.provider.name
                 it[googleId] = authCredential.googleId
-            }.singleOrNull()?.get(AuthCredentials.id) ?: error("Failed to insert authCredential")
+            }.singleOrNull()?.get(AuthCredentials.id) ?: throw IllegalStateException("Failed to insert authCredential")
         }
     }
 

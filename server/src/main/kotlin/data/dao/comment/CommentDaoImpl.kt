@@ -16,7 +16,7 @@ class CommentDaoImpl : ICommentDAO {
                     it[Comments.userId] = userId
                     it[Comments.postId] = postId
                     it[Comments.commentText] = commentText
-                }.singleOrNull()?.get(Comments.id) ?: error("Failed to insert comment")
+                }.singleOrNull()?.get(Comments.id) ?: throw IllegalStateException("Failed to insert comment")
         }
     }
 

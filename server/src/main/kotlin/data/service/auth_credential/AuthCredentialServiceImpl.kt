@@ -25,7 +25,11 @@ class AuthCredentialServiceImpl(
 
         val authCredentialsToSave = authCredential.copy(password = hashedPassword)
 
-        return authCredentialRepository.createCredentials(authCredentialsToSave)
+        return try {
+            authCredentialRepository.createCredentials(authCredentialsToSave)
+        } catch (e: IllegalStateException) {
+            throw CredentialCreationException("Unable to create credentials", e)
+        }
     }
 
     override suspend fun regularLogin(email: String, password: String): AuthCredentialDTO? {
@@ -80,3 +84,5 @@ class AuthCredentialServiceImpl(
         return authCredentialRepository.getCredentialsById(credentialId)
     }
 }
+
+class CredentialCreationException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

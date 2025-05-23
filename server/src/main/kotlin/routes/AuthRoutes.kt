@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.carspotter.data.dto.AuthCredentialDTO
 import com.carspotter.data.dto.request.GoogleLoginRequest
+import com.carspotter.data.dto.request.LoginRequest
 import com.carspotter.data.dto.request.RegisterRequest
 import com.carspotter.data.dto.request.RegularLoginRequest
 import com.carspotter.data.dto.request.UpdatePasswordRequest
@@ -24,42 +25,36 @@ fun Route.authRoutes() {
     val authCredentialService: IAuthCredentialService by application.inject()
 
     route("/auth") {
-        post("/regular-login") {
-            val request = call.receive<RegularLoginRequest>()
+        post("/login") {
+            val request = call.receive<LoginRequest>()
 
-            if(request.email.isBlank() || request.password.isBlank()) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid email or password"))
+            if (request.email.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Email must not be empty"))
                 return@post
             }
 
-            if(!isValidEmail(request.email)) {
+            if (!isValidEmail(request.email)) {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid email format"))
                 return@post
             }
 
-            val result = authCredentialService.regularLogin(request.email, request.password)
+            val result = when (request.provider) {
+                AuthProvider.REGULAR -> {
+                    if (request.password.isNullOrBlank()) {
+                        call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Password must not be empty"))
+                        return@post
+                    }
+                    authCredentialService.regularLogin(request.email, request.password)
+                }
 
-            if (result != null) {
-                call.respond(generateJwtToken(result))
-            } else {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid credentials"))
+                AuthProvider.GOOGLE -> {
+                    if (request.googleId.isNullOrBlank()) {
+                        call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Google ID must not be empty"))
+                        return@post
+                    }
+                    authCredentialService.googleLogin(request.email, request.googleId)
+                }
             }
-        }
-
-        post("/google-login") {
-            val request = call.receive<GoogleLoginRequest>()
-
-            if(request.email.isBlank() || request.googleId.isBlank()) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Email or google id must not be empty"))
-                return@post
-            }
-
-            if(!isValidEmail(request.email)) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid email format"))
-                return@post
-            }
-
-            val result = authCredentialService.googleLogin(request.email, request.googleId)
 
             if (result != null) {
                 call.respond(generateJwtToken(result))
@@ -98,7 +93,7 @@ fun Route.authRoutes() {
         }
 
         authenticate("jwt") {
-            delete("/auth/delete-account") {
+            delete("/delete-account") {
                 val credentialId = call.principal<JWTPrincipal>()?.payload?.getClaim("credentialId")?.asInt()
                     ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid token"))
 

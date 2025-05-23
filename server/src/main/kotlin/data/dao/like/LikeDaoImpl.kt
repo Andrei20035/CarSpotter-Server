@@ -18,7 +18,7 @@ class LikeDaoImpl : ILikeDAO {
                     it[Likes.userId] = userId
                     it[Likes.postId] = postId
                 }.singleOrNull()?.get(Likes.id)
-                ?: throw IllegalArgumentException("Failed to insert like for user $userId and post $postId")
+                ?: throw IllegalStateException("Failed to insert like for user $userId and post $postId")
         }
     }
 

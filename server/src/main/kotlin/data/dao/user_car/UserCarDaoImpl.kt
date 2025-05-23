@@ -18,7 +18,7 @@ class UserCarDaoImpl : IUserCarDAO {
                 it[userId] = userCar.userId
                 it[carModelId] = userCar.carModelId
                 it[imagePath] = userCar.imagePath
-            }.singleOrNull()?.get(UsersCars.id) ?: error("Failed to create user car")
+            }.singleOrNull()?.get(UsersCars.id) ?: throw IllegalStateException("Failed to create user car")
         }
     }
 
@@ -77,7 +77,7 @@ class UserCarDaoImpl : IUserCarDAO {
                         createdAt = row[Users.createdAt],
                         updatedAt = row[Users.updatedAt]
                     )
-                }.singleOrNull() ?: error("User with userCarId: $userCarId not found")
+                }.singleOrNull() ?: throw NoSuchElementException("User with userCarId: $userCarId not found")
         }
     }
 

@@ -8,7 +8,11 @@ class CommentServiceImpl(
     private val commentRepository: ICommentRepository,
 ): ICommentService {
     override suspend fun addComment(userId: Int, postId: Int, commentText: String): Int {
-        return commentRepository.addComment(userId, postId, commentText)
+        return try {
+            commentRepository.addComment(userId, postId, commentText)
+        } catch (e: IllegalStateException) {
+            throw IllegalArgumentException("Failed to add comment: $commentText", e)
+        }
     }
 
     override suspend fun deleteComment(commentId: Int): Int {
