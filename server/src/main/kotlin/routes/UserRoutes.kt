@@ -86,7 +86,6 @@ fun Route.userRoutes() {
                     call.respond(HttpStatusCode.NotFound, mapOf("error" to "User not found"))
                 }
             }
-            
         }
     }
 }
