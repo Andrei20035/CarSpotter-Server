@@ -22,13 +22,13 @@ fun Route.friendRoutes() {
 
             post("/{friendId}") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val friendId = call.parameters["friendId"]?.toIntOrNull()
-                    ?: return@post call.respond(HttpStatusCode.BadRequest, "Invalid or missing friendId")
+                    ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing friendId"))
 
                 if (userId == friendId) {
-                    return@post call.respond(HttpStatusCode.BadRequest, "Cannot add yourself as a friend")
+                    return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Cannot add yourself as a friend"))
                 }
 
                 val result = friendService.addFriend(userId, friendId)
@@ -42,10 +42,10 @@ fun Route.friendRoutes() {
 
             delete("/{friendId}") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val friendId = call.parameters["friendId"]?.toIntOrNull()
-                    ?: return@delete call.respond(HttpStatusCode.BadRequest, "Invalid or missing friendId")
+                    ?: return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing friendId"))
 
                 val deletedRows = friendService.deleteFriend(userId, friendId)
 
@@ -56,7 +56,7 @@ fun Route.friendRoutes() {
 
             get {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@get call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                    ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val friends = friendService.getAllFriends(userId)
                 call.respond(HttpStatusCode.OK, friends)

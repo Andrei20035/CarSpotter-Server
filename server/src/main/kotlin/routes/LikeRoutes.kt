@@ -15,10 +15,10 @@ fun Route.likeRoutes() {
         route("/like") {
             post("/{postId}") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val postId = call.parameters["postId"]?.toIntOrNull()
-                    ?: return@post call.respond(HttpStatusCode.BadRequest, "Invalid or missing post ID")
+                    ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing post ID"))
 
                 val result = likeService.likePost(userId, postId)
 
@@ -31,10 +31,10 @@ fun Route.likeRoutes() {
 
             delete("/{postId}") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val postId = call.parameters["postId"]?.toIntOrNull()
-                    ?: return@delete call.respond(HttpStatusCode.BadRequest, "Invalid or missing post ID")
+                    ?: return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing post ID"))
 
                 val rowsDeleted = likeService.unlikePost(userId, postId)
 
@@ -47,12 +47,12 @@ fun Route.likeRoutes() {
 
             get("/post/{postId}") {
                 val postId = call.parameters["postId"]?.toIntOrNull()
-                    ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid or missing post ID")
+                    ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing post ID"))
 
                 val users = likeService.getLikesForPost(postId)
 
                 if (users.isEmpty()) {
-                    call.respond(HttpStatusCode.NoContent, "No likes for this post")
+                    call.respond(HttpStatusCode.NoContent, mapOf("error" to "No likes for this post"))
                 } else {
                     call.respond(HttpStatusCode.OK, users)
                 }

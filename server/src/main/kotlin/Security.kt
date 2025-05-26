@@ -9,6 +9,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.response.respond
 
 fun Application.configureSecurity() {
     val dotenv = dotenv()
@@ -32,6 +33,9 @@ fun Application.configureSecurity() {
             validate { credential ->
                 if (credential.payload.audience.contains(jwtAudience)) JWTPrincipal(credential.payload) else null
             }
+            challenge { _, _ ->
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+            }
         }
         jwt("admin") {
             realm = "CarSpotter Admin"
@@ -47,6 +51,10 @@ fun Application.configureSecurity() {
                     JWTPrincipal(credential.payload)
                 } else null
             }
+            challenge { _, _ ->
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+            }
+
         }
     }
 

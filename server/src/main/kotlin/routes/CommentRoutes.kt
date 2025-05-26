@@ -12,17 +12,17 @@ import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
 fun Route.commentRoutes() {
-    val commentService: ICommentService by inject()
-    val postService: IPostService by inject()
+    val commentService: ICommentService by application.inject()
+    val postService: IPostService by application.inject()
 
         get("/comment/{postId}") {
             val postId = call.parameters["postId"]?.toIntOrNull()
-                ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid post ID")
+                ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid post ID"))
 
             val comments = commentService.getCommentsForPost(postId)
 
             if (comments.isEmpty()) {
-                return@get call.respond(HttpStatusCode.NoContent, "No comments found for this post")
+                return@get call.respond(HttpStatusCode.NoContent, mapOf("error" to "No comments found for this post"))
             }
 
             call.respond(HttpStatusCode.OK, comments)
@@ -33,7 +33,7 @@ fun Route.commentRoutes() {
                 post {
                     val request = call.receive<CommentRequest>()
                     val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                        ?: return@post call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                        ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                     if (request.commentText.isBlank()) {
                         call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Comment text cannot be blank"))
@@ -54,24 +54,21 @@ fun Route.commentRoutes() {
 
                 delete("/{commentId}") {
                     val commentId = call.parameters["commentId"]?.toIntOrNull()
-                        ?: return@delete call.respond(HttpStatusCode.BadRequest, "Invalid comment ID")
+                        ?: return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid comment ID"))
 
                     val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                        ?: return@delete call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                        ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                     val comment = commentService.getCommentById(commentId)
 
                     if (comment == null) {
-                        return@delete call.respond(HttpStatusCode.NotFound, "Comment not found")
+                        return@delete call.respond(HttpStatusCode.NotFound, mapOf("error" to "Comment not found"))
                     }
 
                     val postOwnerId = postService.getUserIdByPost(comment.postId)
 
                     if (comment.userId != userId && postOwnerId != userId) {
-                        return@delete call.respond(
-                            HttpStatusCode.Forbidden,
-                            "You are not authorized to delete this comment"
-                        )
+                        return@delete call.respond(HttpStatusCode.Forbidden, mapOf("error" to "You are not authorized to delete this comment"))
                     }
 
                     val rowsAffected = commentService.deleteComment(commentId)

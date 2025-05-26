@@ -93,7 +93,7 @@ fun Route.authRoutes() {
         }
 
         authenticate("jwt") {
-            delete("/delete-account") {
+            delete("/account") {
                 val credentialId = call.principal<JWTPrincipal>()?.payload?.getClaim("credentialId")?.asInt()
                     ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid token"))
 
@@ -106,9 +106,9 @@ fun Route.authRoutes() {
                 }
             }
 
-            put("/update-password") {
+            put("/password") {
                 val credentialId = call.principal<JWTPrincipal>()?.payload?.getClaim("credentialId")?.asInt()
-                    ?: return@put call.respond(HttpStatusCode.Unauthorized, "Invalid token")
+                    ?: return@put call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid token"))
 
                 val request = call.receive<UpdatePasswordRequest>()
 
@@ -133,7 +133,7 @@ private fun generateJwtToken(credential: AuthCredentialDTO): Map<String, String>
     val secret = System.getenv("JWT_SECRET") ?: dotenv["JWT_SECRET"] ?: throw IllegalStateException("JWT_SECRET environment variable is not set")
 
     val token = JWT.create()
-        .withClaim("userId", credential.id)
+        .withClaim("credentialId", credential.id)
         .withClaim("email", credential.email)
         .withExpiresAt(Date(System.currentTimeMillis() + 86400000)) // 24 hours
         .sign(Algorithm.HMAC256(secret))

@@ -20,7 +20,7 @@ fun Route.userCarRoutes() {
         route("/user-car") {
             post("/create") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val userCarRequest = call.receive<UserCarRequest>()
                 val userCar = userCarRequest.toUserCar(userId)
@@ -42,33 +42,33 @@ fun Route.userCarRoutes() {
 
             get("/{userCarId}") {
                 val userCarId = call.parameters["userCarId"]?.toIntOrNull()
-                    ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid or missing user car ID")
+                    ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing user car ID"))
 
                 val userCar = userCarService.getUserCarById(userCarId)
 
                 if (userCar != null) {
                     return@get call.respond(HttpStatusCode.OK, userCar)
                 } else {
-                    return@get call.respond(HttpStatusCode.NotFound, "User car not found")
+                    return@get call.respond(HttpStatusCode.NotFound, mapOf("error" to "User car not found"))
                 }
             }
 
             get("/user/{userId}") {
                 val userId = call.parameters["userId"]?.toIntOrNull()
-                    ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid or missing user ID")
+                    ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing user ID"))
 
                 val userCar = userCarService.getUserCarByUserId(userId)
 
                 if (userCar != null) {
                     return@get call.respond(HttpStatusCode.OK, userCar)
                 } else {
-                    return@get call.respond(HttpStatusCode.NotFound, "User car not found")
+                    return@get call.respond(HttpStatusCode.NotFound, mapOf("error" to "User car not found"))
                 }
             }
 
             get("/user-by-car/{userCarId}") {
                 val userCarId = call.parameters["userCarId"]?.toIntOrNull()
-                    ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid or missing user car ID")
+                    ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing user car ID"))
 
                 val user = userCarService.getUserByUserCarId(userCarId)
 
@@ -77,7 +77,7 @@ fun Route.userCarRoutes() {
 
             put("/update") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@put call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                    ?: return@put call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val request = call.receive<UserCarUpdateRequest>()
 
@@ -86,20 +86,20 @@ fun Route.userCarRoutes() {
                 if(updatedRows > 0) {
                     call.respond(HttpStatusCode.OK, mapOf("message" to "User car updated successfully"))
                 } else {
-                    call.respond(HttpStatusCode.NotFound, "User car not found")
+                    call.respond(HttpStatusCode.NotFound, mapOf("error" to "User car not found"))
                 }
             }
 
             delete("/delete") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val deletedRows = userCarService.deleteUserCar(userId)
 
                 if(deletedRows > 0) {
                     return@delete call.respond(HttpStatusCode.OK, mapOf("message" to "User car deleted successfully"))
                 } else {
-                    return@delete call.respond(HttpStatusCode.NotFound, "User car not found")
+                    return@delete call.respond(HttpStatusCode.NotFound, mapOf("error" to "User car not found"))
                 }
             }
 

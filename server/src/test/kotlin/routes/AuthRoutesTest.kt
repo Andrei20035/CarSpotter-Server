@@ -19,6 +19,8 @@ import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -26,7 +28,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
-import java.util.Date
+import java.util.*
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -89,12 +91,13 @@ class AuthRoutesTest : KoinTest {
     fun `regular login with valid credentials returns token`() = testApplication {
         val email = "test@example.com"
         val password = "password123"
+        val provider = AuthProvider.REGULAR
         val credentialId = 1
 
         val mockCredential = AuthCredentialDTO(
             id = credentialId,
             email = email,
-            provider = AuthProvider.REGULAR,
+            provider = provider,
             providerId = null
         )
 
@@ -106,7 +109,7 @@ class AuthRoutesTest : KoinTest {
 
         val response = client.post("/auth/login") {
             contentType(ContentType.Application.Json)
-            setBody("""{"email":"$email","password":"$password"}""")
+            setBody("""{"email":"$email","password":"$password","provider":"REGULAR"}""")
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
@@ -119,7 +122,17 @@ class AuthRoutesTest : KoinTest {
     @Test
     fun `regular login with invalid credentials returns unauthorized`() = testApplication {
         val email = "test@example.com"
-        val password = "wrongpassword"
+        val password = "password123"
+        val provider = AuthProvider.REGULAR
+        val googleId = "1234"
+        val credentialId = 1
+
+        val mockCredential = AuthCredentialDTO(
+            id = credentialId,
+            email = email,
+            provider = provider,
+            providerId = googleId,
+        )
 
         coEvery { authCredentialService.regularLogin(email, password) } returns null
 
@@ -129,7 +142,7 @@ class AuthRoutesTest : KoinTest {
 
         val response = client.post("/auth/login") {
             contentType(ContentType.Application.Json)
-            setBody("""{"email":"$email","password":"$password"}""")
+            setBody("""{"email":"$email","password":"$password","googleId":"$googleId","provider":"REGULAR"}""")
         }
 
         assertEquals(HttpStatusCode.Unauthorized, response.status)
@@ -161,11 +174,12 @@ class AuthRoutesTest : KoinTest {
         val email = "test@example.com"
         val googleId = "google123"
         val credentialId = 1
+        val provider = AuthProvider.GOOGLE
 
         val mockCredential = AuthCredentialDTO(
             id = credentialId,
             email = email,
-            provider = AuthProvider.GOOGLE,
+            provider = provider,
             providerId = googleId
         )
 
@@ -177,11 +191,12 @@ class AuthRoutesTest : KoinTest {
 
         val response = client.post("/auth/login") {
             contentType(ContentType.Application.Json)
-            setBody("""{"email":"$email","googleId":"$googleId"}""")
+            setBody("""{"email":"$email","googleId":"$googleId","provider":"GOOGLE"}""")
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
         val responseBody = response.bodyAsText()
+        println(responseBody)
         assertTrue(responseBody.contains("token"))
 
         coVerify(exactly = 1) { authCredentialService.googleLogin(email, googleId) }
@@ -191,11 +206,12 @@ class AuthRoutesTest : KoinTest {
     fun `register with valid data returns created status`() = testApplication {
         val email = "newuser@example.com"
         val password = "newpassword123"
+        val provider = AuthProvider.REGULAR
         val credentialId = 2
 
         coEvery {
             authCredentialService.createCredentials(match {
-                it.email == email && it.password == password && it.provider == AuthProvider.REGULAR
+                it.email == email && it.password == password && it.provider == provider
             })
         } returns credentialId
 
@@ -208,23 +224,20 @@ class AuthRoutesTest : KoinTest {
             setBody("""{"email":"$email","password":"$password","provider":"REGULAR"}""")
         }
 
-        // Assert
         assertEquals(HttpStatusCode.Created, response.status)
 
         coVerify(exactly = 1) {
             authCredentialService.createCredentials(match {
-                it.email == email && it.password == password && it.provider == AuthProvider.REGULAR
+                it.email == email && it.password == password && it.provider == provider
             })
         }
     }
 
     @Test
     fun `update password with valid token returns success`() = testApplication {
-        // Arrange
         val credentialId = 1
         val newPassword = "newpassword456"
 
-        // Mock JWT environment
         System.setProperty("JWT_SECRET", "test-secret-key")
 
         coEvery { authCredentialService.updatePassword(credentialId, newPassword) } returns 1
@@ -234,11 +247,11 @@ class AuthRoutesTest : KoinTest {
         }
 
         val token = JWT.create()
-            .withClaim("userId", credentialId)  // Using credentialId as that's what the route expects
+            .withClaim("credentialId", credentialId)
             .withExpiresAt(Date(System.currentTimeMillis() + 60000))
             .sign(Algorithm.HMAC256(System.getenv("JWT_SECRET") ?: "test-secret-key"))
 
-        val response = client.put("/auth/update-password") {
+        val response = client.put("/auth/password") {
             contentType(ContentType.Application.Json)
             header(HttpHeaders.Authorization, "Bearer $token")
             setBody("""{"newPassword":"$newPassword"}""")
@@ -247,6 +260,42 @@ class AuthRoutesTest : KoinTest {
         // Assert
         assertEquals(HttpStatusCode.OK, response.status)
 
+        val expectedJson = Json.parseToJsonElement("""{"message":"Password updated successfully"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
         coVerify(exactly = 1) { authCredentialService.updatePassword(credentialId, newPassword) }
+    }
+
+    @Test
+    fun `delete account should return success`() = testApplication {
+        val credentialId = 1
+
+        System.setProperty("JWT_SECRET", "test-secret-key")
+
+        coEvery { authCredentialService.deleteCredentials(credentialId) } returns 1
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = JWT.create()
+            .withClaim("credentialId", credentialId)
+            .withExpiresAt(Date(System.currentTimeMillis() + 60000))
+            .sign(Algorithm.HMAC256(System.getenv("JWT_SECRET") ?: "test-secret-key"))
+
+        val response = client.delete("/auth/account") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"message":"Account deleted successfully"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { authCredentialService.deleteCredentials(credentialId)  }
     }
 }

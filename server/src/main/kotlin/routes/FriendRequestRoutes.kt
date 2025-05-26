@@ -22,13 +22,13 @@ fun Route.friendRequestRoutes() {
 
             post("/{receiverId}") {
                 val senderId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val receiverId = call.parameters["receiverId"]?.toIntOrNull()
-                    ?: return@post call.respond(HttpStatusCode.BadRequest, "Invalid or missing receiverId")
+                    ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing receiverId"))
 
                 if (senderId == receiverId) {
-                    return@post call.respond(HttpStatusCode.BadRequest, "You cannot send a friend request to yourself")
+                    return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "You cannot send a friend request to yourself"))
                 }
 
                 friendRequestService.sendFriendRequest(senderId, receiverId)
@@ -37,13 +37,13 @@ fun Route.friendRequestRoutes() {
 
             post("/accept/{senderId}") {
                 val receiverId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val senderId = call.parameters["senderId"]?.toIntOrNull()
-                    ?: return@post call.respond(HttpStatusCode.BadRequest, "Invalid or missing senderId")
+                    ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing senderId"))
 
                 if (senderId == receiverId) {
-                    return@post call.respond(HttpStatusCode.BadRequest, "You cannot accept a friend request from yourself")
+                    return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "You cannot accept a friend request from yourself"))
                 }
 
                 val result = friendRequestService.acceptFriendRequest(senderId, receiverId)
@@ -51,19 +51,19 @@ fun Route.friendRequestRoutes() {
                 if (result) {
                     call.respond(HttpStatusCode.OK, mapOf("message" to "Friend request accepted"))
                 } else {
-                    call.respond(HttpStatusCode.NotFound, "Friend request not found")
+                    call.respond(HttpStatusCode.NotFound, mapOf("error" to "Friend request not found"))
                 }
             }
 
             post("/decline/{senderId}") {
                 val receiverId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val senderId = call.parameters["senderId"]?.toIntOrNull()
-                    ?: return@post call.respond(HttpStatusCode.BadRequest, "Invalid or missing senderId")
+                    ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing senderId"))
 
                 if (senderId == receiverId) {
-                    return@post call.respond(HttpStatusCode.BadRequest, "You cannot decline a friend request from yourself")
+                    return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "You cannot decline a friend request from yourself"))
                 }
 
                 val rowsAffected = friendRequestService.declineFriendRequest(senderId, receiverId)
@@ -71,17 +71,17 @@ fun Route.friendRequestRoutes() {
                 if (rowsAffected > 0) {
                     call.respond(HttpStatusCode.OK, mapOf("message" to "Friend request declined"))
                 } else {
-                    call.respond(HttpStatusCode.NotFound, "Friend request not found")
+                    call.respond(HttpStatusCode.NotFound, mapOf("error" to "Friend request not found"))
                 }
             }
 
             get("/requests") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@get call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                    ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val friendRequests = friendRequestService.getAllFriendRequests(userId)
                 if (friendRequests.isEmpty()) {
-                    return@get call.respond(HttpStatusCode.NoContent, "No friend requests found")
+                    return@get call.respond(HttpStatusCode.NoContent, mapOf("error" to "No friend requests found"))
                 }
 
                 call.respond(HttpStatusCode.OK, friendRequests)

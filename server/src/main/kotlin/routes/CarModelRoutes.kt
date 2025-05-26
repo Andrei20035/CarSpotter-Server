@@ -7,10 +7,10 @@ import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
 fun Route.carModelRoutes() {
-    val carModelService: ICarModelService by inject()
+    val carModelService: ICarModelService by application.inject()
 
     route("/car-models") {
-        get("/all") {
+        get {
             val models = carModelService.getAllCarModels()
             if (models.isNotEmpty())
                 call.respond(models)
@@ -22,7 +22,7 @@ fun Route.carModelRoutes() {
         }
         get("/{modelId}") {
             val modelId = call.parameters["modelId"]?.toIntOrNull()
-                ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid or missing model ID")
+                ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing model ID"))
 
             val model = carModelService.getCarModelById(modelId)
             if (model != null)

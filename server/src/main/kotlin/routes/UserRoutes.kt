@@ -19,14 +19,14 @@ fun Route.userRoutes() {
         route("/user") {
             get("/me") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@get call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                    ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val user = userService.getUserById(userId)
 
                 if (user != null) {
                     return@get call.respond(user)
                 } else {
-                    return@get call.respond(HttpStatusCode.NotFound, "User not found")
+                    return@get call.respond(HttpStatusCode.NotFound, mapOf("error" to "User not found"))
                 }
             }
 
@@ -34,7 +34,7 @@ fun Route.userRoutes() {
                 val userRole = call.principal<JWTPrincipal>()?.payload?.getClaim("role")?.asString()
 
                 if (userRole != "admin") {
-                    return@get call.respond(HttpStatusCode.Forbidden, "Access denied")
+                    return@get call.respond(HttpStatusCode.Forbidden, mapOf("error" to "Access denied"))
                 }
 
                 val users = userService.getAllUsers()
@@ -43,7 +43,7 @@ fun Route.userRoutes() {
 
             get("/by-username/{username}") {
                 val username = call.parameters["username"]
-                    ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing username")
+                    ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing username"))
 
                 val users = userService.getUserByUsername(username)
 
@@ -54,36 +54,36 @@ fun Route.userRoutes() {
                 val request = call.receive<CreateUserRequest>()
                 val result = userService.createUser(request.toUser())
                 if (result > 0) {
-                    return@post call.respond(HttpStatusCode.Created, "User created with ID: $result")
+                    return@post call.respond(HttpStatusCode.Created, mapOf("message" to "User created with ID: $result"))
                 } else {
-                    return@post call.respond(HttpStatusCode.InternalServerError, "Failed to create user")
+                    return@post call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to create user"))
                 }
             }
 
             put("/profile-picture") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@put call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                    ?: return@put call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val request = call.receive<UpdateProfilePictureRequest>()
                 val result = userService.updateProfilePicture(userId, request.imagePath)
 
                 if (result > 0) {
-                    call.respond(HttpStatusCode.OK, "Profile picture updated")
+                    call.respond(HttpStatusCode.OK, mapOf("error" to "Profile picture updated"))
                 } else {
-                    call.respond(HttpStatusCode.NotFound, "User not found")
+                    call.respond(HttpStatusCode.NotFound, mapOf("error" to "User not found"))
                 }
             }
 
             delete("/me") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, "Missing or invalid JWT token")
+                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val result = userService.deleteUser(userId)
 
                 if (result > 0) {
-                    call.respond(HttpStatusCode.OK, "User deleted")
+                    call.respond(HttpStatusCode.OK, mapOf("message" to "User deleted"))
                 } else {
-                    call.respond(HttpStatusCode.NotFound, "User not found")
+                    call.respond(HttpStatusCode.NotFound, mapOf("error" to "User not found"))
                 }
             }
         }
