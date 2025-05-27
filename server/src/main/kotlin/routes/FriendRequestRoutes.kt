@@ -9,12 +9,19 @@ import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
 fun Route.friendRequestRoutes() {
-    val friendRequestService: IFriendRequestService by inject()
+    val friendRequestService: IFriendRequestService by application.inject()
 
     authenticate("jwt") {
         route("/friend-request") {
             authenticate("admin") {
-                get("/all") {
+                get("/admin") {
+                    val principal = call.principal<JWTPrincipal>()
+                    val isAdmin = principal?.getClaim("isAdmin", Boolean::class) ?: false
+                    if (!isAdmin) {
+                        call.respond(HttpStatusCode.Forbidden, mapOf("error" to "Admin access required"))
+                        return@get
+                    }
+
                     val allRequests = friendRequestService.getAllFriendReqFromDB()
                     call.respond(HttpStatusCode.OK, allRequests )
                 }
@@ -22,7 +29,7 @@ fun Route.friendRequestRoutes() {
 
             post("/{receiverId}") {
                 val senderId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid JWT token"))
 
                 val receiverId = call.parameters["receiverId"]?.toIntOrNull()
                     ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing receiverId"))
@@ -31,13 +38,18 @@ fun Route.friendRequestRoutes() {
                     return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "You cannot send a friend request to yourself"))
                 }
 
-                friendRequestService.sendFriendRequest(senderId, receiverId)
-                call.respond(HttpStatusCode.Created, mapOf("message" to "Friend request sent", "senderId" to senderId, "receiverId" to receiverId))
+                val rowsInserted = friendRequestService.sendFriendRequest(senderId, receiverId)
+
+                if(rowsInserted == 1) {
+                    call.respond(HttpStatusCode.Created, mapOf("message" to "Friend request sent"))
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "A problem occurred when sending friend request"))
+                }
             }
 
-            post("/accept/{senderId}") {
+            post("/{senderId}/accept") {
                 val receiverId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid JWT token"))
 
                 val senderId = call.parameters["senderId"]?.toIntOrNull()
                     ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing senderId"))
@@ -55,9 +67,9 @@ fun Route.friendRequestRoutes() {
                 }
             }
 
-            post("/decline/{senderId}") {
+            post("/{senderId}/decline") {
                 val receiverId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid JWT token"))
 
                 val senderId = call.parameters["senderId"]?.toIntOrNull()
                     ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing senderId"))
@@ -75,13 +87,14 @@ fun Route.friendRequestRoutes() {
                 }
             }
 
-            get("/requests") {
+            get {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
                     ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
 
                 val friendRequests = friendRequestService.getAllFriendRequests(userId)
+
                 if (friendRequests.isEmpty()) {
-                    return@get call.respond(HttpStatusCode.NoContent, mapOf("error" to "No friend requests found"))
+                    return@get call.respond(HttpStatusCode.NoContent)
                 }
 
                 call.respond(HttpStatusCode.OK, friendRequests)
