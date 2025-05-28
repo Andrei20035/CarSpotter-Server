@@ -14,13 +14,13 @@ import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.koin.ktor.ext.inject
 
 fun Route.userCarRoutes() {
-    val userCarService: IUserCarService by inject()
+    val userCarService: IUserCarService by application.inject()
 
     authenticate("jwt") {
-        route("/user-car") {
-            post("/create") {
+        route("/user-cars") {
+            post {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val userCarRequest = call.receive<UserCarRequest>()
                 val userCar = userCarRequest.toUserCar(userId)
@@ -29,20 +29,35 @@ fun Route.userCarRoutes() {
                     val userCarId = userCarService.createUserCar(userCar)
 
                     if (userCarId > 0) {
-                        return@post call.respond(HttpStatusCode.Created, mapOf("message" to "User car created successfully", "userCarId" to userCarId))
+                        return@post call.respond(
+                            HttpStatusCode.Created,
+                            mapOf("message" to "User car created successfully")
+                        )
                     } else {
-                        return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Failed to create user car"))
+                        return@post call.respond(
+                            HttpStatusCode.BadRequest,
+                            mapOf("error" to "Failed to create user car")
+                        )
                     }
                 } catch (e: ExposedSQLException) {
-                    return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid userId or carModelId", "details" to e.message))
+                    return@post call.respond(
+                        HttpStatusCode.BadRequest,
+                        mapOf("error" to "Invalid userId or carModelId")
+                    )
                 } catch (e: Exception) {
-                    return@post call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Unexpected error", "details" to e.message))
+                    return@post call.respond(
+                        HttpStatusCode.InternalServerError,
+                        mapOf("error" to "Unexpected error")
+                    )
                 }
             }
 
             get("/{userCarId}") {
                 val userCarId = call.parameters["userCarId"]?.toIntOrNull()
-                    ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing user car ID"))
+                    ?: return@get call.respond(
+                        HttpStatusCode.BadRequest,
+                        mapOf("error" to "Invalid or missing user car ID")
+                    )
 
                 val userCar = userCarService.getUserCarById(userCarId)
 
@@ -53,9 +68,9 @@ fun Route.userCarRoutes() {
                 }
             }
 
-            get("/user/{userId}") {
+            get("/by-user/{userId}") {
                 val userId = call.parameters["userId"]?.toIntOrNull()
-                    ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing user ID"))
+                    ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid user ID"))
 
                 val userCar = userCarService.getUserCarByUserId(userId)
 
@@ -66,47 +81,51 @@ fun Route.userCarRoutes() {
                 }
             }
 
-            get("/user-by-car/{userCarId}") {
+            get("/{userCarId}/user") {
                 val userCarId = call.parameters["userCarId"]?.toIntOrNull()
-                    ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing user car ID"))
+                    ?: return@get call.respond(
+                        HttpStatusCode.BadRequest,
+                        mapOf("error" to "Invalid or missing user car ID")
+                    )
 
                 val user = userCarService.getUserByUserCarId(userCarId)
 
                 call.respond(HttpStatusCode.OK, user)
             }
 
-            put("/update") {
+            put {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@put call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                    ?: return@put call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val request = call.receive<UserCarUpdateRequest>()
 
                 val updatedRows = userCarService.updateUserCar(userId, request.imagePath, request.carModelId)
 
-                if(updatedRows > 0) {
+                if (updatedRows > 0) {
                     call.respond(HttpStatusCode.OK, mapOf("message" to "User car updated successfully"))
                 } else {
                     call.respond(HttpStatusCode.NotFound, mapOf("error" to "User car not found"))
                 }
             }
 
-            delete("/delete") {
+            delete {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val deletedRows = userCarService.deleteUserCar(userId)
 
-                if(deletedRows > 0) {
+                if (deletedRows > 0) {
                     return@delete call.respond(HttpStatusCode.OK, mapOf("message" to "User car deleted successfully"))
                 } else {
                     return@delete call.respond(HttpStatusCode.NotFound, mapOf("error" to "User car not found"))
                 }
             }
 
-            get("/all") {
+            get {
                 val allUserCars = userCarService.getAllUserCars()
                 call.respond(HttpStatusCode.OK, allUserCars)
             }
         }
     }
 }
+

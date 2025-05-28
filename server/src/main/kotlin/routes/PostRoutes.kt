@@ -14,13 +14,13 @@ import org.koin.ktor.ext.inject
 import java.time.ZoneId
 
 fun Route.postRoutes() {
-    val postService: IPostService by inject()
+    val postService: IPostService by application.inject()
 
     authenticate("jwt") {
-        route("/post") {
-            post("/create") {
+        route("/posts") {
+            post {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val postRequest = call.receive<PostRequest>()
 
@@ -31,7 +31,7 @@ fun Route.postRoutes() {
                 val postId = postService.createPost(postRequest.toPost(userId))
 
                 if(postId > 0) {
-                    call.respond(HttpStatusCode.OK, mapOf("message" to "Post created successfully", "postId" to postId))
+                    call.respond(HttpStatusCode.OK, mapOf("message" to "Post created successfully"))
                 } else {
                     call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Failed to create post due to invalid input"))
                 }
@@ -39,7 +39,7 @@ fun Route.postRoutes() {
 
             get("/{postId}") {
                 val postId = call.parameters["postId"]?.toIntOrNull()
-                    ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing post ID"))
+                    ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid postId"))
 
                 val post = postService.getPostById(postId)
 
@@ -50,14 +50,14 @@ fun Route.postRoutes() {
                 }
             }
 
-            get("/all") {
+            get {
                 val posts = postService.getAllPosts()
                 return@get call.respond(HttpStatusCode.OK, posts)
             }
 
-            get("/current-day/{userId}") {
-                val userId = call.parameters["userId"]?.toIntOrNull()
-                    ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing user ID"))
+            get("/current-day") {
+                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                    ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val userTimeZone = ZoneId.of(call.request.headers["Time-Zone"] ?: "UTC")  // Default to UTC if not specified
 
@@ -65,13 +65,12 @@ fun Route.postRoutes() {
                 call.respond(HttpStatusCode.OK, posts)
             }
 
-            // Route to edit a post
-            put("/edit/{postId}") {
+            put("/{postId}") {
                 val postId = call.parameters["postId"]?.toIntOrNull()
-                    ?: return@put call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing post ID"))
+                    ?: return@put call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing postId"))
 
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@put call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                    ?: return@put call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val request = call.receive<PostEditRequest>()
 
@@ -90,10 +89,10 @@ fun Route.postRoutes() {
 
             delete("/{postId}") {
                 val postId = call.parameters["postId"]?.toIntOrNull()
-                    ?: return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing post ID"))
+                    ?: return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid postId"))
 
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid invalid JWT token"))
 
                 if(postService.getUserIdByPost(postId) != userId) {
                     return@delete call.respond(HttpStatusCode.Forbidden, mapOf("error" to "You do not have permission to edit this post"))

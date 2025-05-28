@@ -1,19 +1,26 @@
 package com.carspotter.data.dto
 
 import com.carspotter.data.model.User
+import com.carspotter.serialization.InstantSerializer
+import com.carspotter.serialization.LocalDateSerializer
+import kotlinx.serialization.Serializable
 import java.time.Instant
 import java.time.LocalDate
 
+@Serializable
 data class UserDTO(
     val id: Int = 0,
     val firstName: String,
     val lastName: String,
     val profilePicturePath: String? = null,
+    @Serializable(with = LocalDateSerializer::class)
     val birthDate: LocalDate,
     val username: String,
     val country: String,
     val spotScore: Int = 0,
+    @Serializable(with = InstantSerializer::class)
     val createdAt: Instant? = null,
+    @Serializable(with = InstantSerializer::class)
     val updatedAt: Instant? = null
 )
 

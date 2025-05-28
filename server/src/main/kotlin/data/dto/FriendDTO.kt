@@ -1,11 +1,16 @@
 package com.carspotter.data.dto
 
 import com.carspotter.data.model.Friend
+import com.carspotter.serialization.InstantSerializer
+import com.carspotter.serialization.LocalDateSerializer
+import kotlinx.serialization.Serializable
 import java.time.Instant
 
+@Serializable
 data class FriendDTO(
     val userId: Int,
     val friendId: Int,
+    @Serializable(with = InstantSerializer::class)
     val createdAt: Instant? = null
 )
 

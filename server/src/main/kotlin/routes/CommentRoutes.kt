@@ -15,9 +15,9 @@ fun Route.commentRoutes() {
     val commentService: ICommentService by application.inject()
     val postService: IPostService by application.inject()
 
-        get("/comment/{postId}") {
+        get("/comments/{postId}") {
             val postId = call.parameters["postId"]?.toIntOrNull()
-                ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid post ID"))
+                ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing postId"))
 
             val comments = commentService.getCommentsForPost(postId)
 
@@ -29,17 +29,16 @@ fun Route.commentRoutes() {
         }
 
         authenticate("jwt") {
-            route("/comment") {
+            route("/comments") {
                 post {
                     val request = call.receive<CommentRequest>()
                     val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                        ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                        ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                     if (request.commentText.isBlank()) {
                         call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Comment text cannot be blank"))
                         return@post
                     }
-
 
                     val commentId = commentService.addComment(userId, request.postId, request.commentText)
 
@@ -54,10 +53,10 @@ fun Route.commentRoutes() {
 
                 delete("/{commentId}") {
                     val commentId = call.parameters["commentId"]?.toIntOrNull()
-                        ?: return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid comment ID"))
+                        ?: return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing commentId"))
 
                     val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                        ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                        ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                     val comment = commentService.getCommentById(commentId)
 

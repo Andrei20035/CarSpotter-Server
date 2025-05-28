@@ -13,13 +13,13 @@ import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
 fun Route.userRoutes() {
-    val userService: IUserService by inject()
+    val userService: IUserService by application.inject()
 
     authenticate("jwt") {
         route("/user") {
             get("/me") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                    ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val user = userService.getUserById(userId)
 
@@ -29,24 +29,23 @@ fun Route.userRoutes() {
                     return@get call.respond(HttpStatusCode.NotFound, mapOf("error" to "User not found"))
                 }
             }
-
-            get("/all") {
-                val userRole = call.principal<JWTPrincipal>()?.payload?.getClaim("role")?.asString()
-
-                if (userRole != "admin") {
-                    return@get call.respond(HttpStatusCode.Forbidden, mapOf("error" to "Access denied"))
+            authenticate("admin") {
+                get("/all") {
+                    val principal = call.principal<JWTPrincipal>()
+                    val isAdmin = principal?.getClaim("isAdmin", Boolean::class) ?: false
+                    if (!isAdmin) {
+                        call.respond(HttpStatusCode.Forbidden, mapOf("error" to "Admin access required"))
+                        return@get
+                    }
+                    val users = userService.getAllUsers()
+                    call.respond(users)
                 }
-
-                val users = userService.getAllUsers()
-                call.respond(users)
             }
-
             get("/by-username/{username}") {
                 val username = call.parameters["username"]
                     ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing username"))
 
                 val users = userService.getUserByUsername(username)
-
                 return@get call.respond(HttpStatusCode.OK, users)
             }
 
@@ -62,7 +61,7 @@ fun Route.userRoutes() {
 
             put("/profile-picture") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@put call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                    ?: return@put call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val request = call.receive<UpdateProfilePictureRequest>()
                 val result = userService.updateProfilePicture(userId, request.imagePath)
@@ -76,7 +75,7 @@ fun Route.userRoutes() {
 
             delete("/me") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val result = userService.deleteUser(userId)
 

@@ -9,16 +9,16 @@ import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
 fun Route.likeRoutes() {
-    val likeService: ILikeService by inject()
+    val likeService: ILikeService by application.inject()
 
     authenticate("jwt") {
-        route("/like") {
+        route("/likes") {
             post("/{postId}") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val postId = call.parameters["postId"]?.toIntOrNull()
-                    ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing post ID"))
+                    ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing postId"))
 
                 val result = likeService.likePost(userId, postId)
 
@@ -31,10 +31,10 @@ fun Route.likeRoutes() {
 
             delete("/{postId}") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val postId = call.parameters["postId"]?.toIntOrNull()
-                    ?: return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing post ID"))
+                    ?: return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing postId"))
 
                 val rowsDeleted = likeService.unlikePost(userId, postId)
 
@@ -45,9 +45,9 @@ fun Route.likeRoutes() {
                 }
             }
 
-            get("/post/{postId}") {
+            get("/posts/{postId}") {
                 val postId = call.parameters["postId"]?.toIntOrNull()
-                    ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing post ID"))
+                    ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing postId"))
 
                 val users = likeService.getLikesForPost(postId)
 

@@ -141,7 +141,7 @@ class FriendRequestRoutesTest : KoinTest {
             .withClaim("isAdmin", false)
             .sign(Algorithm.HMAC256("test-secret-key"))
 
-        val response = client.get("/friend-request/admin") {
+        val response = client.get("/friend-requests/admin") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -170,7 +170,7 @@ class FriendRequestRoutesTest : KoinTest {
             .withClaim("isAdmin", true)
             .sign(Algorithm.HMAC256("test-secret-key"))
 
-        val response = client.get("/friend-request/admin") {
+        val response = client.get("/friend-requests/admin") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -189,7 +189,7 @@ class FriendRequestRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.post("/friend-request/1") {
+        val response = client.post("/friend-requests/1") {
             header(HttpHeaders.Authorization, "Bearer invalid-token")
         }
 
@@ -202,7 +202,7 @@ class FriendRequestRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.post("/friend-request/1") {
+        val response = client.post("/friend-requests/1") {
             header(HttpHeaders.Authorization, "Bearer ")
         }
 
@@ -219,7 +219,7 @@ class FriendRequestRoutesTest : KoinTest {
             .withClaim("userId", 1)
             .sign(Algorithm.HMAC256("test-secret-key"))
 
-        val response = client.post("/friend-request/abc") {
+        val response = client.post("/friend-requests/abc") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -235,7 +235,7 @@ class FriendRequestRoutesTest : KoinTest {
             .withClaim("userId", 1)
             .sign(Algorithm.HMAC256("test-secret-key"))
 
-        val response = client.post("/friend-request/1") {
+        val response = client.post("/friend-requests/1") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -262,7 +262,7 @@ class FriendRequestRoutesTest : KoinTest {
             .withClaim("userId", senderId)
             .sign(Algorithm.HMAC256("test-secret-key"))
 
-        val response = client.post("/friend-request/2") {
+        val response = client.post("/friend-requests/2") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -278,7 +278,7 @@ class FriendRequestRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.post("friend-request/$senderId/accept") {
+        val response = client.post("friend-requests/$senderId/accept") {
             header(HttpHeaders.Authorization, "Bearer invalid-token")
         }
 
@@ -298,7 +298,7 @@ class FriendRequestRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.post("friend-request/$senderId/accept") {
+        val response = client.post("friend-requests/$senderId/accept") {
             header(HttpHeaders.Authorization, null)
         }
 
@@ -321,7 +321,7 @@ class FriendRequestRoutesTest : KoinTest {
             .withClaim("userId", 1)
             .sign(Algorithm.HMAC256("test-secret-key"))
 
-        val response = client.post("friend-request/abc/accept") {
+        val response = client.post("friend-requests/abc/accept") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -346,7 +346,7 @@ class FriendRequestRoutesTest : KoinTest {
             .withClaim("userId", receiverId)
             .sign(Algorithm.HMAC256("test-secret-key"))
 
-        val response = client.post("friend-request/$senderId/accept") {
+        val response = client.post("friend-requests/$senderId/accept") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -373,7 +373,7 @@ class FriendRequestRoutesTest : KoinTest {
             .withClaim("userId", receiverId)
             .sign(Algorithm.HMAC256("test-secret-key"))
 
-        val response = client.post("friend-request/$senderId/accept") {
+        val response = client.post("friend-requests/$senderId/accept") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -395,7 +395,7 @@ class FriendRequestRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.post("friend-request/$senderId/decline") {
+        val response = client.post("friend-requests/$senderId/decline") {
             header(HttpHeaders.Authorization, "Bearer invalid")
         }
 
@@ -415,7 +415,7 @@ class FriendRequestRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.post("friend-request/$senderId/decline") {
+        val response = client.post("friend-requests/$senderId/decline") {
             header(HttpHeaders.Authorization, null)
         }
 
@@ -440,7 +440,7 @@ class FriendRequestRoutesTest : KoinTest {
             .withClaim("userId", receiverId)
             .sign(Algorithm.HMAC256("test-secret-key"))
 
-        val response = client.post("friend-request/$senderId/decline") {
+        val response = client.post("friend-requests/$senderId/decline") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -465,7 +465,7 @@ class FriendRequestRoutesTest : KoinTest {
             .withClaim("userId", receiverId)
             .sign(Algorithm.HMAC256("test-secret-key"))
 
-        val response = client.post("friend-request/$senderId/decline") {
+        val response = client.post("friend-requests/$senderId/decline") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -492,7 +492,7 @@ class FriendRequestRoutesTest : KoinTest {
             .withClaim("userId", receiverId)
             .sign(Algorithm.HMAC256("test-secret-key"))
 
-        val response = client.post("/friend-request/$senderId/decline") {
+        val response = client.post("/friend-requests/$senderId/decline") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -512,7 +512,7 @@ class FriendRequestRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.get("/friend-request") {
+        val response = client.get("/friend-requests") {
             header(HttpHeaders.Authorization, "Bearer invalid-token")
         }
 
@@ -532,7 +532,7 @@ class FriendRequestRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.get("/friend-request") {
+        val response = client.get("/friend-requests") {
             header(HttpHeaders.Authorization, null)
         }
 
@@ -561,7 +561,7 @@ class FriendRequestRoutesTest : KoinTest {
             .withClaim("userId", userId)
             .sign(Algorithm.HMAC256("test-secret-key"))
 
-        val response = client.get("/friend-request") {
+        val response = client.get("/friend-requests") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 

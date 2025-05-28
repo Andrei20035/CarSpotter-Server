@@ -95,7 +95,7 @@ fun Route.authRoutes() {
         authenticate("jwt") {
             delete("/account") {
                 val credentialId = call.principal<JWTPrincipal>()?.payload?.getClaim("credentialId")?.asInt()
-                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid token"))
+                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing credentialId"))
 
                 val deletedRows = authCredentialService.deleteCredentials(credentialId)
 
@@ -108,7 +108,7 @@ fun Route.authRoutes() {
 
             put("/password") {
                 val credentialId = call.principal<JWTPrincipal>()?.payload?.getClaim("credentialId")?.asInt()
-                    ?: return@put call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid token"))
+                    ?: return@put call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing credentialId"))
 
                 val request = call.receive<UpdatePasswordRequest>()
 

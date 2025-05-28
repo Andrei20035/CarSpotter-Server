@@ -156,7 +156,7 @@ class CarModelRoutesTest : KoinTest {
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
 
-        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid or missing model ID"}""").jsonObject
+        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid or missing modelId"}""").jsonObject
         val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
 
         assertEquals(expectedJson, actualJson)

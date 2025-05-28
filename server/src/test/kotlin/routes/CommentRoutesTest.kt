@@ -116,11 +116,11 @@ class CommentRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.get("/comment/abc")
+        val response = client.get("/comments/abc")
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
 
-        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid post ID"}""").jsonObject
+        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid or missing postId"}""").jsonObject
         val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
 
         assertEquals(expectedJson, actualJson)
@@ -134,7 +134,7 @@ class CommentRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.get("/comment/1")
+        val response = client.get("/comments/1")
 
         assertEquals(HttpStatusCode.NoContent, response.status)
 
@@ -158,7 +158,7 @@ class CommentRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.get("/comment/1")
+        val response = client.get("/comments/1")
 
         assertEquals(HttpStatusCode.OK, response.status)
 
@@ -177,7 +177,7 @@ class CommentRoutesTest : KoinTest {
 
         val request = CommentRequest(postId = 1, commentText = "Hello")
 
-        val response = client.post("/comment") {
+        val response = client.post("/comments") {
             contentType(ContentType.Application.Json)
             header(HttpHeaders.Authorization, "Bearer invalid-token")
             setBody(Json.encodeToString(request))
@@ -203,7 +203,7 @@ class CommentRoutesTest : KoinTest {
 
         val token = createTestToken(userId)
 
-        val response = client.post("/comment") {
+        val response = client.post("/comments") {
             contentType(ContentType.Application.Json)
             setBody(Json.encodeToString(request))
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -231,7 +231,7 @@ class CommentRoutesTest : KoinTest {
 
         val token = createTestToken(userId)
 
-        val response = client.post("/comment") {
+        val response = client.post("/comments") {
             contentType(ContentType.Application.Json)
             setBody(Json.encodeToString(request))
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -260,7 +260,7 @@ class CommentRoutesTest : KoinTest {
         val request = CommentRequest(postId = 1, commentText = "Hello!")
 
         val token = createTestToken(userId)
-        val response = client.post("/comment") {
+        val response = client.post("/comments") {
             contentType(ContentType.Application.Json)
             setBody(Json.encodeToString(request))
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -284,11 +284,11 @@ class CommentRoutesTest : KoinTest {
 
         val token = createTestToken(1)
 
-        val response = client.delete("/comment/invalid-id") {
+        val response = client.delete("/comments/invalid-id") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
-        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid comment ID"}""").jsonObject
+        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid or missing commentId"}""").jsonObject
         val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
 
         assertEquals(expectedJson, actualJson)
@@ -300,7 +300,7 @@ class CommentRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.delete("/comment/1") {
+        val response = client.delete("/comments/1") {
             header(HttpHeaders.Authorization, "Bearer invalid-token")
         }
 
@@ -322,7 +322,7 @@ class CommentRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.delete("/comment/1") {
+        val response = client.delete("/comments/1") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -347,7 +347,7 @@ class CommentRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.delete("/comment/1") {
+        val response = client.delete("/comments/1") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -375,7 +375,7 @@ class CommentRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.delete("/comment/1") {
+        val response = client.delete("/comments/1") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -404,7 +404,7 @@ class CommentRoutesTest : KoinTest {
 
         application { configureTestApplication() }
 
-        val response = client.delete("/comment/1") {
+        val response = client.delete("/comments/1") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 

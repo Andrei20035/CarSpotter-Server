@@ -12,7 +12,7 @@ fun Route.friendRequestRoutes() {
     val friendRequestService: IFriendRequestService by application.inject()
 
     authenticate("jwt") {
-        route("/friend-request") {
+        route("/friend-requests") {
             authenticate("admin") {
                 get("/admin") {
                     val principal = call.principal<JWTPrincipal>()
@@ -29,7 +29,7 @@ fun Route.friendRequestRoutes() {
 
             post("/{receiverId}") {
                 val senderId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid JWT token"))
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing senderId"))
 
                 val receiverId = call.parameters["receiverId"]?.toIntOrNull()
                     ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing receiverId"))
@@ -49,7 +49,7 @@ fun Route.friendRequestRoutes() {
 
             post("/{senderId}/accept") {
                 val receiverId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid JWT token"))
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing receiverId"))
 
                 val senderId = call.parameters["senderId"]?.toIntOrNull()
                     ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing senderId"))
@@ -69,7 +69,7 @@ fun Route.friendRequestRoutes() {
 
             post("/{senderId}/decline") {
                 val receiverId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid JWT token"))
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing receiverId"))
 
                 val senderId = call.parameters["senderId"]?.toIntOrNull()
                     ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing senderId"))
@@ -89,7 +89,7 @@ fun Route.friendRequestRoutes() {
 
             get {
                 val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                    ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val friendRequests = friendRequestService.getAllFriendRequests(userId)
 

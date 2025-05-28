@@ -22,7 +22,7 @@ fun Route.carModelRoutes() {
         }
         get("/{modelId}") {
             val modelId = call.parameters["modelId"]?.toIntOrNull()
-                ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing model ID"))
+                ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing modelId"))
 
             val model = carModelService.getCarModelById(modelId)
             if (model != null)
