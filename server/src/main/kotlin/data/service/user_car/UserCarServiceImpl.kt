@@ -5,7 +5,6 @@ import com.carspotter.data.dto.UserDTO
 import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.UserCar
 import com.carspotter.data.repository.user_car.IUserCarRepository
-import org.jetbrains.exposed.exceptions.ExposedSQLException
 
 class UserCarServiceImpl(
     private val userCarRepository: IUserCarRepository

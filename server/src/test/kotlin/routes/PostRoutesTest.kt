@@ -1,0 +1,704 @@
+package routes
+
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+import com.carspotter.configureSerialization
+import com.carspotter.data.dto.PostDTO
+import com.carspotter.data.dto.request.PostEditRequest
+import com.carspotter.data.dto.request.PostRequest
+import com.carspotter.data.service.post.IPostService
+import com.carspotter.routes.postRoutes
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.testing.*
+import io.mockk.clearAllMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
+import org.junit.jupiter.api.*
+import org.koin.core.context.GlobalContext.startKoin
+import org.koin.core.context.GlobalContext.stopKoin
+import org.koin.dsl.module
+import org.koin.test.KoinTest
+import java.time.Instant
+import java.time.ZoneId
+import java.util.*
+import kotlin.test.assertEquals
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class PostRoutesTest : KoinTest {
+
+    private lateinit var postService: IPostService
+
+    @BeforeAll
+    fun setup() {
+        postService = mockk()
+    }
+
+    @BeforeEach
+    fun setupKoin() {
+        startKoin {
+            modules(
+                module {
+                    single { postService }
+                }
+            )
+        }
+    }
+
+    private fun Application.configureTestApplication() {
+        System.setProperty("JWT_SECRET", "test-secret-key")
+
+        configureSerialization()
+
+        install(Authentication) {
+            jwt("jwt") {
+                realm = "Test Server"
+                verifier(
+                    JWT
+                        .require(Algorithm.HMAC256("test-secret-key"))
+                        .build()
+                )
+                validate { credential ->
+                    if (credential.payload.getClaim("userId").asInt() != null) {
+                        JWTPrincipal(credential.payload)
+                    } else {
+                        null
+                    }
+                }
+                challenge { _, _ ->
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))
+                }
+            }
+        }
+
+        routing {
+            postRoutes()
+        }
+    }
+
+    @AfterEach
+    fun tearDownKoin() {
+        stopKoin()
+        clearAllMocks()
+    }
+
+    @Test
+    fun `POST posts returns 401 when JWT missing or invalid`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val request = PostRequest(carModelId = 1, imagePath = "path/to/image.jpg")
+
+        val response = client.post("/posts") {
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(request))
+            header(HttpHeaders.Authorization, "Bearer invalid-token")
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Missing or invalid JWT token"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `POST posts returns 400 when image path is blank`() = testApplication {
+        val userId = 1
+
+        application {
+            configureTestApplication()
+        }
+
+        val request = PostRequest(carModelId = 1, imagePath = "")
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.post("/posts") {
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(request))
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Image path cannot be blank"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `POST posts returns 400 when failed to create post due to invalid input`() = testApplication {
+        val userId = 1
+
+        coEvery { postService.createPost(any()) } returns -1
+
+        application {
+            configureTestApplication()
+        }
+
+        val request = PostRequest(carModelId = 1, imagePath = "path/to/image.jpg")
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.post("/posts") {
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(request))
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Failed to create post due to invalid input"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { postService.createPost(any()) }
+    }
+
+    @Test
+    fun `POST posts returns 200 when post created successfully`() = testApplication {
+        val userId = 1
+        val postId = 123
+
+        coEvery { postService.createPost(any()) } returns postId
+
+        application {
+            configureTestApplication()
+        }
+
+        val request = PostRequest(carModelId = 1, imagePath = "path/to/image.jpg")
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.post("/posts") {
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(request))
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"message":"Post created successfully"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { postService.createPost(any()) }
+    }
+
+    @Test
+    fun `GET posts-postId returns 401 when JWT missing or invalid`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val response = client.get("/posts/1") {
+            header(HttpHeaders.Authorization, "Bearer invalid-token")
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Missing or invalid JWT token"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `GET posts-postId returns 400 for invalid postId`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = 1)
+
+        val response = client.get("/posts/invalid") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid postId"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `GET posts-postId returns 404 when post not found`() = testApplication {
+        val userId = 1
+        val postId = 123
+
+        coEvery { postService.getPostById(postId) } returns null
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.get("/posts/$postId") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.NotFound, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Post not found"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { postService.getPostById(postId) }
+    }
+
+    @Test
+    fun `GET posts-postId returns 200 with post details when found`() = testApplication {
+        val userId = 1
+        val postId = 123
+        val post = PostDTO(
+            id = postId,
+            userId = userId,
+            carModelId = 1,
+            imagePath = "path/to/image.jpg",
+            description = "Test post",
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
+
+        coEvery { postService.getPostById(postId) } returns post
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.get("/posts/$postId") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        val expectedJson = Json.encodeToJsonElement(post)
+        val actualJson = Json.parseToJsonElement(response.bodyAsText())
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { postService.getPostById(postId) }
+    }
+
+    @Test
+    fun `GET posts returns 401 when JWT missing or invalid`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val response = client.get("/posts") {
+            header(HttpHeaders.Authorization, "Bearer invalid-token")
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Missing or invalid JWT token"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `GET posts returns 200 with list of posts`() = testApplication {
+        val userId = 1
+        val posts = listOf(
+            PostDTO(
+                id = 1,
+                userId = userId,
+                carModelId = 1,
+                imagePath = "path/to/image1.jpg",
+                description = "Test post 1",
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
+            ),
+            PostDTO(
+                id = 2,
+                userId = userId,
+                carModelId = 2,
+                imagePath = "path/to/image2.jpg",
+                description = "Test post 2",
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
+            )
+        )
+
+        coEvery { postService.getAllPosts() } returns posts
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.get("/posts") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        val expectedJson = Json.encodeToJsonElement(posts)
+        val actualJson = Json.parseToJsonElement(response.bodyAsText())
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { postService.getAllPosts() }
+    }
+
+    @Test
+    fun `GET posts-current-day returns 401 when JWT missing or invalid`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val response = client.get("/posts/current-day") {
+            header(HttpHeaders.Authorization, "Bearer invalid-token")
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Missing or invalid JWT token"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `GET posts-current-day returns 200 with list of posts`() = testApplication {
+        val userId = 1
+        val posts = listOf(
+            PostDTO(
+                id = 1,
+                userId = userId,
+                carModelId = 1,
+                imagePath = "path/to/image1.jpg",
+                description = "Test post 1",
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
+            ),
+            PostDTO(
+                id = 2,
+                userId = userId,
+                carModelId = 2,
+                imagePath = "path/to/image2.jpg",
+                description = "Test post 2",
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
+            )
+        )
+
+        coEvery { postService.getCurrentDayPostsForUser(userId, any()) } returns posts
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.get("/posts/current-day") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+            header("Time-Zone", "UTC")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        val expectedJson = Json.encodeToJsonElement(posts)
+        val actualJson = Json.parseToJsonElement(response.bodyAsText())
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { postService.getCurrentDayPostsForUser(userId, ZoneId.of("UTC")) }
+    }
+
+    @Test
+    fun `PUT posts-postId returns 401 when JWT missing or invalid`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val request = PostEditRequest(newDescription = "Updated description")
+
+        val response = client.put("/posts/1") {
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(request))
+            header(HttpHeaders.Authorization, "Bearer invalid-token")
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Missing or invalid JWT token"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `PUT posts-postId returns 400 for invalid postId`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = 1)
+        val request = PostEditRequest(newDescription = "Updated description")
+
+        val response = client.put("/posts/invalid") {
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(request))
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid or missing postId"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `PUT posts-postId returns 403 when user doesn't have permission to edit`() = testApplication {
+        val userId = 1
+        val postId = 123
+        val postOwnerId = 2
+
+        coEvery { postService.getUserIdByPost(postId) } returns postOwnerId
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+        val request = PostEditRequest(newDescription = "Updated description")
+
+        val response = client.put("/posts/$postId") {
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(request))
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.Forbidden, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"You do not have permission to edit this post"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { postService.getUserIdByPost(postId) }
+    }
+
+    @Test
+    fun `PUT posts-postId returns 404 when post not found or failed to update`() = testApplication {
+        val userId = 1
+        val postId = 123
+
+        coEvery { postService.getUserIdByPost(postId) } returns userId
+        coEvery { postService.editPost(postId, "Updated description") } returns 0
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+        val request = PostEditRequest(newDescription = "Updated description")
+
+        val response = client.put("/posts/$postId") {
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(request))
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.NotFound, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Post not found or failed to update"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { postService.getUserIdByPost(postId) }
+        coVerify(exactly = 1) { postService.editPost(postId, "Updated description") }
+    }
+
+    @Test
+    fun `PUT posts-postId returns 200 when post updated successfully`() = testApplication {
+        val userId = 1
+        val postId = 123
+
+        coEvery { postService.getUserIdByPost(postId) } returns userId
+        coEvery { postService.editPost(postId, "Updated description") } returns 1
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+        val request = PostEditRequest(newDescription = "Updated description")
+
+        val response = client.put("/posts/$postId") {
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(request))
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"message":"Post updated successfully"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { postService.getUserIdByPost(postId) }
+        coVerify(exactly = 1) { postService.editPost(postId, "Updated description") }
+    }
+
+    @Test
+    fun `DELETE posts-postId returns 401 when JWT missing or invalid`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val response = client.delete("/posts/1") {
+            header(HttpHeaders.Authorization, "Bearer invalid-token")
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Missing or invalid JWT token"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `DELETE posts-postId returns 400 for invalid postId`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = 1)
+
+        val response = client.delete("/posts/invalid") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid postId"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `DELETE posts-postId returns 403 when user doesn't have permission to delete`() = testApplication {
+        val userId = 1
+        val postId = 123
+        val postOwnerId = 2
+
+        coEvery { postService.getUserIdByPost(postId) } returns postOwnerId
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.delete("/posts/$postId") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.Forbidden, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"You do not have permission to edit this post"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { postService.getUserIdByPost(postId) }
+    }
+
+    @Test
+    fun `DELETE posts-postId returns 404 when post not found or already deleted`() = testApplication {
+        val userId = 1
+        val postId = 123
+
+        coEvery { postService.getUserIdByPost(postId) } returns userId
+        coEvery { postService.deletePost(postId) } returns 0
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.delete("/posts/$postId") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.NotFound, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Post not found or already deleted"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { postService.getUserIdByPost(postId) }
+        coVerify(exactly = 1) { postService.deletePost(postId) }
+    }
+
+    @Test
+    fun `DELETE posts-postId returns 200 when post deleted successfully`() = testApplication {
+        val userId = 1
+        val postId = 123
+
+        coEvery { postService.getUserIdByPost(postId) } returns userId
+        coEvery { postService.deletePost(postId) } returns 1
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.delete("/posts/$postId") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"message":"Post deleted successfully"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { postService.getUserIdByPost(postId) }
+        coVerify(exactly = 1) { postService.deletePost(postId) }
+    }
+
+    private fun createTestToken(userId: Int): String {
+        return JWT.create()
+            .withClaim("userId", userId)
+            .withExpiresAt(Date(System.currentTimeMillis() + 60000))
+            .sign(Algorithm.HMAC256(System.getenv("JWT_SECRET") ?: "test-secret-key"))
+    }
+}

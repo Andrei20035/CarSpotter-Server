@@ -3,10 +3,8 @@ package com.carspotter.routes
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.carspotter.data.dto.AuthCredentialDTO
-import com.carspotter.data.dto.request.GoogleLoginRequest
 import com.carspotter.data.dto.request.LoginRequest
 import com.carspotter.data.dto.request.RegisterRequest
-import com.carspotter.data.dto.request.RegularLoginRequest
 import com.carspotter.data.dto.request.UpdatePasswordRequest
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider

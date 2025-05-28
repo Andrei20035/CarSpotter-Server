@@ -2,7 +2,6 @@ package com.carspotter.data.dto
 
 import com.carspotter.data.model.Friend
 import com.carspotter.serialization.InstantSerializer
-import com.carspotter.serialization.LocalDateSerializer
 import kotlinx.serialization.Serializable
 import java.time.Instant
 

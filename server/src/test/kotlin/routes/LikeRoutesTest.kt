@@ -1,0 +1,392 @@
+package routes
+
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+import com.carspotter.configureSerialization
+import com.carspotter.data.dto.UserDTO
+import com.carspotter.data.service.like.ILikeService
+import com.carspotter.routes.likeRoutes
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.testing.*
+import io.mockk.clearAllMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
+import org.junit.jupiter.api.*
+import org.koin.core.context.GlobalContext.startKoin
+import org.koin.core.context.GlobalContext.stopKoin
+import org.koin.dsl.module
+import org.koin.test.KoinTest
+import java.time.LocalDate
+import java.util.*
+import kotlin.test.assertEquals
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class LikeRoutesTest : KoinTest {
+
+    private lateinit var likeService: ILikeService
+
+    @BeforeAll
+    fun setup() {
+        likeService = mockk()
+    }
+
+    @BeforeEach
+    fun setupKoin() {
+        startKoin {
+            modules(
+                module {
+                    single { likeService }
+                }
+            )
+        }
+    }
+
+    private fun Application.configureTestApplication() {
+        System.setProperty("JWT_SECRET", "test-secret-key")
+
+        configureSerialization()
+
+        install(Authentication) {
+            jwt("jwt") {
+                realm = "Test Server"
+                verifier(
+                    JWT
+                        .require(Algorithm.HMAC256("test-secret-key"))
+                        .build()
+                )
+                validate { credential ->
+                    if (credential.payload.getClaim("userId").asInt() != null) {
+                        JWTPrincipal(credential.payload)
+                    } else {
+                        null
+                    }
+                }
+                challenge { _, _ ->
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid JWT token"))
+                }
+            }
+        }
+
+        routing {
+            likeRoutes()
+        }
+    }
+
+    @AfterEach
+    fun tearDownKoin() {
+        stopKoin()
+        clearAllMocks()
+    }
+
+    @Test
+    fun `POST likes returns 401 when JWT missing or invalid`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val response = client.post("/likes/1") {
+            header(HttpHeaders.Authorization, "Bearer invalid-token")
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid JWT token"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `POST likes returns 400 for invalid postId`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = 1)
+
+        val response = client.post("/likes/invalid") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid or missing postId"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `POST likes returns 409 when user has already liked the post`() = testApplication {
+        val userId = 1
+        val postId = 2
+
+        coEvery { likeService.likePost(userId, postId) } returns 0
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.post("/likes/$postId") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.Conflict, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"You have already liked this post"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { likeService.likePost(userId, postId) }
+    }
+
+    @Test
+    fun `POST likes returns 200 when post liked successfully`() = testApplication {
+        val userId = 1
+        val postId = 2
+
+        coEvery { likeService.likePost(userId, postId) } returns 1
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.post("/likes/$postId") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"message":"Post liked successfully"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { likeService.likePost(userId, postId) }
+    }
+
+    @Test
+    fun `DELETE likes returns 401 when JWT missing or invalid`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val response = client.delete("/likes/1") {
+            header(HttpHeaders.Authorization, "Bearer invalid-token")
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid JWT token"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `DELETE likes returns 400 for invalid postId`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = 1)
+
+        val response = client.delete("/likes/invalid") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid or missing postId"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `DELETE likes returns 404 when like not found or already removed`() = testApplication {
+        val userId = 1
+        val postId = 2
+
+        coEvery { likeService.unlikePost(userId, postId) } returns 0
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.delete("/likes/$postId") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.NotFound, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Like not found or already removed"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { likeService.unlikePost(userId, postId) }
+    }
+
+    @Test
+    fun `DELETE likes returns 200 when post unliked successfully`() = testApplication {
+        val userId = 1
+        val postId = 2
+
+        coEvery { likeService.unlikePost(userId, postId) } returns 1
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.delete("/likes/$postId") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"message":"Post unliked successfully"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { likeService.unlikePost(userId, postId) }
+    }
+
+    @Test
+    fun `GET likes-posts returns 401 when JWT missing or invalid`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val response = client.get("/likes/posts/1") {
+            header(HttpHeaders.Authorization, "Bearer invalid-token")
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid JWT token"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `GET likes-posts returns 400 for invalid postId`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = 1)
+
+        val response = client.get("/likes/posts/invalid") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid or missing postId"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `GET likes-posts returns 204 when no likes for the post`() = testApplication {
+        val userId = 1
+        val postId = 2
+
+        coEvery { likeService.getLikesForPost(postId) } returns emptyList()
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.get("/likes/posts/$postId") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.NoContent, response.status)
+
+        val expectedJson = Json.parseToJsonElement("""{"error":"No likes for this post"}""").jsonObject
+        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { likeService.getLikesForPost(postId) }
+    }
+
+    @Test
+    fun `GET likes-posts returns 200 with list of users who liked the post`() = testApplication {
+        val userId = 1
+        val postId = 2
+        val users = listOf(
+            UserDTO(
+                id = 2, 
+                firstName = "John", 
+                lastName = "Doe", 
+                username = "user2", 
+                birthDate = LocalDate.of(1990, 1, 1),
+                country = "USA"
+            ),
+            UserDTO(
+                id = 3, 
+                firstName = "Jane", 
+                lastName = "Smith", 
+                username = "user3", 
+                birthDate = LocalDate.of(1992, 5, 15),
+                country = "UK"
+            )
+        )
+
+        coEvery { likeService.getLikesForPost(postId) } returns users
+
+        application {
+            configureTestApplication()
+        }
+
+        val token = createTestToken(userId = userId)
+
+        val response = client.get("/likes/posts/$postId") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        val expectedJson = Json.encodeToJsonElement(users)
+        val actualJson = Json.parseToJsonElement(response.bodyAsText())
+
+        assertEquals(expectedJson, actualJson)
+
+        coVerify(exactly = 1) { likeService.getLikesForPost(postId) }
+    }
+
+    private fun createTestToken(userId: Int): String {
+        return JWT.create()
+            .withClaim("userId", userId)
+            .withExpiresAt(Date(System.currentTimeMillis() + 60000))
+            .sign(Algorithm.HMAC256(System.getenv("JWT_SECRET") ?: "test-secret-key"))
+    }
+}
