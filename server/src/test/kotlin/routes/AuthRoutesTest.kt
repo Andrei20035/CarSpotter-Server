@@ -6,6 +6,7 @@ import com.carspotter.configureSerialization
 import com.carspotter.data.dto.AuthCredentialDTO
 import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.service.auth_credential.IAuthCredentialService
+import com.carspotter.data.service.auth_credential.JwtService
 import com.carspotter.routes.authRoutes
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -35,10 +36,12 @@ import java.util.*
 class AuthRoutesTest : KoinTest {
 
     private lateinit var authCredentialService: IAuthCredentialService
+    private lateinit var jwtService: JwtService
 
     @BeforeAll
     fun setup() {
         authCredentialService = mockk()
+        jwtService = mockk()
     }
 
     @BeforeEach
@@ -47,6 +50,7 @@ class AuthRoutesTest : KoinTest {
             modules(
                 module {
                     single { authCredentialService }
+                    single { jwtService }
                 }
             )
         }
@@ -102,6 +106,7 @@ class AuthRoutesTest : KoinTest {
         )
 
         coEvery { authCredentialService.regularLogin(email, password) } returns mockCredential
+        coEvery { jwtService.generateJwtToken(credentialId, null, email) } returns mapOf("token" to "fake.jwt.token")
 
         application {
             configureTestApplication()
@@ -117,6 +122,8 @@ class AuthRoutesTest : KoinTest {
         assertTrue(responseBody.contains("token"))
 
         coVerify(exactly = 1) { authCredentialService.regularLogin(email, password) }
+        coVerify(exactly = 1) { jwtService.generateJwtToken(credentialId, null, email) }
+
     }
 
     @Test
@@ -184,6 +191,7 @@ class AuthRoutesTest : KoinTest {
         )
 
         coEvery { authCredentialService.googleLogin(email, googleId) } returns mockCredential
+        coEvery { jwtService.generateJwtToken(credentialId, null, email) } returns mapOf("token" to "fake.jwt.token")
 
         application {
             configureTestApplication()
@@ -200,6 +208,7 @@ class AuthRoutesTest : KoinTest {
         assertTrue(responseBody.contains("token"))
 
         coVerify(exactly = 1) { authCredentialService.googleLogin(email, googleId) }
+        coVerify(exactly = 1) { jwtService.generateJwtToken(credentialId, null, email) }
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.carspotter.configureSerialization
 import com.carspotter.data.dto.UserDTO
 import com.carspotter.data.dto.request.CreateUserRequest
 import com.carspotter.data.dto.request.UpdateProfilePictureRequest
+import com.carspotter.data.service.auth_credential.JwtService
 import com.carspotter.data.service.user.IUserService
 import com.carspotter.routes.userRoutes
 import io.ktor.client.request.*
@@ -37,10 +38,12 @@ import kotlin.test.assertEquals
 class UserRoutesTest : KoinTest {
 
     private lateinit var userService: IUserService
+    private lateinit var jwtService: JwtService
 
     @BeforeAll
     fun setup() {
         userService = mockk()
+        jwtService = mockk()
     }
 
     @BeforeEach
@@ -49,6 +52,7 @@ class UserRoutesTest : KoinTest {
             modules(
                 module {
                     single { userService }
+                    single { jwtService }
                 }
             )
         }
@@ -136,7 +140,7 @@ class UserRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId)
+        val token = createTestToken(userId, email = "test@yahoo.com", credentialId = 1)
 
         val response = client.get("/user/me") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -171,7 +175,7 @@ class UserRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId)
+        val token = createTestToken(userId, email = "test@yahoo.com", credentialId = 1)
 
         val response = client.get("/user/me") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -193,7 +197,7 @@ class UserRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(1, false)
+        val token = createTestToken(1, false, email = "test@yahoo.com", credentialId = 1)
 
         val response = client.get("/user/all") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -236,7 +240,7 @@ class UserRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(1, true)
+        val token = createTestToken(1, true, email = "test@yahoo.com", credentialId = 1)
 
         val response = client.get("/user/all") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -258,7 +262,7 @@ class UserRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(1)
+        val token = createTestToken(userId = 1, email = "test@yahoo.com", credentialId = 1)
 
         val response = client.get("/user/by-username/") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -299,7 +303,7 @@ class UserRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(1)
+        val token = createTestToken(userId = 1, email = "test@yahoo.com", credentialId = 1)
 
         val response = client.get("/user/by-username/$username") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -318,7 +322,6 @@ class UserRoutesTest : KoinTest {
     @Test
     fun `POST user returns 201 when user created successfully`() = testApplication {
         val request = CreateUserRequest(
-            authCredentialId = 1,
             username = "newuser",
             firstName = "New",
             lastName = "User",
@@ -327,12 +330,13 @@ class UserRoutesTest : KoinTest {
         )
 
         coEvery { userService.createUser(any()) } returns 1
+        coEvery { jwtService.generateJwtToken(any(), any(), any(), any()) } returns mapOf("token" to "mocked.jwt.token")
 
         application {
             configureTestApplication()
         }
 
-        val token = createTestToken(1)
+        val token = createTestToken(userId = 1, email = "test@yahoo.com", credentialId = 1)
 
         val response = client.post("/user") {
             contentType(ContentType.Application.Json)
@@ -342,7 +346,7 @@ class UserRoutesTest : KoinTest {
 
         assertEquals(HttpStatusCode.Created, response.status)
 
-        val expectedJson = Json.parseToJsonElement("""{"message":"User created with ID: 1"}""").jsonObject
+        val expectedJson = Json.parseToJsonElement("""{"token":{"token":"mocked.jwt.token"}}""").jsonObject
         val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
 
         assertEquals(expectedJson, actualJson)
@@ -353,7 +357,6 @@ class UserRoutesTest : KoinTest {
     @Test
     fun `POST user returns 500 when user creation fails`() = testApplication {
         val request = CreateUserRequest(
-            authCredentialId = 1,
             username = "newuser",
             firstName = "New",
             lastName = "User",
@@ -367,7 +370,7 @@ class UserRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(1)
+        val token = createTestToken(userId = 1, email = "test@yahoo.com", credentialId = 1)
 
         val response = client.post("/user") {
             contentType(ContentType.Application.Json)
@@ -417,7 +420,7 @@ class UserRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId)
+        val token = createTestToken(userId = userId, email = "test@yahoo.com", credentialId = 1)
 
         val response = client.put("/user/profile-picture") {
             contentType(ContentType.Application.Json)
@@ -446,7 +449,7 @@ class UserRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId)
+        val token = createTestToken(userId = userId, email = "test@yahoo.com", credentialId = 1)
 
         val response = client.put("/user/profile-picture") {
             contentType(ContentType.Application.Json)
@@ -490,7 +493,7 @@ class UserRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId)
+        val token = createTestToken(userId, email = "test@yahoo.com", credentialId = 1)
 
         val response = client.delete("/user/me") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -516,7 +519,7 @@ class UserRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId)
+        val token = createTestToken(userId = userId, email = "test@yahoo.com", credentialId = 1)
 
         val response = client.delete("/user/me") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -532,10 +535,12 @@ class UserRoutesTest : KoinTest {
         coVerify(exactly = 1) { userService.deleteUser(userId) }
     }
 
-    private fun createTestToken(userId: Int, isAdmin: Boolean = false): String {
+    private fun createTestToken(userId: Int, isAdmin: Boolean = false, email: String, credentialId: Int): String {
         return JWT.create()
+            .withClaim("credentialId", credentialId)
             .withClaim("userId", userId)
             .withClaim("isAdmin", isAdmin)
+            .withClaim("email", email)
             .withExpiresAt(Date(System.currentTimeMillis() + 60000))
             .sign(Algorithm.HMAC256(System.getenv("JWT_SECRET") ?: "test-secret-key"))
     }

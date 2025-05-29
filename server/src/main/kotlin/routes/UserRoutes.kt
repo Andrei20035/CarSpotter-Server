@@ -3,6 +3,7 @@ package com.carspotter.routes
 import com.carspotter.data.dto.request.CreateUserRequest
 import com.carspotter.data.dto.request.UpdateProfilePictureRequest
 import com.carspotter.data.dto.request.toUser
+import com.carspotter.data.service.auth_credential.JwtService
 import com.carspotter.data.service.user.IUserService
 import io.ktor.http.*
 import io.ktor.server.auth.*
@@ -14,6 +15,7 @@ import org.koin.ktor.ext.inject
 
 fun Route.userRoutes() {
     val userService: IUserService by application.inject()
+    val jwtService: JwtService by application.inject()
 
     authenticate("jwt") {
         route("/user") {
@@ -51,9 +53,23 @@ fun Route.userRoutes() {
 
             post {
                 val request = call.receive<CreateUserRequest>()
-                val result = userService.createUser(request.toUser())
-                if (result > 0) {
-                    return@post call.respond(HttpStatusCode.Created, mapOf("message" to "User created with ID: $result"))
+                val credentialId = call.principal<JWTPrincipal>()?.payload?.getClaim("credentialId")?.asInt()
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing credentialId"))
+
+                val email = call.principal<JWTPrincipal>()?.payload?.getClaim("email")?.asString()
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing email"))
+
+                val user = request.toUser(credentialId)
+                val newUserId = userService.createUser(user)
+
+                if (newUserId > 0) {
+                    val newJwtToken = jwtService.generateJwtToken(
+                        credentialId = credentialId,
+                        userId = newUserId,
+                        email = email
+                    )
+
+                    return@post call.respond(HttpStatusCode.Created, mapOf("token" to newJwtToken))
                 } else {
                     return@post call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to create user"))
                 }

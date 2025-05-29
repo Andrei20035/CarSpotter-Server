@@ -31,7 +31,8 @@ fun Application.configureSecurity() {
                     .build()
             )
             validate { credential ->
-                if (credential.payload.audience.contains(jwtAudience)) JWTPrincipal(credential.payload) else null
+                if (credential.payload.audience.contains(jwtAudience) &&
+                    credential.payload.getClaim("credentialId").asInt() != null) JWTPrincipal(credential.payload) else null
             }
             challenge { _, _ ->
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid JWT token"))

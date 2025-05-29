@@ -7,7 +7,6 @@ import java.time.LocalDate
 
 @Serializable
 data class CreateUserRequest(
-    val authCredentialId: Int,
     val profilePicturePath: String? = null,
     val firstName: String,
     val lastName: String,
@@ -17,8 +16,8 @@ data class CreateUserRequest(
     val country: String
 )
 
-fun CreateUserRequest.toUser() = User(
-    authCredentialId = this.authCredentialId,
+fun CreateUserRequest.toUser(credentialId: Int) = User(
+    authCredentialId = credentialId,
     profilePicturePath = this.profilePicturePath,
     firstName = this.firstName,
     lastName = this.lastName,

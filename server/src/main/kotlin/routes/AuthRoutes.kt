@@ -9,6 +9,7 @@ import com.carspotter.data.dto.request.UpdatePasswordRequest
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.service.auth_credential.IAuthCredentialService
+import com.carspotter.data.service.auth_credential.JwtService
 import io.github.cdimascio.dotenv.dotenv
 import io.ktor.http.*
 import io.ktor.server.auth.*
@@ -21,6 +22,7 @@ import java.util.*
 
 fun Route.authRoutes() {
     val authCredentialService: IAuthCredentialService by application.inject()
+    val jwtService: JwtService by application.inject()
 
     route("/auth") {
         post("/login") {
@@ -55,7 +57,7 @@ fun Route.authRoutes() {
             }
 
             if (result != null) {
-                call.respond(generateJwtToken(result))
+                call.respond(jwtService.generateJwtToken(credentialId = result.id, email = result.email))
             } else {
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid credentials"))
             }
@@ -124,19 +126,6 @@ fun Route.authRoutes() {
             }
         }
     }
-}
-
-private fun generateJwtToken(credential: AuthCredentialDTO): Map<String, String> {
-    val dotenv = dotenv()
-    val secret = System.getenv("JWT_SECRET") ?: dotenv["JWT_SECRET"] ?: throw IllegalStateException("JWT_SECRET environment variable is not set")
-
-    val token = JWT.create()
-        .withClaim("credentialId", credential.id)
-        .withClaim("email", credential.email)
-        .withExpiresAt(Date(System.currentTimeMillis() + 86400000)) // 24 hours
-        .sign(Algorithm.HMAC256(secret))
-
-    return mapOf("token" to token)
 }
 
 private fun isValidEmail(email: String): Boolean {
