@@ -44,6 +44,8 @@ dependencies {
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.apache)
     implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.server.swagger)
+    implementation(libs.ktor.server.openapi)
 
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)

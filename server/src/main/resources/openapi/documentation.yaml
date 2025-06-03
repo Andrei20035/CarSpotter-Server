@@ -1,0 +1,926 @@
+openapi: 3.0.3
+info:
+  title: CarSpotter API
+  description: API for the CarSpotter application
+  version: 1.0.0
+servers:
+  - url: /api
+    description: Main API server
+paths:
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticate a user with email and password or Google ID
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                googleId:
+                  type: string
+                provider:
+                  type: string
+                  enum: [REGULAR, GOOGLE]
+              required:
+                - email
+                - provider
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+
+  /auth/register:
+    post:
+      summary: User registration
+      description: Register a new user
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                provider:
+                  type: string
+                  enum: [REGULAR, GOOGLE]
+              required:
+                - email
+                - provider
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Bad request
+
+  /auth/account:
+    delete:
+      summary: Delete account
+      description: Delete the current user's account
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Account deleted successfully
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /auth/password:
+    put:
+      summary: Update password
+      description: Update the current user's password
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newPassword:
+                  type: string
+              required:
+                - newPassword
+      responses:
+        '200':
+          description: Password updated successfully
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /user/me:
+    get:
+      summary: Get current user
+      description: Get the current user's profile
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+    delete:
+      summary: Delete user
+      description: Delete the current user
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User deleted successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+
+  /user/all:
+    get:
+      summary: Get all users
+      description: Get all users (admin only)
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of users
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /user/by-username/{username}:
+    get:
+      summary: Get users by username
+      description: Get users by username
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of users
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+
+  /user:
+    post:
+      summary: Create user
+      description: Create a new user
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                birthDate:
+                  type: string
+                  format: date
+                country:
+                  type: string
+              required:
+                - username
+                - firstName
+                - lastName
+                - birthDate
+                - country
+      responses:
+        '201':
+          description: User created successfully
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /user/profile-picture:
+    put:
+      summary: Update profile picture
+      description: Update the current user's profile picture
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                imagePath:
+                  type: string
+              required:
+                - imagePath
+      responses:
+        '200':
+          description: Profile picture updated successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+
+  /car-models:
+    get:
+      summary: Get all car models
+      description: Get a list of all car models
+      tags:
+        - Car Models
+      responses:
+        '200':
+          description: List of car models
+        '404':
+          description: No car models found
+
+  /car-models/{modelId}:
+    get:
+      summary: Get car model by ID
+      description: Get a specific car model by ID
+      tags:
+        - Car Models
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Car model details
+        '400':
+          description: Invalid model ID
+        '404':
+          description: Car model not found
+
+  /comments/{postId}:
+    get:
+      summary: Get comments for post
+      description: Get all comments for a specific post
+      tags:
+        - Comments
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of comments
+        '204':
+          description: No comments found
+        '400':
+          description: Invalid post ID
+
+  /comments:
+    post:
+      summary: Add comment
+      description: Add a comment to a post
+      tags:
+        - Comments
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                postId:
+                  type: integer
+                commentText:
+                  type: string
+              required:
+                - postId
+                - commentText
+      responses:
+        '201':
+          description: Comment created successfully
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /comments/{commentId}:
+    delete:
+      summary: Delete comment
+      description: Delete a specific comment
+      tags:
+        - Comments
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Comment deleted successfully
+        '400':
+          description: Invalid comment ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Comment not found
+        '500':
+          description: Internal server error
+
+  /friend-requests:
+    get:
+      summary: Get friend requests
+      description: Get all friend requests for the current user
+      tags:
+        - Friend Requests
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of friend requests
+        '204':
+          description: No friend requests found
+        '401':
+          description: Unauthorized
+
+  /friend-requests/admin:
+    get:
+      summary: Get all friend requests (admin)
+      description: Get all friend requests in the system (admin only)
+      tags:
+        - Friend Requests
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of all friend requests
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /friend-requests/{receiverId}:
+    post:
+      summary: Send friend request
+      description: Send a friend request to another user
+      tags:
+        - Friend Requests
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: receiverId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Friend request sent
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /friend-requests/{senderId}/accept:
+    post:
+      summary: Accept friend request
+      description: Accept a friend request from another user
+      tags:
+        - Friend Requests
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: senderId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Friend request accepted
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Friend request not found
+
+  /friend-requests/{senderId}/decline:
+    post:
+      summary: Decline friend request
+      description: Decline a friend request from another user
+      tags:
+        - Friend Requests
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: senderId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Friend request declined
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Friend request not found
+
+  /friends:
+    get:
+      summary: Get friends
+      description: Get all friends for the current user
+      tags:
+        - Friends
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of friends
+        '204':
+          description: No friends found
+        '401':
+          description: Unauthorized
+
+  /friends/admin:
+    get:
+      summary: Get all friendships (admin)
+      description: Get all friendships in the system (admin only)
+      tags:
+        - Friends
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of all friendships
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /friends/{friendId}:
+    post:
+      summary: Add friend
+      description: Add a user as a friend
+      tags:
+        - Friends
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: friendId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Friend added
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '409':
+          description: Friendship already exists
+    delete:
+      summary: Delete friend
+      description: Remove a user from friends
+      tags:
+        - Friends
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: friendId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Friend deleted
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Friendship not found
+
+  /likes/{postId}:
+    post:
+      summary: Like post
+      description: Like a post
+      tags:
+        - Likes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Post liked successfully
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '409':
+          description: Already liked
+    delete:
+      summary: Unlike post
+      description: Remove a like from a post
+      tags:
+        - Likes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Post unliked successfully
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Like not found
+
+  /likes/posts/{postId}:
+    get:
+      summary: Get likes for post
+      description: Get all users who liked a post
+      tags:
+        - Likes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of users who liked the post
+        '204':
+          description: No likes for this post
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+
+  /posts:
+    get:
+      summary: Get all posts
+      description: Get all posts
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of posts
+        '401':
+          description: Unauthorized
+    post:
+      summary: Create post
+      description: Create a new post
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                imagePath:
+                  type: string
+                description:
+                  type: string
+              required:
+                - imagePath
+      responses:
+        '200':
+          description: Post created successfully
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+
+  /posts/{postId}:
+    get:
+      summary: Get post by ID
+      description: Get a specific post by ID
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Post details
+        '400':
+          description: Invalid post ID
+        '401':
+          description: Unauthorized
+        '404':
+          description: Post not found
+    put:
+      summary: Update post
+      description: Update a post's description
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newDescription:
+                  type: string
+              required:
+                - newDescription
+      responses:
+        '200':
+          description: Post updated successfully
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Post not found
+    delete:
+      summary: Delete post
+      description: Delete a post
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Post deleted successfully
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Post not found
+
+  /posts/current-day:
+    get:
+      summary: Get current day posts
+      description: Get all posts for the current day for the current user
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of posts
+        '401':
+          description: Unauthorized
+
+  /user-cars:
+    get:
+      summary: Get all user cars
+      description: Get all user cars
+      tags:
+        - User Cars
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of user cars
+        '401':
+          description: Unauthorized
+    post:
+      summary: Create user car
+      description: Create a new user car
+      tags:
+        - User Cars
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                carModelId:
+                  type: integer
+                imagePath:
+                  type: string
+              required:
+                - carModelId
+                - imagePath
+      responses:
+        '201':
+          description: User car created successfully
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+    put:
+      summary: Update user car
+      description: Update a user car
+      tags:
+        - User Cars
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                imagePath:
+                  type: string
+                carModelId:
+                  type: integer
+              required:
+                - imagePath
+                - carModelId
+      responses:
+        '200':
+          description: User car updated successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: User car not found
+    delete:
+      summary: Delete user car
+      description: Delete a user car
+      tags:
+        - User Cars
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User car deleted successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: User car not found
+
+  /user-cars/{userCarId}:
+    get:
+      summary: Get user car by ID
+      description: Get a specific user car by ID
+      tags:
+        - User Cars
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userCarId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User car details
+        '400':
+          description: Invalid user car ID
+        '401':
+          description: Unauthorized
+        '404':
+          description: User car not found
+
+  /user-cars/by-user/{userId}:
+    get:
+      summary: Get user car by user ID
+      description: Get a user car by user ID
+      tags:
+        - User Cars
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User car details
+        '400':
+          description: Invalid user ID
+        '401':
+          description: Unauthorized
+        '404':
+          description: User car not found
+
+  /user-cars/{userCarId}/user:
+    get:
+      summary: Get user by user car ID
+      description: Get the user associated with a user car
+      tags:
+        - User Cars
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userCarId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User details
+        '400':
+          description: Invalid user car ID
+        '401':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
