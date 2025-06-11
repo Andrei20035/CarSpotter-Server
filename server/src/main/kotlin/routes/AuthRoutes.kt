@@ -85,7 +85,7 @@ fun Route.authRoutes() {
 
             try {
                 val credentialId = authCredentialService.createCredentials(authCredential)
-                call.respond(HttpStatusCode.Created, mapOf("credentialId" to credentialId))
+                call.respond(jwtService.generateJwtToken(credentialId = credentialId, email = authCredential.email))
             } catch (e: IllegalArgumentException) {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to e.message))
             }
