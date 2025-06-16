@@ -5,7 +5,7 @@ FROM eclipse-temurin:17-jdk AS build
 WORKDIR /app
 
 # Copy the Gradle files and the source code into the container
-COPY . /app
+COPY server /app
 
 # Run the gradle build (if you are using Gradle; replace with Maven if necessary)
 RUN ./gradlew build -x test --no-daemon
