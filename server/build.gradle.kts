@@ -1,5 +1,6 @@
 
 plugins {
+    id("com.gradleup.shadow") version "9.0.0-beta16"
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlin.plugin.serialization)
@@ -17,6 +18,8 @@ application {
 
 repositories {
     mavenCentral()
+    gradlePluginPortal()
+    google()
 }
 
 tasks.test {
@@ -25,9 +28,8 @@ tasks.test {
 
 
 dependencies {
+    implementation("com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.0.0-beta16")
     implementation(libs.ktor.server.status.pages)
-//    implementation(libs.ktor.server.core) // This shouldn t be used
-//    implementation(libs.ktor.server.routing)
     implementation(libs.ktor.server.core.jvm)
     implementation(libs.ktor.server.websockets)
     implementation(libs.ktor.server.auth)
@@ -75,4 +77,11 @@ dependencies {
     testRuntimeOnly(libs.junit.engine)
     testImplementation(libs.mockk)
 
+}
+
+tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    archiveBaseName.set("server")
+    archiveClassifier.set("all")
+    archiveVersion.set("")
+    mergeServiceFiles()
 }

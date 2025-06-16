@@ -16,7 +16,7 @@ fun Application.configureSecurity() {
 
     val jwtAudience = System.getenv("JWT_AUDIENCE") ?: dotenv["JWT_AUDIENCE"] ?: throw IllegalStateException("JWT_AUDIENCE environment variable is not set")
     val jwtIssuer = System.getenv("JWT_ISSUER") ?: dotenv["JWT_ISSUER"] ?: throw IllegalStateException("JWT_ISSUER environment variable is not set")
-    val jwtRealm = "CarSpotter app"
+    val jwtRealm = "CarSpotter-server"
     val jwtSecret = System.getenv("JWT_SECRET") ?: dotenv["JWT_SECRET"] ?: throw IllegalStateException("JWT_SECRET environment variable is not set")
 
     // JWT authentication
@@ -62,7 +62,7 @@ fun Application.configureSecurity() {
     // Google OAuth
     authentication {
         oauth("auth-oauth-google") {
-            urlProvider = { "http://localhost:8080/callback" }
+            urlProvider = { System.getenv("APP_URL") + "/callback"  }
             providerLookup = {
                 OAuthServerSettings.OAuth2ServerSettings(
                     name = "google",

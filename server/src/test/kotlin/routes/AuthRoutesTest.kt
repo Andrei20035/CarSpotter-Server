@@ -224,6 +224,17 @@ class AuthRoutesTest : KoinTest {
             })
         } returns credentialId
 
+        val token = mapOf("token" to "mocked-jwt-token")
+
+        coEvery {
+            jwtService.generateJwtToken(
+                credentialId,
+                null,
+                email,
+                false
+            )
+        } returns token
+
         application {
             configureTestApplication()
         }
@@ -233,7 +244,7 @@ class AuthRoutesTest : KoinTest {
             setBody("""{"email":"$email","password":"$password","provider":"REGULAR"}""")
         }
 
-        assertEquals(HttpStatusCode.Created, response.status)
+        assertEquals(HttpStatusCode.OK, response.status)
 
         coVerify(exactly = 1) {
             authCredentialService.createCredentials(match {
@@ -305,6 +316,6 @@ class AuthRoutesTest : KoinTest {
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { authCredentialService.deleteCredentials(credentialId)  }
+        coVerify(exactly = 1) { authCredentialService.deleteCredentials(credentialId) }
     }
 }

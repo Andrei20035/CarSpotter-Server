@@ -114,7 +114,7 @@ class AuthRoutesIntegrationTest : KoinTest {
             setBody("""{"email":"$email","password":"$password","provider":"${provider.name}"}""")
         }
 
-        assertEquals(HttpStatusCode.Created, registerResponse.status)
+        assertEquals(HttpStatusCode.OK, registerResponse.status)
 
         // Login with the registered credentials
         val loginResponse = client.post("/auth/login") {
@@ -169,7 +169,7 @@ class AuthRoutesIntegrationTest : KoinTest {
             setBody("""{"email":"$email","password":"$password","provider":"${provider.name}"}""")
         }
 
-        assertEquals(HttpStatusCode.Created, registerResponse.status)
+        assertEquals(HttpStatusCode.OK, registerResponse.status)
 
         val loginResponse = client.post("/auth/login") {
             contentType(ContentType.Application.Json)
@@ -216,7 +216,7 @@ class AuthRoutesIntegrationTest : KoinTest {
             setBody("""{"email":"$email","password":"$password","provider":"${provider.name}"}""")
         }
 
-        assertEquals(HttpStatusCode.Created, registerResponse.status)
+        assertEquals(HttpStatusCode.OK, registerResponse.status)
 
         val loginResponse = client.post("/auth/login") {
             contentType(ContentType.Application.Json)
