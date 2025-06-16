@@ -9,9 +9,9 @@ ktor:
 
 database:
   development:
-    url: "jdbc:postgresql://localhost:5432/postgres"
-    user: "postgres"
-    password: "Andrei2003."
+    url: ${DEV_DB_URL}
+    user: ${DEV_USER}
+    password: ${DEV_PASSWORD}
   production:
     url: ${DATABASE_URL}
     user: ${POSTGRES_USER}

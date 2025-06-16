@@ -17,14 +17,11 @@ fun main(args: Array<String>) {
 
 fun Application.module() { // TODO: Put application.yaml data in .env file
     install(Koin) {
-        slf4jLogger() // Optional, for logging Koin's behavior
-        modules(daoModule, repositoryModule, serviceModule) // Add DI modules here
+        slf4jLogger()
+        modules(daoModule, repositoryModule, serviceModule)
     }
 
     install(RoutingRoot)
-
-    val currentEnvironment = environment.config.propertyOrNull("ktor.environment")?.getString() ?: "development"
-    log.info("Running in $currentEnvironment environment")
 
     configureSockets()
     configureSecurity()
