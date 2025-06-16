@@ -3,9 +3,6 @@ package routes
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.carspotter.configureSerialization
-import com.carspotter.data.dto.request.LoginRequest
-import com.carspotter.data.dto.request.RegisterRequest
-import com.carspotter.data.dto.request.UpdatePasswordRequest
 import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.table.AuthCredentials
 import com.carspotter.di.appModule
@@ -15,8 +12,6 @@ import com.carspotter.di.serviceModule
 import com.carspotter.routes.authRoutes
 import data.testutils.SchemaSetup
 import data.testutils.TestDatabase
-import io.github.cdimascio.dotenv.Dotenv
-import io.github.cdimascio.dotenv.dotenv
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -39,7 +34,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
-import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuthRoutesIntegrationTest : KoinTest {
@@ -68,8 +62,7 @@ class AuthRoutesIntegrationTest : KoinTest {
     }
 
     private fun Application.configureTestApplication() {
-        val dotenv = dotenv()
-        val jwtSecret = System.getenv("JWT_SECRET") ?: dotenv["JWT_SECRET"] ?: throw IllegalStateException("JWT_SECRET environment variable is not set")
+        val jwtSecret = System.getenv("JWT_SECRET") ?: throw IllegalStateException("JWT_SECRET environment variable is not set")
 
         configureSerialization()
 

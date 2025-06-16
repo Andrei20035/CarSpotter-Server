@@ -60,7 +60,6 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.commons.compress)
     implementation(libs.bcrypt)
-    implementation(libs.dotenv)
     implementation(libs.hikari)
 
     implementation(libs.koin.core)

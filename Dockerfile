@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy the Gradle files and the source code into the container
 COPY server /app
 
+# Make gradlew executable
+RUN chmod +x ./gradlew
+
 # Run the gradle build (if you are using Gradle; replace with Maven if necessary)
 RUN ./gradlew build -x test --no-daemon
 

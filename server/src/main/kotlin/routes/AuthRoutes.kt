@@ -1,8 +1,5 @@
 package com.carspotter.routes
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
-import com.carspotter.data.dto.AuthCredentialDTO
 import com.carspotter.data.dto.request.LoginRequest
 import com.carspotter.data.dto.request.RegisterRequest
 import com.carspotter.data.dto.request.UpdatePasswordRequest
@@ -10,7 +7,6 @@ import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.service.auth_credential.IAuthCredentialService
 import com.carspotter.data.service.auth_credential.JwtService
-import io.github.cdimascio.dotenv.dotenv
 import io.ktor.http.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
@@ -18,7 +14,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
-import java.util.*
 
 fun Route.authRoutes() {
     val authCredentialService: IAuthCredentialService by application.inject()

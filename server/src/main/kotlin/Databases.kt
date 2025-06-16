@@ -6,12 +6,16 @@ import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.Database
 
 fun Application.configureDatabases() {
-    val databaseUrl = System.getenv("DATABASE_URL")
+    val databaseUrl = System.getenv("DEV_DB_URL")
+    val dbUser = System.getenv("DEV_USER") ?: error("DEV_USER not set")
+    val dbPassword = System.getenv("DEV_PASSWORD") ?: error("DEV_PASSWORD not set")
 
     if(databaseUrl != null) {
         val hikariConfig = HikariConfig().apply {
             jdbcUrl = databaseUrl
             driverClassName = "org.postgresql.Driver"
+            username = dbUser
+            password = dbPassword
             maximumPoolSize = 10
             isAutoCommit = false
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"

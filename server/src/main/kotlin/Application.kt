@@ -12,6 +12,12 @@ import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 
 fun main(args: Array<String>) {
+
+    // Print all environment variables
+    println("=== ENVIRONMENT VARIABLES ===")
+    System.getenv().forEach { (key, value) ->
+        println("$key=$value")
+    }
     EngineMain.main(args)
 }
 
