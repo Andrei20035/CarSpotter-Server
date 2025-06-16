@@ -6,43 +6,50 @@ import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.Database
 
 fun Application.configureDatabases() {
-    val databaseUrl = System.getenv("DEV_DB_URL")
-    val dbUser = System.getenv("DEV_USER") ?: error("DEV_USER not set")
-    val dbPassword = System.getenv("DEV_PASSWORD") ?: error("DEV_PASSWORD not set")
+    val ktorEnv = System.getenv("KTOR_ENV") ?: "development"
 
-    if(databaseUrl != null) {
-        val hikariConfig = HikariConfig().apply {
-            jdbcUrl = databaseUrl
-            driverClassName = "org.postgresql.Driver"
-            username = dbUser
-            password = dbPassword
-            maximumPoolSize = 10
-            isAutoCommit = false
-            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
-            validate()
+    val (databaseUrl, dbUser, dbPassword) = when (ktorEnv) {
+        "production" -> {
+            val url = System.getenv("DATABASE_URL") ?: error("DATABASE_URL not set")
+            val user = System.getenv("POSTGRES_USER") ?: error("POSTGRES_USER not set")
+            val password = System.getenv("POSTGRES_PASSWORD") ?: error("POSTGRES_PASSWORD not set")
+            Triple(url, user, password)
         }
-        val dataSource = HikariDataSource(hikariConfig)
-        Database.connect(dataSource)
-    } else {
-        // Use existing configuration for local development
-        val env = environment.config
-        val environmentType = env.propertyOrNull("ktor.environment")?.getString() ?: "development"
-        val dbConfig = env.config("database.$environmentType")
-
-        val hikariConfig = HikariConfig().apply {
-            jdbcUrl = dbConfig.property("url").getString()
-            driverClassName = "org.postgresql.Driver"
-            username = dbConfig.property("user").getString()
-            password = dbConfig.property("password").getString()
-            maximumPoolSize = 10
-            isAutoCommit = false
-            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
-            validate()
+        "development" -> {
+            val url = System.getenv("DEV_DB_URL") ?: error("DEV_DB_URL not set")
+            val user = System.getenv("DEV_USER") ?: error("DEV_USER not set")
+            val password = System.getenv("DEV_PASSWORD") ?: error("DEV_PASSWORD not set")
+            Triple(url, user, password)
         }
-
-        val dataSource = HikariDataSource(hikariConfig)
-        Database.connect(dataSource)
+        "testing" -> {
+            val url = System.getenv("TEST_DB_URL") ?: error("TEST_DB_URL not set")
+            val user = System.getenv("TEST_DB_USER") ?: error("TEST_DB_USER not set")
+            val password = System.getenv("TEST_DB_PASSWORD") ?: error("TEST_DB_PASSWORD not set")
+            Triple(url, user, password)
+        }
+        else -> error("Unknown KTOR_ENV: $ktorEnv")
     }
+
+    // Make sure DATABASE_URL is JDBC format, if not transform it here
+    val jdbcURL = if (!databaseUrl.startsWith("jdbc:")) {
+        databaseUrl.replaceFirst("postgresql://", "jdbc:postgresql://")
+            .replace(Regex("^(jdbc:postgresql://)([^:/@]+):([^@]+)@"), "$1")
+    } else {
+        databaseUrl
+    }
+
+    val hikariConfig = HikariConfig().apply {
+        jdbcUrl =  jdbcURL
+        driverClassName = "org.postgresql.Driver"
+        username = dbUser
+        password = dbPassword
+        maximumPoolSize = 10
+        isAutoCommit = false
+        transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+        validate()
+    }
+    val dataSource = HikariDataSource(hikariConfig)
+    Database.connect(dataSource)
 
     environment.log.info("Database connected using HikariCP.")
 }
