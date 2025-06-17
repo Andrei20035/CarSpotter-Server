@@ -14,6 +14,7 @@ hikari = "6.3.0"
 testcontainers = "1.21.0"
 junit = "5.12.2"
 mockk = "1.14.2"
+flyway = "11.9.1"
 
 [libraries]
 ktor-server-host-common = { module = "io.ktor:ktor-server-host-common", version.ref = "ktor" }
@@ -68,6 +69,8 @@ junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref 
 
 ktor-server-swagger = { module = "io.ktor:ktor-server-swagger", version.ref = "ktor" }
 ktor-server-openapi = { module = "io.ktor:ktor-server-openapi", version.ref = "ktor" }
+
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway"}
 
 
 [plugins]
