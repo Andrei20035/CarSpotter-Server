@@ -1,9 +1,20 @@
 package com.carspotter
 
+import com.carspotter.data.table.AuthCredentials
+import com.carspotter.data.table.CarModels
+import com.carspotter.data.table.Comments
+import com.carspotter.data.table.FriendRequests
+import com.carspotter.data.table.Friends
+import com.carspotter.data.table.Likes
+import com.carspotter.data.table.Posts
+import com.carspotter.data.table.Users
+import com.carspotter.data.table.UsersCars
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Application.configureDatabases() {
     val ktorEnv = System.getenv("KTOR_ENV") ?: "development"
@@ -52,6 +63,10 @@ fun Application.configureDatabases() {
     Database.connect(dataSource)
 
     environment.log.info("Database connected using HikariCP.")
+
+    transaction {
+        SchemaUtils.create(AuthCredentials, Users, CarModels, UsersCars, Posts, Likes, Comments, FriendRequests, Friends )
+    }
 }
 
 
