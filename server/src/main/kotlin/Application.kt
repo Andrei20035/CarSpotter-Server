@@ -1,5 +1,6 @@
 package com.carspotter
 
+import com.carspotter.di.appModule
 import com.carspotter.di.daoModule
 import com.carspotter.di.repositoryModule
 import com.carspotter.di.serviceModule
@@ -24,7 +25,7 @@ fun main(args: Array<String>) {
 fun Application.module() { // TODO: Put application.yaml data in .env file
     install(Koin) {
         slf4jLogger()
-        modules(daoModule, repositoryModule, serviceModule)
+        modules(daoModule, repositoryModule, serviceModule, appModule)
     }
 
     install(RoutingRoot)
