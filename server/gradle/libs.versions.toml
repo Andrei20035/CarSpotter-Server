@@ -71,6 +71,7 @@ ktor-server-swagger = { module = "io.ktor:ktor-server-swagger", version.ref = "k
 ktor-server-openapi = { module = "io.ktor:ktor-server-openapi", version.ref = "ktor" }
 
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway"}
+flyway-database-postgres = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway"}
 
 
 [plugins]

@@ -1,3 +1,4 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     id("com.gradleup.shadow") version "9.0.0-beta16"
@@ -48,7 +49,9 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.swagger)
     implementation(libs.ktor.server.openapi)
+
     implementation(libs.flyway.core)
+    implementation(libs.flyway.database.postgres)
 
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
@@ -79,7 +82,7 @@ dependencies {
 
 }
 
-tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+tasks.named<ShadowJar>("shadowJar") {
     archiveBaseName.set("server")
     archiveClassifier.set("all")
     archiveVersion.set("")
