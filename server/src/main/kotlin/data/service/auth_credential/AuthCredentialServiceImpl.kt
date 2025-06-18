@@ -8,7 +8,8 @@ import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.repository.auth_credential.IAuthCredentialRepository
 
 class AuthCredentialServiceImpl(
-    private val authCredentialRepository: IAuthCredentialRepository
+    private val authCredentialRepository: IAuthCredentialRepository,
+    private val googleTokenVerifier: GoogleTokenVerifier = GoogleTokenVerifierImpl()
 ) : IAuthCredentialService {
     override suspend fun createCredentials(authCredential: AuthCredential): Int {
 
@@ -43,13 +44,14 @@ class AuthCredentialServiceImpl(
         return null
     }
 
-    override suspend fun googleLogin(email: String, googleId: String): AuthCredentialDTO? {
+    override suspend fun googleLogin(email: String, googleIdToken: String): AuthCredentialDTO? {
         val authCredential = authCredentialRepository.getCredentialsForLogin(email)
+        val googleSub = googleTokenVerifier.verifyAndExtractSub(googleIdToken) ?: return null
 
         return when {
             authCredential != null &&
                     authCredential.provider == AuthProvider.GOOGLE &&
-                    authCredential.googleId == googleId -> {
+                    authCredential.googleId == googleSub -> {
                 authCredential.toDTO()
             }
 
@@ -63,7 +65,7 @@ class AuthCredentialServiceImpl(
                     email = email,
                     password = null,
                     provider = AuthProvider.GOOGLE,
-                    googleId = googleId
+                    googleId = googleSub
                 )
                 authCredentialRepository.createCredentials(newCredential)
                 newCredential.toDTO()

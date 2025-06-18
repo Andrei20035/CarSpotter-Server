@@ -3,13 +3,18 @@ package data.service
 import at.favre.lib.crypto.bcrypt.BCrypt
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
+import com.carspotter.data.repository.auth_credential.IAuthCredentialRepository
+import com.carspotter.data.service.auth_credential.AuthCredentialServiceImpl
 import com.carspotter.data.service.auth_credential.IAuthCredentialService
 import com.carspotter.data.table.AuthCredentials
 import com.carspotter.di.daoModule
 import com.carspotter.di.repositoryModule
 import com.carspotter.di.serviceModule
+import data.testutils.FakeGoogleTokenVerifier
 import data.testutils.SchemaSetup
 import data.testutils.TestDatabase
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -88,13 +93,23 @@ class AuthCredentialServiceTest: KoinTest {
 
     @Test
     fun `get credentials for google login`() = runBlocking {
-        val id = authCredentialService.createCredentials(
-            AuthCredential(
-                email = "credentials@test.com",
-                password = null,
-                googleId = "gid1",
-                provider = AuthProvider.GOOGLE
-            )
+
+        val fakeVerifier = FakeGoogleTokenVerifier()
+        val mockRepo = mockk<IAuthCredentialRepository>()
+
+
+        val testCredential = AuthCredential(
+            email = "credentials@test.com",
+            password = null,
+            googleId = "google123",
+            provider = AuthProvider.GOOGLE
+        )
+
+        coEvery { mockRepo.getCredentialsForLogin("credentials@test.com") } returns testCredential
+
+        val authCredentialService = AuthCredentialServiceImpl(
+            authCredentialRepository = mockRepo,
+            googleTokenVerifier = fakeVerifier
         )
 
         val authCredential = authCredentialService.googleLogin("credentials@test.com", "gid1")

@@ -699,6 +699,7 @@ class PostRoutesTest : KoinTest {
         return JWT.create()
             .withClaim("userId", userId)
             .withExpiresAt(Date(System.currentTimeMillis() + 60000))
-            .sign(Algorithm.HMAC256(System.getenv("JWT_SECRET") ?: "test-secret-key"))
+            .sign(Algorithm.HMAC256("test-secret-key"))
+
     }
 }

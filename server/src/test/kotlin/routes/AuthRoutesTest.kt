@@ -16,10 +16,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
-import io.mockk.clearAllMocks
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
+import io.mockk.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import org.junit.jupiter.api.*
@@ -42,6 +39,8 @@ class AuthRoutesTest : KoinTest {
     fun setup() {
         authCredentialService = mockk()
         jwtService = mockk()
+
+        every { jwtService.generateJwtToken(any(), any(), any(), any()) } returns mapOf("token" to "token")
     }
 
     @BeforeEach
@@ -102,7 +101,6 @@ class AuthRoutesTest : KoinTest {
             id = credentialId,
             email = email,
             provider = provider,
-            providerId = null
         )
 
         coEvery { authCredentialService.regularLogin(email, password) } returns mockCredential
@@ -138,7 +136,6 @@ class AuthRoutesTest : KoinTest {
             id = credentialId,
             email = email,
             provider = provider,
-            providerId = googleId,
         )
 
         coEvery { authCredentialService.regularLogin(email, password) } returns null
@@ -187,7 +184,6 @@ class AuthRoutesTest : KoinTest {
             id = credentialId,
             email = email,
             provider = provider,
-            providerId = googleId
         )
 
         coEvery { authCredentialService.googleLogin(email, googleId) } returns mockCredential
@@ -199,7 +195,7 @@ class AuthRoutesTest : KoinTest {
 
         val response = client.post("/auth/login") {
             contentType(ContentType.Application.Json)
-            setBody("""{"email":"$email","googleId":"$googleId","provider":"GOOGLE"}""")
+            setBody("""{"email":"$email","googleIdToken":"$googleId","provider":"GOOGLE"}""")
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
@@ -269,7 +265,7 @@ class AuthRoutesTest : KoinTest {
         val token = JWT.create()
             .withClaim("credentialId", credentialId)
             .withExpiresAt(Date(System.currentTimeMillis() + 60000))
-            .sign(Algorithm.HMAC256(System.getenv("JWT_SECRET") ?: "test-secret-key"))
+            .sign(Algorithm.HMAC256("test-secret-key"))
 
         val response = client.put("/auth/password") {
             contentType(ContentType.Application.Json)
@@ -296,6 +292,8 @@ class AuthRoutesTest : KoinTest {
 
         coEvery { authCredentialService.deleteCredentials(credentialId) } returns 1
 
+        every { jwtService.generateJwtToken(credentialId, null, "amrusu2@gmail.com", false) } returns mapOf("token" to "token")
+
         application {
             configureTestApplication()
         }
@@ -303,7 +301,7 @@ class AuthRoutesTest : KoinTest {
         val token = JWT.create()
             .withClaim("credentialId", credentialId)
             .withExpiresAt(Date(System.currentTimeMillis() + 60000))
-            .sign(Algorithm.HMAC256(System.getenv("JWT_SECRET") ?: "test-secret-key"))
+            .sign(Algorithm.HMAC256("test-secret-key"))
 
         val response = client.delete("/auth/account") {
             header(HttpHeaders.Authorization, "Bearer $token")

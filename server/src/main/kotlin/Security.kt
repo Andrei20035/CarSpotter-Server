@@ -57,7 +57,7 @@ fun Application.configureSecurity() {
     }
 
     // Google OAuth
-    authentication {
+    authentication { // TODO: Delete this because
         oauth("auth-oauth-google") {
             urlProvider = { System.getenv("APP_URL") + "/callback"  }
             providerLookup = {
@@ -66,8 +66,8 @@ fun Application.configureSecurity() {
                     authorizeUrl = "https://accounts.google.com/o/oauth2/auth",
                     accessTokenUrl = "https://accounts.google.com/o/oauth2/token",
                     requestMethod = HttpMethod.Post,
-                    clientId = System.getenv("GOOGLE_CLIENT_ID"), // TODO: Register the app on Google cloud console to get this
-                    clientSecret = System.getenv("GOOGLE_CLIENT_SECRET"), // TODO: Register the app on Google cloud console to get this
+                    clientId = System.getenv("GOOGLE_CLIENT_ID"),
+                    clientSecret = System.getenv("GOOGLE_CLIENT_SECRET"),
                     defaultScopes = listOf("https://www.googleapis.com/auth/userinfo.profile")
                 )
             }

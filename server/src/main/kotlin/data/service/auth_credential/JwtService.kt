@@ -2,7 +2,7 @@ package com.carspotter.data.service.auth_credential
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import java.util.Date
+import java.util.*
 
 class JwtService(
     private val jwtSecret: String,

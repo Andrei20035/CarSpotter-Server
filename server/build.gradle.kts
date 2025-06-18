@@ -66,6 +66,10 @@ dependencies {
     implementation(libs.bcrypt)
     implementation(libs.hikari)
 
+    implementation(libs.google.api.client)
+    implementation(libs.google.oauth.client)
+
+
     implementation(libs.koin.core)
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)
@@ -79,6 +83,8 @@ dependencies {
     testImplementation(libs.junit.api)
     testRuntimeOnly(libs.junit.engine)
     testImplementation(libs.mockk)
+
+
 
 }
 

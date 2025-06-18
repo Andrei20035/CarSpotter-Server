@@ -451,6 +451,7 @@ class FriendRoutesTest : KoinTest {
             .withClaim("userId", userId)
             .withClaim("isAdmin", isAdmin)
             .withExpiresAt(Date(System.currentTimeMillis() + 60000))
-            .sign(Algorithm.HMAC256(System.getenv("JWT_SECRET") ?: "test-secret-key"))
+            .sign(Algorithm.HMAC256("test-secret-key"))
+
     }
 }

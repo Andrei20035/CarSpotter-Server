@@ -15,6 +15,8 @@ testcontainers = "1.21.0"
 junit = "5.12.2"
 mockk = "1.14.2"
 flyway = "11.9.1"
+api-client = "2.8.0"
+oauth-client = "1.39.0"
 
 [libraries]
 ktor-server-host-common = { module = "io.ktor:ktor-server-host-common", version.ref = "ktor" }
@@ -72,6 +74,9 @@ ktor-server-openapi = { module = "io.ktor:ktor-server-openapi", version.ref = "k
 
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway"}
 flyway-database-postgres = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway"}
+
+google-api-client = {module = "com.google.api-client:google-api-client", version.ref = "api-client"}
+google-oauth-client = { module = "com.google.oauth-client:google-oauth-client", version.ref = "oauth-client"}
 
 
 [plugins]

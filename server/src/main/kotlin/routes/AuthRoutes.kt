@@ -43,11 +43,11 @@ fun Route.authRoutes() {
                 }
 
                 AuthProvider.GOOGLE -> {
-                    if (request.googleId.isNullOrBlank()) {
+                    if (request.googleIdToken.isNullOrBlank()) {
                         call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Google ID must not be empty"))
                         return@post
                     }
-                    authCredentialService.googleLogin(request.email, request.googleId)
+                    authCredentialService.googleLogin(request.email, request.googleIdToken)
                 }
             }
 

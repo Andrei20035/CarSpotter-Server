@@ -4,12 +4,16 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.carspotter.configureSerialization
 import com.carspotter.data.model.AuthProvider
+import com.carspotter.data.service.auth_credential.AuthCredentialServiceImpl
+import com.carspotter.data.service.auth_credential.GoogleTokenVerifier
+import com.carspotter.data.service.auth_credential.IAuthCredentialService
 import com.carspotter.data.table.AuthCredentials
 import com.carspotter.di.appModule
 import com.carspotter.di.daoModule
 import com.carspotter.di.repositoryModule
 import com.carspotter.di.serviceModule
 import com.carspotter.routes.authRoutes
+import data.testutils.FakeGoogleTokenVerifier
 import data.testutils.SchemaSetup
 import data.testutils.TestDatabase
 import io.ktor.client.request.*
@@ -18,7 +22,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
-import io.ktor.server.response.respond
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.json.Json
@@ -33,6 +37,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 import org.koin.test.KoinTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -48,7 +53,11 @@ class AuthRoutesIntegrationTest : KoinTest {
         )
 
         startKoin {
-            modules(daoModule, repositoryModule, serviceModule, appModule)
+            modules(daoModule, repositoryModule, serviceModule, appModule,
+                module {
+                    single<GoogleTokenVerifier> { FakeGoogleTokenVerifier() }
+                    single<IAuthCredentialService> { AuthCredentialServiceImpl(get(), get()) }
+                })
         }
 
         SchemaSetup.createAuthCredentialsTableWithConstraint(AuthCredentials)
@@ -128,7 +137,7 @@ class AuthRoutesIntegrationTest : KoinTest {
     @Test
     fun `login with google credentials`() = testApplication {
         val email = "google@example.com"
-        val googleId = "google123"
+        val googleId = "gid1"
         val provider = AuthProvider.GOOGLE
 
         application {
@@ -137,7 +146,7 @@ class AuthRoutesIntegrationTest : KoinTest {
 
         val loginResponse = client.post("/auth/login") {
             contentType(ContentType.Application.Json)
-            setBody("""{"email":"$email","googleId":"$googleId","provider":"${provider.name}"}""")
+            setBody("""{"email":"$email","googleIdToken":"$googleId","provider":"${provider.name}"}""")
         }
 
         assertEquals(HttpStatusCode.OK, loginResponse.status)
