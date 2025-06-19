@@ -83,8 +83,8 @@ class UserServiceTest: KoinTest {
         val userID = userService.createUser(
             User(
                 authCredentialId = credentialId1,
-                firstName = "Peter",
-                lastName = "Parker",
+                fullName = "Peter Parker",
+                phoneNumber = "0712453678",
                 birthDate = LocalDate.of(2003, 11, 8),
                 username = "Socate123",
                 country = "USA"
@@ -93,14 +93,13 @@ class UserServiceTest: KoinTest {
         val retrievedUser = userService.getUserById(userID)
 
         assertNotNull(retrievedUser)
-        Assertions.assertEquals(userID, retrievedUser.id)
-        Assertions.assertEquals("Peter", retrievedUser.firstName)
-        Assertions.assertEquals("Parker", retrievedUser.lastName)
-        Assertions.assertEquals(null, retrievedUser.profilePicturePath)
-        Assertions.assertEquals(LocalDate.of(2003, 11, 8), retrievedUser.birthDate)
-        Assertions.assertEquals("Socate123", retrievedUser.username)
-        Assertions.assertEquals("USA", retrievedUser.country)
-        Assertions.assertEquals(0, retrievedUser.spotScore)
+        assertEquals(userID, retrievedUser.id)
+        assertEquals("Peter Parker", retrievedUser.fullName)
+        assertEquals(null, retrievedUser.profilePicturePath)
+        assertEquals(LocalDate.of(2003, 11, 8), retrievedUser.birthDate)
+        assertEquals("Socate123", retrievedUser.username)
+        assertEquals("USA", retrievedUser.country)
+        assertEquals(0, retrievedUser.spotScore)
 
     }
 
@@ -109,8 +108,8 @@ class UserServiceTest: KoinTest {
         userService.createUser(
             User(
                 authCredentialId = credentialId1,
-                firstName = "Peter",
-                lastName = "Parker",
+                fullName = "Peter Parker",
+                phoneNumber = "0712453678",
                 birthDate = LocalDate.of(2003, 11, 8),
                 username = "Socate123",
                 country = "USA"
@@ -120,8 +119,8 @@ class UserServiceTest: KoinTest {
         userService.createUser(
             User(
                 authCredentialId = credentialId2,
-                firstName = "Mary Jane",
-                lastName = "Watson",
+                fullName = "Mary Jane",
+                phoneNumber = "0712453678",
                 birthDate = LocalDate.of(2004, 4, 1),
                 username = "Socate321",
                 country = "USA"
@@ -136,7 +135,7 @@ class UserServiceTest: KoinTest {
 
         assertTrue(retrievedUsers2.isNotEmpty())
         assertEquals(1, retrievedUsers2.size)
-        assertEquals("Peter", retrievedUsers2[0].firstName)
+        assertEquals("Peter Parker", retrievedUsers2[0].fullName)
     }
 
     @Test
@@ -144,8 +143,8 @@ class UserServiceTest: KoinTest {
         val userId1 = userService.createUser(
             User(
                 authCredentialId = credentialId1,
-                firstName = "Peter",
-                lastName = "Parker",
+                fullName = "Peter Parker",
+                phoneNumber = "0712453678",
                 birthDate = LocalDate.of(2003, 11, 8),
                 username = "Socate123",
                 country = "USA"
@@ -155,8 +154,8 @@ class UserServiceTest: KoinTest {
         val userId2 = userService.createUser(
             User(
                 authCredentialId = credentialId2,
-                firstName = "Mary Jane",
-                lastName = "Watson",
+                fullName = "Mary Jane",
+                phoneNumber = "0712453678",
                 birthDate = LocalDate.of(2004, 4, 1),
                 username = "Socate321",
                 country = "USA"
@@ -165,24 +164,22 @@ class UserServiceTest: KoinTest {
 
         val users = userService.getAllUsers()
 
-        Assertions.assertEquals(2, users.size)
+        assertEquals(2, users.size)
 
         val user1 = users.find { it.id == userId1 }
         assertNotNull(user1)
-        Assertions.assertEquals("Peter", user1.firstName)
-        Assertions.assertEquals("Parker", user1.lastName)
-        Assertions.assertEquals("Socate123", user1.username)
-        Assertions.assertEquals(LocalDate.of(2003, 11, 8), user1.birthDate)
-        Assertions.assertEquals("USA", user1.country)
+        assertEquals("Peter Parker", user1.fullName)
+        assertEquals("Socate123", user1.username)
+        assertEquals(LocalDate.of(2003, 11, 8), user1.birthDate)
+        assertEquals("USA", user1.country)
 
         // Assert details of the second user
         val user2 = users.find { it.id == userId2 }
         assertNotNull(user2)
-        Assertions.assertEquals("Mary Jane", user2.firstName)
-        Assertions.assertEquals("Watson", user2.lastName)
-        Assertions.assertEquals("Socate321", user2.username)
-        Assertions.assertEquals(LocalDate.of(2004, 4, 1), user2.birthDate)
-        Assertions.assertEquals("USA", user2.country)
+        assertEquals("Mary Jane", user2.fullName)
+        assertEquals("Socate321", user2.username)
+        assertEquals(LocalDate.of(2004, 4, 1), user2.birthDate)
+        assertEquals("USA", user2.country)
     }
 
     @Test
@@ -190,8 +187,8 @@ class UserServiceTest: KoinTest {
         val userId = userService.createUser(
             User(
                 authCredentialId = credentialId1,
-                firstName = "Peter",
-                lastName = "Parker",
+                fullName = "Peter Parker",
+                phoneNumber = "0712453678",
                 birthDate = LocalDate.of(2003, 11, 8),
                 username = "Socate123",
                 country = "USA"
@@ -210,7 +207,7 @@ class UserServiceTest: KoinTest {
 
         // Make sure the user is not null after updating
         assertNotNull(retrievedUser)
-        Assertions.assertEquals("/path/to/new/picture", retrievedUser.profilePicturePath)
+        assertEquals("/path/to/new/picture", retrievedUser.profilePicturePath)
     }
 
     @Test
@@ -218,8 +215,8 @@ class UserServiceTest: KoinTest {
         val userId = userService.createUser(
             User(
                 authCredentialId = credentialId1,
-                firstName = "Peter",
-                lastName = "Parker",
+                fullName = "Peter Parker",
+                phoneNumber = "0712453678",
                 birthDate = LocalDate.of(2003, 11, 8),
                 username = "Socate123",
                 country = "USA"

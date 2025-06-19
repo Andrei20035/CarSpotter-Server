@@ -449,8 +449,8 @@ class UserCarRoutesTest : KoinTest {
         val userCarId = 123
         val user = UserDTO(
             id = 2,
-            firstName = "John",
-            lastName = "Doe",
+            fullName = "John Doe",
+            phoneNumber = "0712453678",
             username = "johndoe",
             birthDate = LocalDate.of(1990, 1, 1),
             country = "USA"

@@ -161,8 +161,8 @@ class UserRoutesTest : KoinTest {
         val userId = 1
         val user = UserDTO(
             id = userId,
-            firstName = "Test",
-            lastName = "User",
+            fullName = "Test User",
+            phoneNumber = "0712453678",
             username = "testuser",
             profilePicturePath = "path/to/picture.jpg",
             birthDate = LocalDate.of(1990, 1, 1),
@@ -215,18 +215,18 @@ class UserRoutesTest : KoinTest {
     fun `GET all returns 200 with all users when user is admin`() = testApplication {
         val users = listOf(
             UserDTO(
-                id = 1, 
-                firstName = "First1", 
-                lastName = "Last1", 
+                id = 1,
+                fullName = "First1 Last1",
+                phoneNumber = "0712453678",
                 username = "user1", 
                 profilePicturePath = null, 
                 birthDate = LocalDate.of(1990, 1, 1), 
                 country = "USA"
             ),
             UserDTO(
-                id = 2, 
-                firstName = "First2", 
-                lastName = "Last2", 
+                id = 2,
+                fullName = "First2 Last2",
+                phoneNumber = "0712453678",
                 username = "user2", 
                 profilePicturePath = "path/to/picture.jpg", 
                 birthDate = LocalDate.of(1992, 2, 2), 
@@ -278,18 +278,18 @@ class UserRoutesTest : KoinTest {
         val username = "test"
         val users = listOf(
             UserDTO(
-                id = 1, 
-                firstName = "Test", 
-                lastName = "User", 
+                id = 1,
+                fullName = "Test User",
+                phoneNumber = "0712453678",
                 username = "test", 
                 profilePicturePath = null, 
                 birthDate = LocalDate.of(1990, 1, 1), 
                 country = "USA"
             ),
             UserDTO(
-                id = 2, 
-                firstName = "Tester", 
-                lastName = "User", 
+                id = 2,
+                fullName = "Tester User",
+                phoneNumber = "0712453678",
                 username = "tester", 
                 profilePicturePath = null, 
                 birthDate = LocalDate.of(1992, 2, 2), 
@@ -323,8 +323,8 @@ class UserRoutesTest : KoinTest {
     fun `POST user returns 201 when user created successfully`() = testApplication {
         val request = CreateUserRequest(
             username = "newuser",
-            firstName = "New",
-            lastName = "User",
+            fullName = "New User",
+            phoneNumber = "0712453678",
             birthDate = LocalDate.of(1990, 1, 1),
             country = "USA"
         )
@@ -358,8 +358,8 @@ class UserRoutesTest : KoinTest {
     fun `POST user returns 500 when user creation fails`() = testApplication {
         val request = CreateUserRequest(
             username = "newuser",
-            firstName = "New",
-            lastName = "User",
+            fullName = "New User",
+            phoneNumber = "0712453678",
             birthDate = LocalDate.of(1990, 1, 1),
             country = "USA"
         )

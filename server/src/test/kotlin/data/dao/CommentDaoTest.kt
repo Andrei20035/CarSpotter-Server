@@ -83,8 +83,8 @@ class CommentDaoTest: KoinTest {
             userId1 = userDao.createUser(
                 User(
                     authCredentialId = credentialId1,
-                    firstName = "Peter",
-                    lastName = "Parker",
+                    fullName = "Peter Parker",
+                    phoneNumber = "0712453678",
                     birthDate = LocalDate.of(2003, 11, 8),
                     username = "Socate123",
                     country = "USA"
@@ -93,8 +93,8 @@ class CommentDaoTest: KoinTest {
             userId2 = userDao.createUser(
                 User(
                     authCredentialId = credentialId2,
-                    firstName = "Mary Jane",
-                    lastName = "Watson",
+                    fullName = "Mary Jane",
+                    phoneNumber = "0712453678",
                     birthDate = LocalDate.of(2004, 4, 1),
                     username = "Socate321",
                     country = "USA"

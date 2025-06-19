@@ -344,17 +344,17 @@ class LikeRoutesTest : KoinTest {
         val postId = 2
         val users = listOf(
             UserDTO(
-                id = 2, 
-                firstName = "John", 
-                lastName = "Doe", 
+                id = 2,
+                fullName = "John Doe",
+                phoneNumber = "0712453678",
                 username = "user2", 
                 birthDate = LocalDate.of(1990, 1, 1),
                 country = "USA"
             ),
             UserDTO(
-                id = 3, 
-                firstName = "Jane", 
-                lastName = "Smith", 
+                id = 3,
+                fullName = "Jane Smith",
+                phoneNumber = "0712453678",
                 username = "user3", 
                 birthDate = LocalDate.of(1992, 5, 15),
                 country = "UK"

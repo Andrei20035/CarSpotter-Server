@@ -80,8 +80,8 @@ class CommentRepositoryTest: KoinTest {
             userId1 = userRepository.createUser(
                 User(
                     authCredentialId = credentialId1,
-                    firstName = "Tony",
-                    lastName = "Stark",
+                    fullName = "Tony Stark",
+                    phoneNumber = "0712453678",
                     birthDate = LocalDate.of(1970, 5, 29),
                     username = "IronMan",
                     country = "USA"
@@ -90,8 +90,8 @@ class CommentRepositoryTest: KoinTest {
             userId2 = userRepository.createUser(
                 User(
                     authCredentialId = credentialId2,
-                    firstName = "Steve",
-                    lastName = "Rogers",
+                    fullName = "Steve Rogers",
+                    phoneNumber = "0712453678",
                     birthDate = LocalDate.of(1918, 7, 4),
                     username = "Captain",
                     country = "USA"

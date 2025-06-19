@@ -75,8 +75,8 @@ class FriendServiceTest: KoinTest {
             userId1 = userService.createUser(
                 User(
                     authCredentialId = credentialId1,
-                    firstName = "Peter",
-                    lastName = "Parker",
+                    fullName = "Peter Parker",
+                    phoneNumber = "0712453678",
                     birthDate = LocalDate.of(2003, 11, 8),
                     username = "Socate123",
                     country = "USA"
@@ -85,8 +85,8 @@ class FriendServiceTest: KoinTest {
             userId2 = userService.createUser(
                 User(
                     authCredentialId = credentialId2,
-                    firstName = "Mary Jane",
-                    lastName = "Watson",
+                    fullName = "Mary Jane",
+                    phoneNumber = "0712453678",
                     birthDate = LocalDate.of(2004, 4, 1),
                     username = "Socate321",
                     country = "USA"
@@ -122,7 +122,7 @@ class FriendServiceTest: KoinTest {
 
         val allFriends = friendService.getAllFriends(userId1)
         Assertions.assertEquals(1, allFriends.size)
-        Assertions.assertEquals("Watson", allFriends[0].lastName)
+        Assertions.assertEquals("Mary Jane", allFriends[0].fullName)
     }
 
     @Test
@@ -131,7 +131,7 @@ class FriendServiceTest: KoinTest {
 
         val allFriendsBeforeDelete = friendService.getAllFriends(userId1)
         Assertions.assertEquals(1, allFriendsBeforeDelete.size)
-        Assertions.assertEquals("Watson", allFriendsBeforeDelete[0].lastName)
+        Assertions.assertEquals("Mary Jane", allFriendsBeforeDelete[0].fullName)
 
         friendService.deleteFriend(userId1, userId2)
 

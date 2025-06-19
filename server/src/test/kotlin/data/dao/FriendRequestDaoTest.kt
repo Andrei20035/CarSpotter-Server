@@ -79,8 +79,8 @@ class FriendRequestDaoTest: KoinTest {
             userId1 = userDao.createUser(
                 User(
                     authCredentialId = credentialId1,
-                    firstName = "Peter",
-                    lastName = "Parker",
+                    fullName = "Peter Parker",
+                    phoneNumber = "0712453678",
                     birthDate = LocalDate.of(2003, 11, 8),
                     username = "Socate123",
                     country = "USA"
@@ -89,8 +89,8 @@ class FriendRequestDaoTest: KoinTest {
             userId2 = userDao.createUser(
                 User(
                     authCredentialId = credentialId2,
-                    firstName = "Mary Jane",
-                    lastName = "Watson",
+                    fullName = "Mary Jane",
+                    phoneNumber = "0712453678",
                     birthDate = LocalDate.of(2004, 4, 1),
                     username = "Socate321",
                     country = "USA"
@@ -138,8 +138,8 @@ class FriendRequestDaoTest: KoinTest {
         val friendsForUser1 = friendDao.getAllFriends(userId1)
         val friendsForUser2 = friendDao.getAllFriends(userId2)
 
-        assertEquals("Watson", friendsForUser1[0].lastName)
-        assertEquals("Parker", friendsForUser2[0].lastName)
+        assertEquals("Mary Jane", friendsForUser1[0].fullName)
+        assertEquals("Peter Parker", friendsForUser2[0].fullName)
     }
 
     @Test

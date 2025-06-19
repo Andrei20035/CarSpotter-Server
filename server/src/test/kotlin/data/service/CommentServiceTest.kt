@@ -81,8 +81,8 @@ class CommentServiceTest: KoinTest {
             userId1 = userService.createUser(
                 User(
                     authCredentialId = credentialId1,
-                    firstName = "Tony",
-                    lastName = "Stark",
+                    fullName = "Tony Stark",
+                    phoneNumber = "0712453678",
                     birthDate = LocalDate.of(1970, 5, 29),
                     username = "IronMan",
                     country = "USA"
@@ -91,8 +91,8 @@ class CommentServiceTest: KoinTest {
             userId2 = userService.createUser(
                 User(
                     authCredentialId = credentialId2,
-                    firstName = "Steve",
-                    lastName = "Rogers",
+                    fullName = "Steve Rogers",
+                    phoneNumber = "0712453678",
                     birthDate = LocalDate.of(1918, 7, 4),
                     username = "Captain",
                     country = "USA"

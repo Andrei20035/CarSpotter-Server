@@ -85,8 +85,8 @@ class UserCarRepositoryTest: KoinTest {
             userId1 = userRepository.createUser(
                 User(
                     authCredentialId = credentialId1,
-                    firstName = "Peter",
-                    lastName = "Parker",
+                    fullName = "Peter Parker",
+                    phoneNumber = "0712453678",
                     birthDate = LocalDate.of(2003, 11, 8),
                     username = "Socate123",
                     country = "USA"
@@ -95,8 +95,8 @@ class UserCarRepositoryTest: KoinTest {
             userId2 = userRepository.createUser(
                 User(
                     authCredentialId = credentialId2,
-                    firstName = "Mary Jane",
-                    lastName = "Watson",
+                    fullName = "Peter Parker",
+                    phoneNumber = "0712453678",
                     birthDate = LocalDate.of(2004, 4, 1),
                     username = "Socate321",
                     country = "USA"
@@ -174,8 +174,7 @@ class UserCarRepositoryTest: KoinTest {
 
         assertNotNull(user)
         assertEquals(userId1, user.id)
-        assertEquals("Peter", user.firstName)
-        assertEquals("Parker", user.lastName)
+        assertEquals("Peter Parker", user.fullName)
     }
 
     @Test

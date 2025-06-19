@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="SqlDialectMappings">
-    <file url="file://$PROJECT_DIR$/server/src/main/resources/db/migrations/V2__alter_google_id_column.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/server/src/main/resources/db/migrations/V2__alter_google_id_column.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/server/src/main/resources/db/migrations/V3__add__fullName_and_phoneNumber.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/server/src/main/resources/db/migrations/V4__add_constraint_auth_credentials.sql" dialect="GenericSQL" />
     <file url="PROJECT" dialect="PostgreSQL" />
   </component>
   <component name="SqlResolveMappings">
