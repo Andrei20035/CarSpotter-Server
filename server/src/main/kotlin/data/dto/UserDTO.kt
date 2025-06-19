@@ -10,8 +10,8 @@ import java.time.LocalDate
 @Serializable
 data class UserDTO(
     val id: Int = 0,
-    val firstName: String,
-    val lastName: String,
+    val fullName: String,
+    val phoneNumber: String? = null,
     val profilePicturePath: String? = null,
     @Serializable(with = LocalDateSerializer::class)
     val birthDate: LocalDate,
@@ -27,8 +27,8 @@ data class UserDTO(
 fun User.toDTO(): UserDTO {
     return UserDTO(
         id = this.id,
-        firstName = this.firstName,
-        lastName = this.lastName,
+        fullName = this.fullName,
+        phoneNumber = this.phoneNumber,
         profilePicturePath = this.profilePicturePath,
         birthDate = this.birthDate,
         username = this.username,

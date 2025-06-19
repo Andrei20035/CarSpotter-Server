@@ -8,8 +8,8 @@ import java.time.LocalDate
 @Serializable
 data class CreateUserRequest(
     val profilePicturePath: String? = null,
-    val firstName: String,
-    val lastName: String,
+    val fullName: String,
+    val phoneNumber: String? = null,
     @Serializable(with = LocalDateSerializer::class)
     val birthDate: LocalDate,
     val username: String,
@@ -19,8 +19,8 @@ data class CreateUserRequest(
 fun CreateUserRequest.toUser(credentialId: Int) = User(
     authCredentialId = credentialId,
     profilePicturePath = this.profilePicturePath,
-    firstName = this.firstName,
-    lastName = this.lastName,
+    fullName = this.fullName,
+    phoneNumber = this.phoneNumber,
     birthDate = this.birthDate,
     username = this.username,
     country = this.country,

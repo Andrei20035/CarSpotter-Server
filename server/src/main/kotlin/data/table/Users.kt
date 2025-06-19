@@ -10,10 +10,10 @@ object Users : Table("users") {
     val id = integer("id").autoIncrement()
     val authCredentialId = integer("auth_credential_id").uniqueIndex().references(AuthCredentials.id, onDelete = ReferenceOption.CASCADE)
     val profilePicturePath = text("profile_picture_path").nullable()
-    val firstName = varchar("first_name", 80)
-    val lastName = varchar("last_name", 80)
+    val fullName = varchar("full_name", 150)
+    val phoneNumber = varchar("phone_number", 20).nullable()
     val birthDate = date("birth_date")
-    val username = varchar("username", 50)
+    val username = varchar("username", 50).uniqueIndex()
     val country = varchar("country", 50)
     val spotScore = integer("spot_score").default(0)
     val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
@@ -21,3 +21,4 @@ object Users : Table("users") {
 
     override val primaryKey = PrimaryKey(id)
 }
+

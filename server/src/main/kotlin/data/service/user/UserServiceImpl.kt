@@ -13,7 +13,10 @@ class UserServiceImpl(
         return try {
             userRepository.createUser(user)
         } catch (e: UserCreationException) {
-            throw IllegalArgumentException("Could not create user: ${e.message}", e)
+            if (e.message?.contains("username") == true) {
+                throw UsernameAlreadyExistsException("Username is already taken")
+            }
+            throw e
         }
     }
 
@@ -37,3 +40,6 @@ class UserServiceImpl(
         return userRepository.deleteUser(credentialId)
     }
 }
+
+class UsernameAlreadyExistsException(message: String) : Exception(message)
+

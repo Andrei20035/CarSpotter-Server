@@ -1,5 +1,6 @@
 package com.carspotter.routes
 
+import com.carspotter.data.dao.user.UserCreationException
 import com.carspotter.data.dto.request.CreateUserRequest
 import com.carspotter.data.dto.request.UpdateProfilePictureRequest
 import com.carspotter.data.dto.request.toUser
@@ -59,20 +60,24 @@ fun Route.userRoutes() {
                 val email = call.principal<JWTPrincipal>()?.payload?.getClaim("email")?.asString()
                     ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing email"))
 
-                val user = request.toUser(credentialId)
-                val newUserId = userService.createUser(user)
+                try {
+                    val user = request.toUser(credentialId)
+                    val newUserId = userService.createUser(user)
+                    if (newUserId > 0) {
+                        val newJwtToken = jwtService.generateJwtToken(
+                            credentialId = credentialId,
+                            userId = newUserId,
+                            email = email
+                        )
+                        return@post call.respond(HttpStatusCode.Created, mapOf("token" to newJwtToken))
+                    } else {
+                        return@post call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to create user"))
+                    }
+                } catch (e: UserCreationException) {
+                    return@post call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
 
-                if (newUserId > 0) {
-                    val newJwtToken = jwtService.generateJwtToken(
-                        credentialId = credentialId,
-                        userId = newUserId,
-                        email = email
-                    )
-
-                    return@post call.respond(HttpStatusCode.Created, mapOf("token" to newJwtToken))
-                } else {
-                    return@post call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to create user"))
                 }
+
             }
 
             put("/profile-picture") {

@@ -14,8 +14,8 @@ class UserDaoImpl : IUserDAO {
             Users.insertReturning(listOf(Users.id)) {
                 it[authCredentialId] = user.authCredentialId
                 it[profilePicturePath] = user.profilePicturePath
-                it[firstName] = user.firstName
-                it[lastName] = user.lastName
+                it[fullName] = user.fullName
+                it[phoneNumber] =  user.phoneNumber
                 it[birthDate] = user.birthDate
                 it[username] = user.username
                 it[country] = user.country
@@ -34,8 +34,8 @@ class UserDaoImpl : IUserDAO {
                         id = row[Users.id],
                         authCredentialId = row[Users.authCredentialId],
                         profilePicturePath = row[Users.profilePicturePath],
-                        firstName = row[Users.firstName],
-                        lastName = row[Users.lastName],
+                        fullName = row[Users.fullName],
+                        phoneNumber = row[Users.phoneNumber],
                         birthDate = row[Users.birthDate],
                         username = row[Users.username],
                         country = row[Users.country],
@@ -57,8 +57,8 @@ class UserDaoImpl : IUserDAO {
                         id = row[Users.id],
                         authCredentialId = row[Users.authCredentialId],
                         profilePicturePath = row[Users.profilePicturePath],
-                        firstName = row[Users.firstName],
-                        lastName = row[Users.lastName],
+                        fullName = row[Users.fullName],
+                        phoneNumber = row[Users.phoneNumber],
                         birthDate = row[Users.birthDate],
                         username = row[Users.username],
                         country = row[Users.country],
@@ -79,8 +79,8 @@ class UserDaoImpl : IUserDAO {
                         id = row[Users.id],
                         authCredentialId = row[Users.authCredentialId],
                         profilePicturePath = row[Users.profilePicturePath],
-                        firstName = row[Users.firstName],
-                        lastName = row[Users.lastName],
+                        fullName = row[Users.fullName],
+                        phoneNumber = row[Users.phoneNumber],
                         birthDate = row[Users.birthDate],
                         username = row[Users.username],
                         country = row[Users.country],
