@@ -56,6 +56,8 @@ fun Application.configureDatabases() {
         .locations("classpath:db/migrations")
         .baselineOnMigrate(true)
         .load()
+
+    flyway.repair()
     flyway.migrate()
 
     Database.connect(dataSource)
