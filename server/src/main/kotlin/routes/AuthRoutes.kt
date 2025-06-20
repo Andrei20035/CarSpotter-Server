@@ -14,6 +14,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import kotlin.math.log
 
 fun Route.authRoutes() {
     val authCredentialService: IAuthCredentialService by application.inject()
