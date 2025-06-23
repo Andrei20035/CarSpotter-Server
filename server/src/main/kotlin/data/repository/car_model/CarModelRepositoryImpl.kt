@@ -6,6 +6,18 @@ import com.carspotter.data.model.CarModel
 class CarModelRepositoryImpl(
     private val carModelDao: ICarModelDAO
 ) : ICarModelRepository {
+    override suspend fun getCarModelId(brand: String, model: String): Int? {
+        return carModelDao.getCarModelId(brand, model)
+    }
+
+    override suspend fun getAllCarBrands(): List<String> {
+        return carModelDao.getAllCarBrands()
+    }
+
+    override suspend fun getCarModelsForBrand(brand: String): List<String> {
+        return carModelDao.getCarModelsForBrand(brand)
+    }
+
     override suspend fun createCarModel(carModel: CarModel): Int {
         return carModelDao.createCarModel(carModel)
     }

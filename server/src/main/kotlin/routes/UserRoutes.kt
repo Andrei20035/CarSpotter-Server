@@ -69,7 +69,13 @@ fun Route.userRoutes() {
                             userId = newUserId,
                             email = email
                         )
-                        return@post call.respond(HttpStatusCode.Created, mapOf("token" to newJwtToken))
+                        return@post call.respond(
+                            HttpStatusCode.Created,
+                            mapOf(
+                                "jwtToken" to newJwtToken,
+                                "userId" to newUserId
+                            )
+                        )
                     } else {
                         return@post call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to create user"))
                     }

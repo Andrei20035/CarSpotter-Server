@@ -52,6 +52,50 @@ class CarModelServiceTest: KoinTest {
     }
 
     @Test
+    fun `get car models for brand - returns models for specific brand`() = runBlocking {
+
+        carModelService.createCarModel(CarModel(brand = "Toyota", model = "Camry", year = 2021))
+        carModelService.createCarModel(CarModel(brand = "Toyota", model = "Corolla", year = 2022))
+        carModelService.createCarModel(CarModel(brand = "Toyota", model = "Prius", year = 2023))
+        carModelService.createCarModel(CarModel(brand = "Honda", model = "Civic", year = 2020))
+        carModelService.createCarModel(CarModel(brand = "Honda", model = "Accord", year = 2021))
+
+        val toyotaModels = carModelService.getCarModelsForBrand("Toyota")
+        val hondaModels = carModelService.getCarModelsForBrand("Honda")
+
+        Assertions.assertEquals(3, toyotaModels.size)
+        Assertions.assertTrue(toyotaModels.contains("Camry"))
+        Assertions.assertTrue(toyotaModels.contains("Corolla"))
+        Assertions.assertTrue(toyotaModels.contains("Prius"))
+
+        Assertions.assertEquals(2, hondaModels.size)
+        Assertions.assertTrue(hondaModels.contains("Civic"))
+        Assertions.assertTrue(hondaModels.contains("Accord"))
+    }
+
+    @Test
+    fun `getCarModelId returns correct id when brand and model exist`() = runBlocking {
+        val carModelId = carModelService.createCarModel(
+            CarModel(
+                brand = "Tesla",
+                model = "Model S",
+                year = 2023
+            )
+        )
+
+        val result = carModelService.getCarModelId("Tesla", "Model S")
+
+        Assertions.assertEquals(carModelId, result)
+    }
+
+    @Test
+    fun `getCarModelId returns null when brand and model do not exist`() = runBlocking {
+        val result = carModelService.getCarModelId("NonExistentBrand", "NonExistentModel")
+
+        org.junit.jupiter.api.assertNull(result)
+    }
+
+    @Test
     fun `create and get car model by id`() = runBlocking {
         val id = carModelService.createCarModel(
             CarModel(

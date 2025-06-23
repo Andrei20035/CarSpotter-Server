@@ -2,8 +2,10 @@ package com.carspotter.data.dao.car_model
 
 import com.carspotter.data.model.CarModel
 import com.carspotter.data.table.CarModels
+import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.selectAll
@@ -36,6 +38,36 @@ class CarModelDaoImpl : ICarModelDAO {
                 }.singleOrNull()
         }
     }
+
+    override suspend fun getCarModelId(brand: String, model: String): Int? {
+        return transaction {
+            CarModels
+                .selectAll()
+                .where { (CarModels.brand eq brand) and (CarModels.model eq model) }
+                .mapNotNull { it[CarModels.id] }
+                .singleOrNull()
+        }
+    }
+
+    override suspend fun getAllCarBrands(): List<String> {
+        return transaction {
+            CarModels.selectAll()
+                .withDistinct()
+                .map { it[CarModels.brand] }
+        }
+    }
+
+    override suspend fun getCarModelsForBrand(brand: String): List<String> {
+        return transaction {
+            CarModels
+                .selectAll()
+                .where { CarModels.brand eq brand }
+                .withDistinct()
+                .map { it[CarModels.model] }
+        }
+    }
+
+
 
     override suspend fun getAllCarModels(): List<CarModel> {
         return transaction {

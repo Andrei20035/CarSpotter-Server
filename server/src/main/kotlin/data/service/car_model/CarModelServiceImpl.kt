@@ -6,6 +6,18 @@ import com.carspotter.data.repository.car_model.ICarModelRepository
 class CarModelServiceImpl(
     private val carModelRepository: ICarModelRepository
 ): ICarModelService {
+    override suspend fun getCarModelId(brand: String, model: String): Int? {
+        return carModelRepository.getCarModelId(brand, model)
+    }
+
+    override suspend fun getAllCarBrands(): List<String> {
+        return carModelRepository.getAllCarBrands()
+    }
+
+    override suspend fun getCarModelsForBrand(brand: String): List<String> {
+        return carModelRepository.getCarModelsForBrand(brand)
+    }
+
     override suspend fun createCarModel(carModel: CarModel): Int {
         return try {
             carModelRepository.createCarModel(carModel)

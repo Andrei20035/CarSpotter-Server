@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
@@ -42,6 +43,50 @@ class CarModelDaoTest: KoinTest {
         transaction {
             CarModels.deleteAll()
         }
+    }
+
+    @Test
+    fun `get car models for brand - returns models for specific brand`() = runBlocking {
+
+        carModelDao.createCarModel(CarModel(brand = "Toyota", model = "Camry", year = 2021))
+        carModelDao.createCarModel(CarModel(brand = "Toyota", model = "Corolla", year = 2022))
+        carModelDao.createCarModel(CarModel(brand = "Toyota", model = "Prius", year = 2023))
+        carModelDao.createCarModel(CarModel(brand = "Honda", model = "Civic", year = 2020))
+        carModelDao.createCarModel(CarModel(brand = "Honda", model = "Accord", year = 2021))
+
+        val toyotaModels = carModelDao.getCarModelsForBrand("Toyota")
+        val hondaModels = carModelDao.getCarModelsForBrand("Honda")
+
+        Assertions.assertEquals(3, toyotaModels.size)
+        Assertions.assertTrue(toyotaModels.contains("Camry"))
+        Assertions.assertTrue(toyotaModels.contains("Corolla"))
+        Assertions.assertTrue(toyotaModels.contains("Prius"))
+
+        Assertions.assertEquals(2, hondaModels.size)
+        Assertions.assertTrue(hondaModels.contains("Civic"))
+        Assertions.assertTrue(hondaModels.contains("Accord"))
+    }
+
+    @Test
+    fun `getCarModelId returns correct id when brand and model exist`() = runBlocking {
+        val carModelId = carModelDao.createCarModel(
+            CarModel(
+                brand = "Tesla",
+                model = "Model S",
+                year = 2023
+            )
+        )
+
+        val result = carModelDao.getCarModelId("Tesla", "Model S")
+
+        assertEquals(carModelId, result)
+    }
+
+    @Test
+    fun `getCarModelId returns null when brand and model do not exist`() = runBlocking {
+        val result = carModelDao.getCarModelId("NonExistentBrand", "NonExistentModel")
+
+        assertNull(result)
     }
 
     @Test
@@ -84,6 +129,8 @@ class CarModelDaoTest: KoinTest {
         Assertions.assertTrue(carModels.any { it.brand == "BMW" && it.model == "M3" && it.year == 2020 })
         Assertions.assertTrue(carModels.any { it.brand == "Audi" && it.model == "A4" && it.year == 2021 })
     }
+
+
 
     @Test
     fun `delete a car model`() = runBlocking {
