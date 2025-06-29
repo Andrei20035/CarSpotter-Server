@@ -17,13 +17,12 @@ mockk = "1.14.2"
 flyway = "11.9.1"
 api-client = "2.8.0"
 oauth-client = "1.39.0"
+amazon-s3 = "2.31.73"
 
 [libraries]
 ktor-server-host-common = { module = "io.ktor:ktor-server-host-common", version.ref = "ktor" }
 ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
 ktor-server-auto-head-response = { module = "io.ktor:ktor-server-auto-head-response", version.ref = "ktor" }
-#ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" } # This shouldn t be used
-#ktor-server-routing = { module = "io.ktor:ktor-server-routing-jvm", version.ref = "ktor" }
 ktor-server-core-jvm = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
 ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktor" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
@@ -77,6 +76,8 @@ flyway-database-postgres = { module = "org.flywaydb:flyway-database-postgresql",
 
 google-api-client = {module = "com.google.api-client:google-api-client", version.ref = "api-client"}
 google-oauth-client = { module = "com.google.oauth-client:google-oauth-client", version.ref = "oauth-client"}
+
+aws-sdk = { module = "software.amazon.awssdk:s3", version.ref = "amazon-s3"}
 
 
 [plugins]

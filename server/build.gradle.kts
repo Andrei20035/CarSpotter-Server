@@ -53,6 +53,8 @@ dependencies {
     implementation(libs.flyway.core)
     implementation(libs.flyway.database.postgres)
 
+    implementation(libs.aws.sdk)
+
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.dao)

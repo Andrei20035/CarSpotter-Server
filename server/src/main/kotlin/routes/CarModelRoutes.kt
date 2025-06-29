@@ -54,6 +54,7 @@ fun Route.carModelRoutes() {
             val models = carModelService.getCarModelsForBrand(brand)
             if (models.isNotEmpty())
                 call.respond(models)
+
             else
                 call.respond(HttpStatusCode.NotFound, mapOf("error" to "No models found for brand $brand"))
         }

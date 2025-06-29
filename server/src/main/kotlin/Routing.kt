@@ -22,6 +22,7 @@ fun Application.configureRouting() {
             postRoutes()
             userCarRoutes()
             userRoutes()
+            uploadRoutes()
             get("/") {
                 call.respondText(
                     """Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
