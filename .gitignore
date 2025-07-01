@@ -25,6 +25,7 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 .env
+*/scripts/scrapper/cars.csv
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
