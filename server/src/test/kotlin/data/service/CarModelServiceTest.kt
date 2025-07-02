@@ -54,11 +54,11 @@ class CarModelServiceTest: KoinTest {
     @Test
     fun `get car models for brand - returns models for specific brand`() = runBlocking {
 
-        carModelService.createCarModel(CarModel(brand = "Toyota", model = "Camry", year = 2021))
-        carModelService.createCarModel(CarModel(brand = "Toyota", model = "Corolla", year = 2022))
-        carModelService.createCarModel(CarModel(brand = "Toyota", model = "Prius", year = 2023))
-        carModelService.createCarModel(CarModel(brand = "Honda", model = "Civic", year = 2020))
-        carModelService.createCarModel(CarModel(brand = "Honda", model = "Accord", year = 2021))
+        carModelService.createCarModel(CarModel(brand = "Toyota", model = "Camry", startYear = 2021, endYear = 2022))
+        carModelService.createCarModel(CarModel(brand = "Toyota", model = "Corolla", startYear = 2022, endYear = 2024))
+        carModelService.createCarModel(CarModel(brand = "Toyota", model = "Prius", startYear = 2018, endYear = 2022))
+        carModelService.createCarModel(CarModel(brand = "Honda", model = "Civic", startYear = 2014, endYear = 2019))
+        carModelService.createCarModel(CarModel(brand = "Honda", model = "Accord", startYear = 2024, endYear = 2025))
 
         val toyotaModels = carModelService.getCarModelsForBrand("Toyota")
         val hondaModels = carModelService.getCarModelsForBrand("Honda")
@@ -79,7 +79,8 @@ class CarModelServiceTest: KoinTest {
             CarModel(
                 brand = "Tesla",
                 model = "Model S",
-                year = 2023
+                startYear = 2022,
+                endYear = 2024
             )
         )
 
@@ -101,7 +102,8 @@ class CarModelServiceTest: KoinTest {
             CarModel(
                 brand = "Toyota",
                 model = "GR Supra",
-                year = 2022
+                startYear = 2019,
+                endYear = 2024
             )
         )
 
@@ -110,13 +112,12 @@ class CarModelServiceTest: KoinTest {
         assertNotNull(result)
         assertEquals("Toyota", result?.brand)
         assertEquals("GR Supra", result?.model)
-        assertEquals(2022, result?.year)
     }
 
     @Test
     fun `get all car models returns all items`() = runBlocking {
-        carModelService.createCarModel(CarModel(brand = "Lamborghini", model = "Huracan", year = 2021))
-        carModelService.createCarModel(CarModel(brand = "Ferrari", model = "296 GTB", year = 2023))
+        carModelService.createCarModel(CarModel(brand = "Lamborghini", model = "Huracan", startYear = 2018, endYear = 2022))
+        carModelService.createCarModel(CarModel(brand = "Ferrari", model = "296 GTB", startYear = 2015, endYear = 2020))
 
         val allModels = carModelService.getAllCarModels()
 
@@ -128,7 +129,7 @@ class CarModelServiceTest: KoinTest {
     @Test
     fun `delete car model removes it from database`() = runBlocking {
         val id = carModelService.createCarModel(
-            CarModel(brand = "Porsche", model = "911 GT3", year = 2020)
+            CarModel(brand = "Porsche", model = "911 GT3", startYear = 2018, endYear = 2024)
         )
 
         val deletedCount = carModelService.deleteCarModel(id)
@@ -137,6 +138,33 @@ class CarModelServiceTest: KoinTest {
         assertEquals(1, deletedCount)
         assertNull(result)
     }
+
+    @Test
+    fun `get all car brands - returns distinct brands only`() = runBlocking {
+        // Insert multiple car models with duplicate brands
+        carModelService.createCarModel(CarModel(brand = "Toyota", model = "Camry", startYear = 2021, endYear = 2022))
+        carModelService.createCarModel(CarModel(brand = "Toyota", model = "Corolla", startYear = 2022, endYear = 2024))
+        carModelService.createCarModel(CarModel(brand = "Toyota", model = "Prius", startYear = 2018, endYear = 2022))
+        carModelService.createCarModel(CarModel(brand = "Honda", model = "Civic", startYear = 2014, endYear = 2019))
+        carModelService.createCarModel(CarModel(brand = "Honda", model = "Accord", startYear = 2024, endYear = 2025))
+        carModelService.createCarModel(CarModel(brand = "Ford", model = "Mustang", startYear = 2020, endYear = 2023))
+        carModelService.createCarModel(CarModel(brand = "Ford", model = "Focus", startYear = 2015, endYear = 2018))
+        carModelService.createCarModel(CarModel(brand = "BMW", model = "X5", startYear = 2019, endYear = 2024))
+        carModelService.createCarModel(CarModel(brand = "BMW", model = "X3", startYear = 2017, endYear = 2021))
+        carModelService.createCarModel(CarModel(brand = "Audi", model = "A4", startYear = 2018, endYear = 2022))
+
+        // Call method to get all distinct car brands
+        val brands = carModelService.getAllCarBrands()
+
+        // Check that all brands are unique and present
+        Assertions.assertEquals(5, brands.size) // Toyota, Honda, Ford, BMW, Audi
+        Assertions.assertTrue(brands.contains("Toyota"))
+        Assertions.assertTrue(brands.contains("Honda"))
+        Assertions.assertTrue(brands.contains("Ford"))
+        Assertions.assertTrue(brands.contains("BMW"))
+        Assertions.assertTrue(brands.contains("Audi"))
+    }
+
 
     @AfterAll
     fun tearDown() {

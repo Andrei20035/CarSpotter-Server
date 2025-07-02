@@ -36,13 +36,20 @@ fun Route.carModelRoutes() {
         }
 
         get("/brands") {
-            val brands = carModelService.getAllCarBrands()
+            try {
+                val brands = carModelService.getAllCarBrands()
 
-            if (brands.isNotEmpty())
-                call.respond(brands)
-            else
-                call.respond(HttpStatusCode.NotFound, mapOf("error" to "No brands found"))
+                if (brands.isNotEmpty()) {
+                    call.respond(HttpStatusCode.OK, brands)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, mapOf("error" to "No brands found"))
+                }
+            } catch (e: Exception) {
+                call.application.environment.log.error("Failed to get car brands", e)
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to load brands"))
+            }
         }
+
 
         get("/brands/{brand}/models") {
             val brand = call.parameters["brand"]

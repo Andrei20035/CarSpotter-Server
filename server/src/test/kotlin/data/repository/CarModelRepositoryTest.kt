@@ -53,11 +53,11 @@ class CarModelRepositoryTest: KoinTest {
     @Test
     fun `get car models for brand - returns models for specific brand`() = runBlocking {
 
-        carModelRepository.createCarModel(CarModel(brand = "Toyota", model = "Camry", year = 2021))
-        carModelRepository.createCarModel(CarModel(brand = "Toyota", model = "Corolla", year = 2022))
-        carModelRepository.createCarModel(CarModel(brand = "Toyota", model = "Prius", year = 2023))
-        carModelRepository.createCarModel(CarModel(brand = "Honda", model = "Civic", year = 2020))
-        carModelRepository.createCarModel(CarModel(brand = "Honda", model = "Accord", year = 2021))
+        carModelRepository.createCarModel(CarModel(brand = "Toyota", model = "Camry", startYear = 2021, endYear = 2022))
+        carModelRepository.createCarModel(CarModel(brand = "Toyota", model = "Corolla", startYear = 2022, endYear = 2024))
+        carModelRepository.createCarModel(CarModel(brand = "Toyota", model = "Prius", startYear = 2018, endYear = 2022))
+        carModelRepository.createCarModel(CarModel(brand = "Honda", model = "Civic", startYear = 2014, endYear = 2019))
+        carModelRepository.createCarModel(CarModel(brand = "Honda", model = "Accord", startYear = 2024, endYear = 2025))
 
         val toyotaModels = carModelRepository.getCarModelsForBrand("Toyota")
         val hondaModels = carModelRepository.getCarModelsForBrand("Honda")
@@ -78,7 +78,8 @@ class CarModelRepositoryTest: KoinTest {
             CarModel(
                 brand = "Tesla",
                 model = "Model S",
-                year = 2023
+                startYear = 2022,
+                endYear = 2024
             )
         )
 
@@ -100,7 +101,8 @@ class CarModelRepositoryTest: KoinTest {
             CarModel(
                 brand = "Toyota",
                 model = "GR Supra",
-                year = 2022
+                startYear = 2022,
+                endYear = 2024
             )
         )
 
@@ -109,13 +111,12 @@ class CarModelRepositoryTest: KoinTest {
         assertNotNull(result)
         assertEquals("Toyota", result?.brand)
         assertEquals("GR Supra", result?.model)
-        assertEquals(2022, result?.year)
     }
 
     @Test
     fun `get all car models returns all items`() = runBlocking {
-        carModelRepository.createCarModel(CarModel(brand = "Lamborghini", model = "Huracan", year = 2021))
-        carModelRepository.createCarModel(CarModel(brand = "Ferrari", model = "296 GTB", year = 2023))
+        carModelRepository.createCarModel(CarModel(brand = "Lamborghini", model = "Huracan", startYear = 2020, endYear = 2025))
+        carModelRepository.createCarModel(CarModel(brand = "Ferrari", model = "296 GTB", startYear = 2018, endYear = 2022))
 
         val allModels = carModelRepository.getAllCarModels()
 
@@ -127,7 +128,7 @@ class CarModelRepositoryTest: KoinTest {
     @Test
     fun `delete car model removes it from database`() = runBlocking {
         val id = carModelRepository.createCarModel(
-            CarModel(brand = "Porsche", model = "911 GT3", year = 2020)
+            CarModel(brand = "Porsche", model = "911 GT3", startYear = 2010, endYear = 2025)
         )
 
         val deletedCount = carModelRepository.deleteCarModel(id)

@@ -102,7 +102,8 @@ class CommentServiceTest: KoinTest {
                 CarModel(
                     brand = "Audi",
                     model = "R8",
-                    year = 2022
+                    startYear = 2022,
+                    endYear = 2025
                 )
             )
             postId1 = postService.createPost(

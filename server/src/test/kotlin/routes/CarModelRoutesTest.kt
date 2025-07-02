@@ -69,8 +69,8 @@ class CarModelRoutesTest : KoinTest {
         }
 
         val carModels = listOf(
-            CarModel(1, "BMW M3", "Sedan", 2021),
-            CarModel(2, "Audi R8", "Coupe", 2020)
+            CarModel(1, "BMW M3", "Sedan", 2022, 2025),
+            CarModel(2, "Audi R8", "Coupe", 2020, 2022)
         )
         coEvery { carModelService.getAllCarModels() } returns carModels
 
@@ -111,7 +111,7 @@ class CarModelRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val model = CarModel(1, "Ferrari 488", "Coupe", 2022)
+        val model = CarModel(1, "Ferrari 488", "Coupe", 2022, 2025)
         coEvery { carModelService.getCarModelById(1) } returns model
 
         val response = client.get("/car-models/1")

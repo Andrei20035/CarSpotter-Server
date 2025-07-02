@@ -5,6 +5,8 @@ import com.carspotter.data.table.CarModels
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertReturning
@@ -18,7 +20,8 @@ class CarModelDaoImpl : ICarModelDAO {
                 .insertReturning(listOf(CarModels.id)) {
                     it[brand] = carModel.brand
                     it[model] = carModel.model
-                    it[year] = carModel.year
+                    it[startYear] = carModel.startYear
+                    it[endYear] = carModel.endYear
                 }.singleOrNull()?.get(CarModels.id) ?: throw IllegalStateException("Failed to insert car model")
         }
     }
@@ -33,7 +36,8 @@ class CarModelDaoImpl : ICarModelDAO {
                         id = row[CarModels.id],
                         brand = row[CarModels.brand],
                         model = row[CarModels.model],
-                        year = row[CarModels.year]
+                        startYear = row[CarModels.startYear],
+                        endYear = row[CarModels.endYear]
                     )
                 }.singleOrNull()
         }
@@ -51,8 +55,11 @@ class CarModelDaoImpl : ICarModelDAO {
 
     override suspend fun getAllCarBrands(): List<String> {
         return transaction {
-            CarModels.selectAll()
+            addLogger(StdOutSqlLogger)
+            CarModels
+                .select(CarModels.brand)
                 .withDistinct()
+                .orderBy(CarModels.brand to SortOrder.ASC)
                 .map { it[CarModels.brand] }
         }
     }
@@ -60,26 +67,26 @@ class CarModelDaoImpl : ICarModelDAO {
     override suspend fun getCarModelsForBrand(brand: String): List<String> {
         return transaction {
             CarModels
-                .selectAll()
+                .select(CarModels.model)
+                .orderBy(CarModels.model to SortOrder.ASC)
                 .where { CarModels.brand eq brand }
                 .withDistinct()
                 .map { it[CarModels.model] }
         }
     }
 
-
-
     override suspend fun getAllCarModels(): List<CarModel> {
         return transaction {
             CarModels
                 .selectAll()
-                .orderBy(CarModels.brand to SortOrder.ASC, CarModels.model to SortOrder.ASC, CarModels.year to SortOrder.DESC)
+                .orderBy(CarModels.brand to SortOrder.ASC, CarModels.model to SortOrder.ASC)
                 .mapNotNull { row ->
                     CarModel(
                         id = row[CarModels.id],
                         brand = row[CarModels.brand],
                         model = row[CarModels.model],
-                        year = row[CarModels.year]
+                        startYear = row[CarModels.startYear],
+                        endYear = row[CarModels.endYear]
                     )
                 }
         }

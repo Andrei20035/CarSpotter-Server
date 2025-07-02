@@ -22,7 +22,7 @@ class CarModelServiceImpl(
         return try {
             carModelRepository.createCarModel(carModel)
         } catch (e: IllegalStateException) {
-            throw IllegalArgumentException( "Failed to add car model: ${carModel.brand} ${carModel.model} (${carModel.year})", e)
+            throw IllegalArgumentException( "Failed to add car model: ${carModel.brand} ${carModel.model} (${carModel.startYear} - ${carModel.endYear})", e)
         }
     }
 

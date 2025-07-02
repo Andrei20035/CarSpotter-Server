@@ -6,12 +6,14 @@ data class CarModelDTO(
     val id: Int = 0,
     val brand: String,
     val model: String,
-    val year: Int? = null,
+    val startYear: Int,
+    val endYear: Int,
 )
 
 fun CarModel.toDTO() = CarModelDTO(
     id = this.id,
     brand = this.brand,
     model = this.model,
-    year = this.year,
+    startYear = this.startYear,
+    endYear = this.endYear
 )

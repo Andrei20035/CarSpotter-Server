@@ -105,14 +105,16 @@ class UserCarDaoTest: KoinTest {
                 CarModel(
                     brand = "BMW",
                     model = "M3",
-                    year = 2020
+                    startYear = 2020,
+                    endYear = 2023
                 )
             )
             carModelId2 = carModelDao.createCarModel(
                 CarModel(
-                    brand = "Tesla",
-                    model = "Model 3",
-                    year = 2023
+                    brand = "Audi",
+                    model = "A4",
+                    startYear = 2022,
+                    endYear = 2024,
                 )
             )
         }

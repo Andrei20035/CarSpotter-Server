@@ -102,7 +102,8 @@ class LikeServiceTest: KoinTest {
                 CarModel(
                     brand = "BMW",
                     model = "M3",
-                    year = 2020
+                    startYear = 2020,
+                    endYear = 2023
                 )
             )
             postId1 = postService.createPost(

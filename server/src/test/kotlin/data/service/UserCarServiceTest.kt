@@ -109,14 +109,16 @@ class UserCarServiceTest: KoinTest {
                 CarModel(
                     brand = "BMW",
                     model = "M3",
-                    year = 2020
+                    startYear = 2020,
+                    endYear = 2023
                 )
             )
             carModelId2 = carModelService.createCarModel(
                 CarModel(
                     brand = "Tesla",
                     model = "Model 3",
-                    year = 2023
+                    startYear = 2022,
+                    endYear = 2024,
                 )
             )
         }

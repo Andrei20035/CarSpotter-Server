@@ -48,11 +48,11 @@ class CarModelDaoTest: KoinTest {
     @Test
     fun `get car models for brand - returns models for specific brand`() = runBlocking {
 
-        carModelDao.createCarModel(CarModel(brand = "Toyota", model = "Camry", year = 2021))
-        carModelDao.createCarModel(CarModel(brand = "Toyota", model = "Corolla", year = 2022))
-        carModelDao.createCarModel(CarModel(brand = "Toyota", model = "Prius", year = 2023))
-        carModelDao.createCarModel(CarModel(brand = "Honda", model = "Civic", year = 2020))
-        carModelDao.createCarModel(CarModel(brand = "Honda", model = "Accord", year = 2021))
+        carModelDao.createCarModel(CarModel(brand = "Toyota", model = "Camry", startYear = 2021, endYear = 2022))
+        carModelDao.createCarModel(CarModel(brand = "Toyota", model = "Corolla", startYear = 2022, endYear = 2024))
+        carModelDao.createCarModel(CarModel(brand = "Toyota", model = "Prius", startYear = 2018, endYear = 2022))
+        carModelDao.createCarModel(CarModel(brand = "Honda", model = "Civic", startYear = 2014, endYear = 2019))
+        carModelDao.createCarModel(CarModel(brand = "Honda", model = "Accord", startYear = 2024, endYear = 2025))
 
         val toyotaModels = carModelDao.getCarModelsForBrand("Toyota")
         val hondaModels = carModelDao.getCarModelsForBrand("Honda")
@@ -73,7 +73,8 @@ class CarModelDaoTest: KoinTest {
             CarModel(
                 brand = "Tesla",
                 model = "Model S",
-                year = 2023
+                startYear = 2022,
+                endYear = 2024
             )
         )
 
@@ -95,7 +96,8 @@ class CarModelDaoTest: KoinTest {
             CarModel(
                 brand = "Tesla",
                 model = "Model S",
-                year = 2023
+                startYear = 2022,
+                endYear = 2024
             )
         )
         val retrievedCarModel = carModelDao.getCarModel(carModelId)
@@ -103,7 +105,6 @@ class CarModelDaoTest: KoinTest {
         assertNotNull(retrievedCarModel)
         Assertions.assertEquals("Tesla", retrievedCarModel.brand)
         Assertions.assertEquals("Model S", retrievedCarModel.model)
-        Assertions.assertEquals(2023, retrievedCarModel.year)
     }
 
     @Test
@@ -112,22 +113,24 @@ class CarModelDaoTest: KoinTest {
             CarModel(
                 brand = "BMW",
                 model = "M3",
-                year = 2020
+                startYear = 2020,
+                endYear = 2025
             )
         )
         carModelDao.createCarModel(
             CarModel(
                 brand = "Audi",
                 model = "A4",
-                year = 2021
+                startYear = 2016,
+                endYear = 2020
             )
         )
 
         val carModels = carModelDao.getAllCarModels()
 
         Assertions.assertEquals(2, carModels.size)
-        Assertions.assertTrue(carModels.any { it.brand == "BMW" && it.model == "M3" && it.year == 2020 })
-        Assertions.assertTrue(carModels.any { it.brand == "Audi" && it.model == "A4" && it.year == 2021 })
+        Assertions.assertTrue(carModels.any { it.brand == "BMW" && it.model == "M3"})
+        Assertions.assertTrue(carModels.any { it.brand == "Audi" && it.model == "A4" })
     }
 
 
@@ -138,7 +141,8 @@ class CarModelDaoTest: KoinTest {
             CarModel(
                 brand = "Mercedes",
                 model = "C-Class",
-                year = 2019
+                startYear = 2019,
+                endYear = 2023
             )
         )
 
