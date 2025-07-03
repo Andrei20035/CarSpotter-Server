@@ -4,6 +4,7 @@ import com.carspotter.data.dao.user.UserCreationException
 import com.carspotter.data.dto.request.CreateUserRequest
 import com.carspotter.data.dto.request.UpdateProfilePictureRequest
 import com.carspotter.data.dto.request.toUser
+import com.carspotter.data.dto.response.CreateUserResponse
 import com.carspotter.data.service.auth_credential.JwtService
 import com.carspotter.data.service.user.IUserService
 import io.ktor.http.*
@@ -69,17 +70,20 @@ fun Route.userRoutes() {
                             userId = newUserId,
                             email = email
                         )
+
+                        val response = CreateUserResponse(
+                            jwtToken = newJwtToken.values.first(),
+                            userId = newUserId
+                        )
+
                         return@post call.respond(
                             HttpStatusCode.Created,
-                            mapOf(
-                                "jwtToken" to newJwtToken,
-                                "userId" to newUserId
-                            )
+                            response
                         )
                     } else {
                         return@post call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to create user"))
                     }
-                } catch (e: UserCreationException) {
+                } catch (e: Exception) {
                     return@post call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
 
                 }

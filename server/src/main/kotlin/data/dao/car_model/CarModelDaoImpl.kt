@@ -55,7 +55,6 @@ class CarModelDaoImpl : ICarModelDAO {
 
     override suspend fun getAllCarBrands(): List<String> {
         return transaction {
-            addLogger(StdOutSqlLogger)
             CarModels
                 .select(CarModels.brand)
                 .withDistinct()

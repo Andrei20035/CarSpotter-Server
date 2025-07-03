@@ -67,8 +67,8 @@ class AuthCredentialServiceImpl(
                     provider = AuthProvider.GOOGLE,
                     googleId = googleSub
                 )
-                authCredentialRepository.createCredentials(newCredential)
-                newCredential.toDTO()
+                val credentialId = authCredentialRepository.createCredentials(newCredential)
+                newCredential.copy(id = credentialId).toDTO()
             }
         }
     }

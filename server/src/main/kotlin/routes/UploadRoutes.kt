@@ -1,11 +1,9 @@
 package com.carspotter.routes
 
 import com.carspotter.data.dto.request.UploadImageRequest
+import com.carspotter.data.dto.response.UploadUrlResponse
 import com.carspotter.data.service.aws_S3.IStorageService
-import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.principal
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -25,7 +23,12 @@ fun Route.uploadRoutes() {
             val presignedUrl = storageService.getPresignedUploadUrl(imageName)
             val publicUrl = storageService.getPublicImageUrl(imageName)
 
-            call.respond(mapOf("uploadUrl" to presignedUrl.toString(), "publicUrl" to publicUrl))
+            call.respond(
+                UploadUrlResponse(
+                    uploadUrl = presignedUrl.toString(),
+                    publicUrl = publicUrl
+                )
+            )
         }
     }
 }
