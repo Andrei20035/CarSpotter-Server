@@ -3,13 +3,16 @@ package com.carspotter.data.dto
 import com.carspotter.data.model.User
 import com.carspotter.serialization.InstantSerializer
 import com.carspotter.serialization.LocalDateSerializer
+import com.carspotter.serialization.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.time.Instant
 import java.time.LocalDate
+import java.util.*
 
 @Serializable
 data class UserDTO(
-    val id: Int = 0,
+    @Serializable(with = UUIDSerializer::class)
+    val id: UUID = UUID.randomUUID(),
     val fullName: String,
     val phoneNumber: String? = null,
     val profilePicturePath: String? = null,

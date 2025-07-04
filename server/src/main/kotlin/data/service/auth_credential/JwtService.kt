@@ -9,16 +9,20 @@ class JwtService(
     private val jwtIssuer: String,
     private val jwtAudience: String
 ) {
-    fun generateJwtToken(credentialId: Int, userId: Int? = null, email: String, isAdmin: Boolean = false): Map<String, String> {
-        val token = JWT.create()
+    fun generateJwtToken(credentialId: UUID, userId: UUID? = null, email: String, isAdmin: Boolean = false): Map<String, String> {
+        val tokenBuilder = JWT.create()
             .withAudience(jwtAudience)
             .withIssuer(jwtIssuer)
-            .withClaim("credentialId", credentialId)
+            .withClaim("credentialId", credentialId.toString())
             .withClaim("email", email)
-            .withClaim("userId", userId)
             .withClaim("isAdmin", isAdmin)
-            .withExpiresAt(Date(System.currentTimeMillis() + 86400000)) // 24h expiration
-            .sign(Algorithm.HMAC256(jwtSecret))
+            .withExpiresAt(Date(System.currentTimeMillis() + 86400000))
+
+        if (userId != null) {
+            tokenBuilder.withClaim("userId", userId.toString())
+        }
+
+        val token = tokenBuilder.sign(Algorithm.HMAC256(jwtSecret))
 
         return mapOf("token" to token)
     }

@@ -7,14 +7,13 @@ import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.service.auth_credential.IAuthCredentialService
 import com.carspotter.data.service.auth_credential.JwtService
+import com.carspotter.utils.getUuidClaim
 import io.ktor.http.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
-import kotlin.math.log
 
 fun Route.authRoutes() {
     val authCredentialService: IAuthCredentialService by application.inject()
@@ -90,7 +89,7 @@ fun Route.authRoutes() {
 
         authenticate("jwt") {
             delete("/account") {
-                val credentialId = call.principal<JWTPrincipal>()?.payload?.getClaim("credentialId")?.asInt()
+                val credentialId = call.getUuidClaim("credentialId")
                     ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing credentialId"))
 
                 val deletedRows = authCredentialService.deleteCredentials(credentialId)
@@ -103,7 +102,7 @@ fun Route.authRoutes() {
             }
 
             put("/password") {
-                val credentialId = call.principal<JWTPrincipal>()?.payload?.getClaim("credentialId")?.asInt()
+                val credentialId = call.getUuidClaim("credentialId")
                     ?: return@put call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing credentialId"))
 
                 val request = call.receive<UpdatePasswordRequest>()

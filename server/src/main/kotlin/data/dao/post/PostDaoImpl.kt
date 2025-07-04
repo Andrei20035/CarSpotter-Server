@@ -6,27 +6,28 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
+import java.util.*
 
 class PostDaoImpl : IPostDAO {
-    override suspend fun createPost(post: Post): Int {
+    override suspend fun createPost(post: Post): UUID {
         return transaction {
             Posts.insertReturning(listOf(Posts.id)) {
                 it[userId] = post.userId
                 it[carModelId] = post.carModelId
                 it[imagePath] = post.imagePath
                 it[description] = post.description
-            }.singleOrNull()?.get(Posts.id) ?: throw IllegalStateException("Failed to insert post")
+            }.singleOrNull()?.get(Posts.id)?.value ?: throw IllegalStateException("Failed to insert post")
         }
     }
 
-    override suspend fun getPostById(postId: Int): Post? {
+    override suspend fun getPostById(postId: UUID): Post? {
         return transaction {
             Posts
                 .selectAll()
                 .where { Posts.id eq postId }
                 .mapNotNull { row ->
                     Post(
-                        id = row[Posts.id],
+                        id = row[Posts.id].value,
                         userId = row[Posts.userId],
                         carModelId = row[Posts.carModelId],
                         imagePath = row[Posts.imagePath],
@@ -45,7 +46,7 @@ class PostDaoImpl : IPostDAO {
                 .selectAll()
                 .map { row ->
                     Post(
-                        id = row[Posts.id],
+                        id = row[Posts.id].value,
                         userId = row[Posts.userId],
                         carModelId = row[Posts.carModelId],
                         imagePath = row[Posts.imagePath],
@@ -57,7 +58,7 @@ class PostDaoImpl : IPostDAO {
         }
     }
 
-    override suspend fun getCurrentDayPostsForUser(userId: Int, startTime: Instant, endTime: Instant): List<Post> {
+    override suspend fun getCurrentDayPostsForUser(userId: UUID, startTime: Instant, endTime: Instant): List<Post> {
         return transaction {
             Posts
                 .selectAll()
@@ -68,7 +69,7 @@ class PostDaoImpl : IPostDAO {
                 }
                 .map { row ->
                     Post(
-                        id = row[Posts.id],
+                        id = row[Posts.id].value,
                         userId = row[Posts.userId],
                         carModelId = row[Posts.carModelId],
                         imagePath = row[Posts.imagePath],
@@ -81,7 +82,7 @@ class PostDaoImpl : IPostDAO {
     }
 
 
-    override suspend fun editPost(postId: Int, postText: String?): Int {
+    override suspend fun editPost(postId: UUID, postText: String?): Int {
         return transaction {
             Posts.update({ Posts.id eq postId }) {
                 it[description] = postText
@@ -91,14 +92,14 @@ class PostDaoImpl : IPostDAO {
     }
 
 
-    override suspend fun deletePost(postId: Int): Int {
+    override suspend fun deletePost(postId: UUID): Int {
         return transaction {
             Posts
                 .deleteWhere { id eq postId }
         }
     }
 
-    override suspend fun getUserIdByPost(postId: Int): Int {
+    override suspend fun getUserIdByPost(postId: UUID): UUID {
         return transaction {
             Posts
                 .selectAll()

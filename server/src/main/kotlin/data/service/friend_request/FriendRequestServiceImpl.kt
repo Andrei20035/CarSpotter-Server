@@ -4,11 +4,12 @@ import com.carspotter.data.dto.FriendRequestDTO
 import com.carspotter.data.dto.UserDTO
 import com.carspotter.data.dto.toDTO
 import com.carspotter.data.repository.friend_request.IFriendRequestRepository
+import java.util.*
 
 class FriendRequestServiceImpl(
     private val friendRequestRepository: IFriendRequestRepository
 ): IFriendRequestService {
-    override suspend fun sendFriendRequest(senderId: Int, receiverId: Int): Int {
+    override suspend fun sendFriendRequest(senderId: UUID, receiverId: UUID): UUID {
         try {
             if(senderId == receiverId) throw IllegalArgumentException("Cannot send friend request to yourself")
 
@@ -18,15 +19,15 @@ class FriendRequestServiceImpl(
         }
     }
 
-    override suspend fun acceptFriendRequest(senderId: Int, receiverId: Int): Boolean {
+    override suspend fun acceptFriendRequest(senderId: UUID, receiverId: UUID): Boolean {
         return friendRequestRepository.acceptFriendRequest(senderId, receiverId)
     }
 
-    override suspend fun declineFriendRequest(senderId: Int, receiverId: Int): Int {
+    override suspend fun declineFriendRequest(senderId: UUID, receiverId: UUID): Int {
         return friendRequestRepository.declineFriendRequest(senderId, receiverId)
     }
 
-    override suspend fun getAllFriendRequests(userId: Int): List<UserDTO> {
+    override suspend fun getAllFriendRequests(userId: UUID): List<UserDTO> {
         return friendRequestRepository.getAllFriendRequests(userId).map { it.toDTO() }
     }
 

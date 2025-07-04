@@ -1,9 +1,10 @@
 package com.carspotter.data.model
 
 import java.time.Instant
+import java.util.*
 
 data class Friend(
-    val userId: Int,
-    val friendId: Int,
+    val userId: UUID,
+    val friendId: UUID,
     val createdAt: Instant? = null
 )

@@ -2,13 +2,14 @@ package com.carspotter.data.dao.user_car
 
 import com.carspotter.data.model.User
 import com.carspotter.data.model.UserCar
+import java.util.*
 
 interface IUserCarDAO {
-    suspend fun createUserCar(userCar: UserCar): Int
-    suspend fun getUserCarById(userCarId: Int): UserCar?
-    suspend fun getUserCarByUserId(userId: Int): UserCar?
-    suspend fun getUserByUserCarId(userCarId: Int): User
-    suspend fun updateUserCar(userId: Int, imagePath: String?, carModelId: Int?): Int
-    suspend fun deleteUserCar(userId: Int): Int
+    suspend fun createUserCar(userCar: UserCar): UUID
+    suspend fun getUserCarById(userCarId: UUID): UserCar?
+    suspend fun getUserCarByUserId(userId: UUID): UserCar?
+    suspend fun getUserByUserCarId(userCarId: UUID): User
+    suspend fun updateUserCar(userId: UUID, imagePath: String?, carModelId: UUID?): Int
+    suspend fun deleteUserCar(userId: UUID): Int
     suspend fun getAllUserCars(): List<UserCar>
 }

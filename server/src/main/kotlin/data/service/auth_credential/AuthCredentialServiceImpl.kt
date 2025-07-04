@@ -6,12 +6,13 @@ import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
 import com.carspotter.data.repository.auth_credential.IAuthCredentialRepository
+import java.util.*
 
 class AuthCredentialServiceImpl(
     private val authCredentialRepository: IAuthCredentialRepository,
     private val googleTokenVerifier: GoogleTokenVerifier = GoogleTokenVerifierImpl()
 ) : IAuthCredentialService {
-    override suspend fun createCredentials(authCredential: AuthCredential): Int {
+    override suspend fun createCredentials(authCredential: AuthCredential): UUID {
 
         val existing = authCredentialRepository.getCredentialsForLogin(authCredential.email)
 
@@ -73,16 +74,16 @@ class AuthCredentialServiceImpl(
         }
     }
 
-    override suspend fun updatePassword(credentialId: Int, newPassword: String): Int {
+    override suspend fun updatePassword(credentialId: UUID, newPassword: String): Int {
         val newHashedPassword = BCrypt.withDefaults().hashToString(12, newPassword.toCharArray())
         return authCredentialRepository.updatePassword(credentialId, newHashedPassword)
     }
 
-    override suspend fun deleteCredentials(credentialId: Int): Int {
+    override suspend fun deleteCredentials(credentialId: UUID): Int {
         return authCredentialRepository.deleteCredentials(credentialId)
     }
 
-    override suspend fun getCredentialsById(credentialId: Int): AuthCredential? {
+    override suspend fun getCredentialsById(credentialId: UUID): AuthCredential? {
         return authCredentialRepository.getCredentialsById(credentialId)
     }
 }

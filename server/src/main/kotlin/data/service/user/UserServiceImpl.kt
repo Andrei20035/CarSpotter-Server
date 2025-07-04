@@ -5,11 +5,12 @@ import com.carspotter.data.dto.UserDTO
 import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.User
 import com.carspotter.data.repository.user.IUserRepository
+import java.util.*
 
 class UserServiceImpl(
     private val userRepository: IUserRepository
 ): IUserService {
-    override suspend fun createUser(user: User): Int {
+    override suspend fun createUser(user: User): UUID {
         return try {
             userRepository.createUser(user)
         } catch (e: UserCreationException) {
@@ -20,7 +21,7 @@ class UserServiceImpl(
         }
     }
 
-    override suspend fun getUserById(userId: Int): UserDTO? {
+    override suspend fun getUserById(userId: UUID): UserDTO? {
         return userRepository.getUserByID(userId)?.toDTO()
     }
 
@@ -32,11 +33,11 @@ class UserServiceImpl(
         return userRepository.getAllUsers().map { it.toDTO() }
     }
 
-    override suspend fun updateProfilePicture(userId: Int, imagePath: String): Int {
+    override suspend fun updateProfilePicture(userId: UUID, imagePath: String): Int {
         return userRepository.updateProfilePicture(userId, imagePath)
     }
 
-    override suspend fun deleteUser(credentialId: Int): Int {
+    override suspend fun deleteUser(credentialId: UUID): Int {
         return userRepository.deleteUser(credentialId)
     }
 }

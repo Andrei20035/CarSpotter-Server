@@ -23,6 +23,7 @@ import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.time.LocalDate
+import java.util.*
 import kotlin.test.assertTrue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -31,8 +32,8 @@ class UserRepositoryTest: KoinTest {
     private val userRepository: IUserRepository by inject()
     private val authCredentialRepository: IAuthCredentialRepository by inject()
 
-    private var credentialId1: Int = 0
-    private var credentialId2: Int = 0
+    private var credentialId1: UUID = UUID.randomUUID()
+    private var credentialId2: UUID = UUID.randomUUID()
 
     @BeforeAll
     fun setupDatabase() {

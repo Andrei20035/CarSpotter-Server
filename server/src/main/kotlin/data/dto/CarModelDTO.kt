@@ -1,9 +1,10 @@
 package com.carspotter.data.dto
 
 import com.carspotter.data.model.CarModel
+import java.util.*
 
 data class CarModelDTO(
-    val id: Int = 0,
+    val id: UUID = UUID.randomUUID(),
     val brand: String,
     val model: String,
     val startYear: Int,

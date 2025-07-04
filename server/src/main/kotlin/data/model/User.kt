@@ -3,11 +3,12 @@ package com.carspotter.data.model
 
 import java.time.Instant
 import java.time.LocalDate
+import java.util.*
 
 
 data class User(
-    val id: Int = 0,
-    val authCredentialId: Int = 0,
+    val id: UUID = UUID.randomUUID(),
+    val authCredentialId: UUID,
     val profilePicturePath: String? = null,
     val fullName: String,
     val phoneNumber: String?,

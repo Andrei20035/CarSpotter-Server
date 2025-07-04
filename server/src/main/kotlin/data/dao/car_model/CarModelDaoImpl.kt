@@ -2,19 +2,13 @@ package com.carspotter.data.dao.car_model
 
 import com.carspotter.data.model.CarModel
 import com.carspotter.data.table.CarModels
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insertReturning
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
 class CarModelDaoImpl : ICarModelDAO {
-    override suspend fun createCarModel(carModel: CarModel): Int {
+    override suspend fun createCarModel(carModel: CarModel): UUID {
         return transaction {
             CarModels
                 .insertReturning(listOf(CarModels.id)) {
@@ -22,18 +16,18 @@ class CarModelDaoImpl : ICarModelDAO {
                     it[model] = carModel.model
                     it[startYear] = carModel.startYear
                     it[endYear] = carModel.endYear
-                }.singleOrNull()?.get(CarModels.id) ?: throw IllegalStateException("Failed to insert car model")
+                }.singleOrNull()?.get(CarModels.id)?.value ?: throw IllegalStateException("Failed to insert car model")
         }
     }
 
-    override suspend fun getCarModel(carModelId: Int): CarModel? {
+    override suspend fun getCarModel(carModelId: UUID): CarModel? {
         return transaction {
             CarModels
                 .selectAll()
                 .where { CarModels.id eq carModelId }
                 .mapNotNull { row ->
                     CarModel(
-                        id = row[CarModels.id],
+                        id = row[CarModels.id].value,
                         brand = row[CarModels.brand],
                         model = row[CarModels.model],
                         startYear = row[CarModels.startYear],
@@ -43,12 +37,12 @@ class CarModelDaoImpl : ICarModelDAO {
         }
     }
 
-    override suspend fun getCarModelId(brand: String, model: String): Int? {
+    override suspend fun getCarModelId(brand: String, model: String): UUID? {
         return transaction {
             CarModels
                 .selectAll()
                 .where { (CarModels.brand eq brand) and (CarModels.model eq model) }
-                .mapNotNull { it[CarModels.id] }
+                .mapNotNull { it[CarModels.id].value }
                 .singleOrNull()
         }
     }
@@ -81,7 +75,7 @@ class CarModelDaoImpl : ICarModelDAO {
                 .orderBy(CarModels.brand to SortOrder.ASC, CarModels.model to SortOrder.ASC)
                 .mapNotNull { row ->
                     CarModel(
-                        id = row[CarModels.id],
+                        id = row[CarModels.id].value,
                         brand = row[CarModels.brand],
                         model = row[CarModels.model],
                         startYear = row[CarModels.startYear],
@@ -91,7 +85,7 @@ class CarModelDaoImpl : ICarModelDAO {
         }
     }
 
-    override suspend fun deleteCarModel(carModelId: Int): Int {
+    override suspend fun deleteCarModel(carModelId: UUID): Int {
         return transaction {
             CarModels
                 .deleteWhere { id eq carModelId }

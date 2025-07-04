@@ -4,9 +4,10 @@ import com.carspotter.data.dto.request.PostEditRequest
 import com.carspotter.data.dto.request.PostRequest
 import com.carspotter.data.dto.request.toPost
 import com.carspotter.data.service.post.IPostService
+import com.carspotter.utils.getUuidClaim
+import com.carspotter.utils.toUuidOrNull
 import io.ktor.http.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -19,7 +20,7 @@ fun Route.postRoutes() {
     authenticate("jwt") {
         route("/posts") {
             post {
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                val userId = call.getUuidClaim("userId")
                     ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val postRequest = call.receive<PostRequest>()
@@ -28,17 +29,16 @@ fun Route.postRoutes() {
                     return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Image path cannot be blank"))
                 }
 
-                val postId = postService.createPost(postRequest.toPost(userId))
-
-                if(postId > 0) {
+                try {
+                    postService.createPost(postRequest.toPost(userId))
                     call.respond(HttpStatusCode.OK, mapOf("message" to "Post created successfully"))
-                } else {
+                } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Failed to create post due to invalid input"))
                 }
             }
 
             get("/{postId}") {
-                val postId = call.parameters["postId"]?.toIntOrNull()
+                val postId = call.parameters["postId"].toUuidOrNull()
                     ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid postId"))
 
                 val post = postService.getPostById(postId)
@@ -56,7 +56,7 @@ fun Route.postRoutes() {
             }
 
             get("/current-day") {
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                val userId = call.getUuidClaim("userId")
                     ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val userTimeZone = ZoneId.of(call.request.headers["Time-Zone"] ?: "UTC")  // Default to UTC if not specified
@@ -66,10 +66,10 @@ fun Route.postRoutes() {
             }
 
             put("/{postId}") {
-                val postId = call.parameters["postId"]?.toIntOrNull()
+                val postId = call.parameters["postId"].toUuidOrNull()
                     ?: return@put call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing postId"))
 
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                val userId = call.getUuidClaim("userId")
                     ?: return@put call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val request = call.receive<PostEditRequest>()
@@ -88,10 +88,10 @@ fun Route.postRoutes() {
             }
 
             delete("/{postId}") {
-                val postId = call.parameters["postId"]?.toIntOrNull()
+                val postId = call.parameters["postId"].toUuidOrNull()
                     ?: return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid postId"))
 
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                val userId = call.getUuidClaim("userId")
                     ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid invalid JWT token"))
 
                 if(postService.getUserIdByPost(postId) != userId) {

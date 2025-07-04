@@ -3,12 +3,10 @@ package com.carspotter.routes
 import com.carspotter.data.dto.request.UploadImageRequest
 import com.carspotter.data.dto.response.UploadUrlResponse
 import com.carspotter.data.service.aws_S3.IStorageService
-import io.ktor.server.auth.authenticate
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.application
-import io.ktor.server.routing.post
+import io.ktor.server.auth.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
 fun Route.uploadRoutes() {

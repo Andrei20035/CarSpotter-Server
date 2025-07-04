@@ -6,11 +6,12 @@ import com.carspotter.data.model.Post
 import com.carspotter.data.repository.post.IPostRepository
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.*
 
 class PostServiceImpl(
     private val postRepository: IPostRepository
 ): IPostService {
-    override suspend fun createPost(post: Post): Int {
+    override suspend fun createPost(post: Post): UUID {
         return try {
             postRepository.createPost(post)
         } catch (e: IllegalStateException) {
@@ -18,7 +19,7 @@ class PostServiceImpl(
         }
     }
 
-    override suspend fun getPostById(postId: Int): PostDTO? {
+    override suspend fun getPostById(postId: UUID): PostDTO? {
         return postRepository.getPostById(postId)?.toDTO()
     }
 
@@ -26,7 +27,7 @@ class PostServiceImpl(
         return postRepository.getAllPosts().map { it.toDTO() }
     }
 
-    override suspend fun getCurrentDayPostsForUser(userId: Int, userTimeZone: ZoneId): List<PostDTO> {
+    override suspend fun getCurrentDayPostsForUser(userId: UUID, userTimeZone: ZoneId): List<PostDTO> {
         val nowInUserTimeZone = ZonedDateTime.now(userTimeZone)
         val startOfDay = nowInUserTimeZone.toLocalDate().atStartOfDay(userTimeZone).toInstant()
         val endOfDay = nowInUserTimeZone.toLocalDate().atTime(23, 59, 59).atZone(userTimeZone).toInstant()
@@ -36,15 +37,15 @@ class PostServiceImpl(
         return posts.map { it.toDTO() }
     }
 
-    override suspend fun editPost(postId: Int, postText: String?): Int {
+    override suspend fun editPost(postId: UUID, postText: String?): Int {
         return postRepository.editPost(postId, postText)
     }
 
-    override suspend fun deletePost(postId: Int): Int {
+    override suspend fun deletePost(postId: UUID): Int {
         return postRepository.deletePost(postId)
     }
 
-    override suspend fun getUserIdByPost(postId: Int): Int {
+    override suspend fun getUserIdByPost(postId: UUID): UUID {
         return try {
             postRepository.getUserIdByPost(postId)
         } catch (e: IllegalStateException) {

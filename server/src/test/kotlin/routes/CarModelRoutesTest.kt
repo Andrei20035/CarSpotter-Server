@@ -23,6 +23,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
+import java.util.*
 import kotlin.test.assertEquals
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -68,9 +69,12 @@ class CarModelRoutesTest : KoinTest {
             configureTestApplication()
         }
 
+        val carModelId1 = UUID.randomUUID()
+        val carModelId2 = UUID.randomUUID()
+
         val carModels = listOf(
-            CarModel(1, "BMW M3", "Sedan", 2022, 2025),
-            CarModel(2, "Audi R8", "Coupe", 2020, 2022)
+            CarModel(carModelId1, "BMW M3", "Sedan", 2022, 2025),
+            CarModel(carModelId2, "Audi R8", "Coupe", 2020, 2022)
         )
         coEvery { carModelService.getAllCarModels() } returns carModels
 
@@ -78,7 +82,7 @@ class CarModelRoutesTest : KoinTest {
 
         assertEquals(HttpStatusCode.OK, response.status)
 
-        val expectedJson = Json.parseToJsonElement("""[{"id":1,"brand":"BMW M3","model":"Sedan","year":2021}, {"id":2,"brand":"Audi R8","model":"Coupe","year":2020}]""").jsonArray
+        val expectedJson = Json.parseToJsonElement("""[{"id":"$carModelId1","brand":"BMW M3","model":"Sedan","startYear":2022, "endYear": 2025}, {"id":"$carModelId2","brand":"Audi R8","model":"Coupe","startYear":2020, "endYear":2022}]""").jsonArray
         val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonArray
 
         assertEquals(expectedJson, actualJson)
@@ -111,10 +115,12 @@ class CarModelRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val model = CarModel(1, "Ferrari 488", "Coupe", 2022, 2025)
-        coEvery { carModelService.getCarModelById(1) } returns model
+        val id = UUID.randomUUID()
 
-        val response = client.get("/car-models/1")
+        val model = CarModel(id, "Ferrari 488", "Coupe", 2022, 2025)
+        coEvery { carModelService.getCarModelById(id) } returns model
+
+        val response = client.get("/car-models/$id")
 
         assertEquals(HttpStatusCode.OK, response.status)
 
@@ -123,7 +129,7 @@ class CarModelRoutesTest : KoinTest {
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { carModelService.getCarModelById(1) }
+        coVerify(exactly = 1) { carModelService.getCarModelById(id) }
     }
 
     @Test
@@ -132,18 +138,20 @@ class CarModelRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        coEvery { carModelService.getCarModelById(1) } returns null
+        val id = UUID.randomUUID()
 
-        val response = client.get("/car-models/1")
+        coEvery { carModelService.getCarModelById(id) } returns null
+
+        val response = client.get("/car-models/$id")
 
         assertEquals(HttpStatusCode.NotFound, response.status)
 
-        val expectedJson = Json.parseToJsonElement("""{"error":"Car model with ID 1 not found"}""").jsonObject
+        val expectedJson = Json.parseToJsonElement("""{"error":"Car model with ID $id not found"}""").jsonObject
         val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { carModelService.getCarModelById(1) }
+        coVerify(exactly = 1) { carModelService.getCarModelById(id) }
     }
 
     @Test

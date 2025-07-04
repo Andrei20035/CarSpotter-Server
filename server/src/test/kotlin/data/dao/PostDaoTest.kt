@@ -1,6 +1,6 @@
 package data.dao
 
-import com.carspotter.data.dao.auth_credentials.IAuthCredentialDAO
+import com.carspotter.data.dao.auth_credential.IAuthCredentialDAO
 import com.carspotter.data.dao.car_model.ICarModelDAO
 import com.carspotter.data.dao.post.IPostDAO
 import com.carspotter.data.dao.user.IUserDAO
@@ -25,7 +25,7 @@ import org.koin.test.inject
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
-
+import java.util.*
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -36,12 +36,12 @@ class PostDaoTest: KoinTest {
     private val carModelDao: ICarModelDAO by inject()
     private val authCredentialDao: IAuthCredentialDAO by inject()
 
-    private var credentialId1: Int = 0
-    private var credentialId2: Int = 0
-    private var userId1: Int = 0
-    private var userId2: Int = 0
-    private var carModelId1: Int = 0
-    private var carModelId2: Int = 0
+    private var credentialId1: UUID = UUID.randomUUID()
+    private var credentialId2: UUID = UUID.randomUUID()
+    private var userId1: UUID = UUID.randomUUID()
+    private var userId2: UUID = UUID.randomUUID()
+    private var carModelId1: UUID = UUID.randomUUID()
+    private var carModelId2: UUID = UUID.randomUUID()
 
     @BeforeAll
     fun setupDatabase() {

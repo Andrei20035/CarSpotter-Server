@@ -72,8 +72,14 @@ class UserRoutesTest : KoinTest {
                         .build()
                 )
                 validate { credential ->
-                    if (credential.payload.getClaim("userId").asInt() != null) {
-                        JWTPrincipal(credential.payload)
+                    val credentialIdString = credential.payload.getClaim("userId").asString()
+                    if (credentialIdString != null) {
+                        try {
+                            UUID.fromString(credentialIdString)
+                            JWTPrincipal(credential.payload)
+                        } catch (e: IllegalArgumentException) {
+                            null
+                        }
                     } else {
                         null
                     }
@@ -132,7 +138,8 @@ class UserRoutesTest : KoinTest {
 
     @Test
     fun `GET me returns 404 when user not found`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
+        val credentialId = UUID.randomUUID()
 
         coEvery { userService.getUserById(userId) } returns null
 
@@ -140,7 +147,7 @@ class UserRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId, email = "test@yahoo.com", credentialId = 1)
+        val token = createTestToken(userId, email = "test@yahoo.com", credentialId = credentialId)
 
         val response = client.get("/user/me") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -158,7 +165,9 @@ class UserRoutesTest : KoinTest {
 
     @Test
     fun `GET me returns 200 with user data when user found`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
+        val credentialId = UUID.randomUUID()
+
         val user = UserDTO(
             id = userId,
             fullName = "Test User",
@@ -175,7 +184,7 @@ class UserRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId, email = "test@yahoo.com", credentialId = 1)
+        val token = createTestToken(userId, email = "test@yahoo.com", credentialId = credentialId)
 
         val response = client.get("/user/me") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -197,7 +206,10 @@ class UserRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(1, false, email = "test@yahoo.com", credentialId = 1)
+        val userId = UUID.randomUUID()
+        val credentialId = UUID.randomUUID()
+
+        val token = createTestToken(userId, false, email = "test@yahoo.com", credentialId = credentialId)
 
         val response = client.get("/user/all") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -213,9 +225,13 @@ class UserRoutesTest : KoinTest {
 
     @Test
     fun `GET all returns 200 with all users when user is admin`() = testApplication {
+        val userId1 = UUID.randomUUID()
+        val userId2 = UUID.randomUUID()
+        val credentialId = UUID.randomUUID()
+
         val users = listOf(
             UserDTO(
-                id = 1,
+                id = userId1,
                 fullName = "First1 Last1",
                 phoneNumber = "0712453678",
                 username = "user1", 
@@ -224,7 +240,7 @@ class UserRoutesTest : KoinTest {
                 country = "USA"
             ),
             UserDTO(
-                id = 2,
+                id = userId2,
                 fullName = "First2 Last2",
                 phoneNumber = "0712453678",
                 username = "user2", 
@@ -240,7 +256,7 @@ class UserRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(1, true, email = "test@yahoo.com", credentialId = 1)
+        val token = createTestToken(userId1, true, email = "test@yahoo.com", credentialId = credentialId)
 
         val response = client.get("/user/all") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -258,11 +274,14 @@ class UserRoutesTest : KoinTest {
 
     @Test
     fun `GET by-username returns 404 when username is missing`() = testApplication {
+        val userId = UUID.randomUUID()
+        val credentialId = UUID.randomUUID()
+
         application {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1, email = "test@yahoo.com", credentialId = 1)
+        val token = createTestToken(userId = userId, email = "test@yahoo.com", credentialId = credentialId)
 
         val response = client.get("/user/by-username/") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -275,37 +294,42 @@ class UserRoutesTest : KoinTest {
 
     @Test
     fun `GET by-username returns 200 with matching users`() = testApplication {
-        val username = "test"
+        val username1 = "test1"
+        val username2 = "tester"
+        val userId1 = UUID.randomUUID()
+        val userId2 = UUID.randomUUID()
+        val credentialId1 = UUID.randomUUID()
+
         val users = listOf(
             UserDTO(
-                id = 1,
+                id = userId1,
                 fullName = "Test User",
                 phoneNumber = "0712453678",
-                username = "test", 
+                username = username1,
                 profilePicturePath = null, 
                 birthDate = LocalDate.of(1990, 1, 1), 
                 country = "USA"
             ),
             UserDTO(
-                id = 2,
+                id = userId2,
                 fullName = "Tester User",
                 phoneNumber = "0712453678",
-                username = "tester", 
+                username = username2,
                 profilePicturePath = null, 
                 birthDate = LocalDate.of(1992, 2, 2), 
                 country = "Canada"
             )
         )
 
-        coEvery { userService.getUserByUsername(username) } returns users
+        coEvery { userService.getUserByUsername(username1) } returns users
 
         application {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1, email = "test@yahoo.com", credentialId = 1)
+        val token = createTestToken(userId = userId1, email = "test@yahoo.com", credentialId = credentialId1)
 
-        val response = client.get("/user/by-username/$username") {
+        val response = client.get("/user/by-username/$username1") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -316,11 +340,14 @@ class UserRoutesTest : KoinTest {
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { userService.getUserByUsername(username) }
+        coVerify(exactly = 1) { userService.getUserByUsername(username1) }
     }
 
     @Test
     fun `POST user returns 201 when user created successfully`() = testApplication {
+        val userId1 = UUID.randomUUID()
+        val credentialId1 = UUID.randomUUID()
+
         val request = CreateUserRequest(
             username = "newuser",
             fullName = "New User",
@@ -329,14 +356,14 @@ class UserRoutesTest : KoinTest {
             country = "USA"
         )
 
-        coEvery { userService.createUser(any()) } returns 1
+        coEvery { userService.createUser(any()) } returns userId1
         coEvery { jwtService.generateJwtToken(any(), any(), any(), any()) } returns mapOf("token" to "mocked.jwt.token")
 
         application {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1, email = "test@yahoo.com", credentialId = 1)
+        val token = createTestToken(userId = userId1, email = "test@yahoo.com", credentialId = credentialId1)
 
         val response = client.post("/user") {
             contentType(ContentType.Application.Json)
@@ -346,7 +373,7 @@ class UserRoutesTest : KoinTest {
 
         assertEquals(HttpStatusCode.Created, response.status)
 
-        val expectedJson = Json.parseToJsonElement("""{"token":{"token":"mocked.jwt.token"}}""").jsonObject
+        val expectedJson = Json.parseToJsonElement("""{"jwtToken":"mocked.jwt.token","userId":"$userId1"}""").jsonObject
         val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
 
         assertEquals(expectedJson, actualJson)
@@ -356,6 +383,10 @@ class UserRoutesTest : KoinTest {
 
     @Test
     fun `POST user returns 500 when user creation fails`() = testApplication {
+        val returned = UUID.randomUUID()
+        val userId1 = UUID.randomUUID()
+        val credentialId1 = UUID.randomUUID()
+
         val request = CreateUserRequest(
             username = "newuser",
             fullName = "New User",
@@ -364,13 +395,13 @@ class UserRoutesTest : KoinTest {
             country = "USA"
         )
 
-        coEvery { userService.createUser(any()) } returns -1
+        coEvery { userService.createUser(any()) } returns returned
 
         application {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1, email = "test@yahoo.com", credentialId = 1)
+        val token = createTestToken(userId = userId1, email = "test@yahoo.com", credentialId = credentialId1)
 
         val response = client.post("/user") {
             contentType(ContentType.Application.Json)
@@ -411,16 +442,18 @@ class UserRoutesTest : KoinTest {
 
     @Test
     fun `PUT profile-picture returns 404 when user not found`() = testApplication {
-        val userId = 1
+        val userId1 = UUID.randomUUID()
+        val credentialId1 = UUID.randomUUID()
+
         val request = UpdateProfilePictureRequest(imagePath = "path/to/new/picture.jpg")
 
-        coEvery { userService.updateProfilePicture(userId, request.imagePath) } returns 0
+        coEvery { userService.updateProfilePicture(userId1, request.imagePath) } returns 0
 
         application {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = userId, email = "test@yahoo.com", credentialId = 1)
+        val token = createTestToken(userId = userId1, email = "test@yahoo.com", credentialId = credentialId1)
 
         val response = client.put("/user/profile-picture") {
             contentType(ContentType.Application.Json)
@@ -435,21 +468,23 @@ class UserRoutesTest : KoinTest {
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { userService.updateProfilePicture(userId, request.imagePath) }
+        coVerify(exactly = 1) { userService.updateProfilePicture(userId1, request.imagePath) }
     }
 
     @Test
     fun `PUT profile-picture returns 200 when update successful`() = testApplication {
-        val userId = 1
+        val userId1 = UUID.randomUUID()
+        val credentialId1 = UUID.randomUUID()
+
         val request = UpdateProfilePictureRequest(imagePath = "path/to/new/picture.jpg")
 
-        coEvery { userService.updateProfilePicture(userId, request.imagePath) } returns 1
+        coEvery { userService.updateProfilePicture(userId1, request.imagePath) } returns 1
 
         application {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = userId, email = "test@yahoo.com", credentialId = 1)
+        val token = createTestToken(userId = userId1, email = "test@yahoo.com", credentialId = credentialId1)
 
         val response = client.put("/user/profile-picture") {
             contentType(ContentType.Application.Json)
@@ -464,7 +499,7 @@ class UserRoutesTest : KoinTest {
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { userService.updateProfilePicture(userId, request.imagePath) }
+        coVerify(exactly = 1) { userService.updateProfilePicture(userId1, request.imagePath) }
     }
 
     @Test
@@ -485,15 +520,16 @@ class UserRoutesTest : KoinTest {
 
     @Test
     fun `DELETE me returns 404 when user not found`() = testApplication {
-        val userId = 1
+        val userId1 = UUID.randomUUID()
+        val credentialId1 = UUID.randomUUID()
 
-        coEvery { userService.deleteUser(userId) } returns 0
+        coEvery { userService.deleteUser(userId1) } returns 0
 
         application {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId, email = "test@yahoo.com", credentialId = 1)
+        val token = createTestToken(userId1, email = "test@yahoo.com", credentialId = credentialId1)
 
         val response = client.delete("/user/me") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -506,20 +542,21 @@ class UserRoutesTest : KoinTest {
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { userService.deleteUser(userId) }
+        coVerify(exactly = 1) { userService.deleteUser(userId1) }
     }
 
     @Test
     fun `DELETE me returns 200 when user deleted successfully`() = testApplication {
-        val userId = 1
+        val userId1 = UUID.randomUUID()
+        val credentialId1 = UUID.randomUUID()
 
-        coEvery { userService.deleteUser(userId) } returns 1
+        coEvery { userService.deleteUser(userId1) } returns 1
 
         application {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = userId, email = "test@yahoo.com", credentialId = 1)
+        val token = createTestToken(userId = userId1, email = "test@yahoo.com", credentialId = credentialId1)
 
         val response = client.delete("/user/me") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -532,17 +569,16 @@ class UserRoutesTest : KoinTest {
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { userService.deleteUser(userId) }
+        coVerify(exactly = 1) { userService.deleteUser(userId1) }
     }
 
-    private fun createTestToken(userId: Int, isAdmin: Boolean = false, email: String, credentialId: Int): String {
+    private fun createTestToken(userId: UUID, isAdmin: Boolean = false, email: String, credentialId: UUID): String {
         return JWT.create()
-            .withClaim("credentialId", credentialId)
-            .withClaim("userId", userId)
+            .withClaim("credentialId", credentialId.toString())
+            .withClaim("userId", userId.toString())
             .withClaim("isAdmin", isAdmin)
             .withClaim("email", email)
             .withExpiresAt(Date(System.currentTimeMillis() + 60000))
             .sign(Algorithm.HMAC256("test-secret-key"))
-
     }
 }

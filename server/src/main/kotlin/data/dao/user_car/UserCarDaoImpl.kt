@@ -10,26 +10,27 @@ import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
+import java.util.*
 
 class UserCarDaoImpl : IUserCarDAO {
-    override suspend fun createUserCar(userCar: UserCar): Int {
+    override suspend fun createUserCar(userCar: UserCar): UUID {
         return transaction {
             UsersCars.insertReturning(listOf(UsersCars.id)) {
                 it[userId] = userCar.userId
                 it[carModelId] = userCar.carModelId
                 it[imagePath] = userCar.imagePath
-            }.singleOrNull()?.get(UsersCars.id) ?: throw IllegalStateException("Failed to create user car")
+            }.singleOrNull()?.get(UsersCars.id)?.value ?: throw IllegalStateException("Failed to create user car")
         }
     }
 
-    override suspend fun getUserCarById(userCarId: Int): UserCar? {
+    override suspend fun getUserCarById(userCarId: UUID): UserCar? {
         return transaction {
             UsersCars
                 .selectAll()
                 .where { UsersCars.id eq userCarId }
                 .mapNotNull { row ->
                     UserCar(
-                        id = row[UsersCars.id],
+                        id = row[UsersCars.id].value,
                         userId = row[UsersCars.userId],
                         carModelId = row[UsersCars.carModelId],
                         imagePath = row[UsersCars.imagePath],
@@ -40,14 +41,14 @@ class UserCarDaoImpl : IUserCarDAO {
         }
     }
 
-    override suspend fun getUserCarByUserId(userId: Int): UserCar? {
+    override suspend fun getUserCarByUserId(userId: UUID): UserCar? {
         return transaction {
             UsersCars
                 .selectAll()
                 .where { UsersCars.userId eq userId }
                 .mapNotNull { row ->
                     UserCar(
-                        id = row[UsersCars.id],
+                        id = row[UsersCars.id].value,
                         userId = row[UsersCars.userId],
                         carModelId = row[UsersCars.carModelId],
                         imagePath = row[UsersCars.imagePath],
@@ -58,14 +59,14 @@ class UserCarDaoImpl : IUserCarDAO {
         }
     }
 
-    override suspend fun getUserByUserCarId(userCarId: Int): User {
+    override suspend fun getUserByUserCarId(userCarId: UUID): User {
         return transaction {
             (UsersCars innerJoin Users)
                 .selectAll()
                 .where { UsersCars.id eq userCarId }
                 .mapNotNull { row ->
                     User(
-                        id = row[Users.id],
+                        id = row[Users.id].value,
                         authCredentialId = row[Users.authCredentialId],
                         profilePicturePath = row[Users.profilePicturePath],
                         fullName = row[Users.fullName],
@@ -81,7 +82,7 @@ class UserCarDaoImpl : IUserCarDAO {
         }
     }
 
-    override suspend fun updateUserCar(userId: Int, imagePath: String?, carModelId: Int?): Int {
+    override suspend fun updateUserCar(userId: UUID, imagePath: String?, carModelId: UUID?): Int {
         return transaction {
             UsersCars.update({ UsersCars.userId eq userId }) { row ->
                 if (imagePath != null) row[UsersCars.imagePath] = imagePath
@@ -90,7 +91,7 @@ class UserCarDaoImpl : IUserCarDAO {
         }
     }
 
-    override suspend fun deleteUserCar(userId: Int): Int {
+    override suspend fun deleteUserCar(userId: UUID): Int {
         return transaction {
             UsersCars.deleteWhere { UsersCars.userId eq userId }
         }

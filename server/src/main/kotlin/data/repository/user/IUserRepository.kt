@@ -1,12 +1,13 @@
 package com.carspotter.data.repository.user
 
 import com.carspotter.data.model.User
+import java.util.*
 
 interface IUserRepository {
-    suspend fun createUser(user: User): Int
-    suspend fun getUserByID(userId: Int): User?
+    suspend fun createUser(user: User): UUID
+    suspend fun getUserByID(userId: UUID): User?
     suspend fun getUserByUsername(username: String): List<User>
     suspend fun getAllUsers(): List<User>
-    suspend fun updateProfilePicture(userId: Int, imagePath: String): Int
-    suspend fun deleteUser(credentialId: Int): Int
+    suspend fun updateProfilePicture(userId: UUID, imagePath: String): Int
+    suspend fun deleteUser(credentialId: UUID): Int
 }

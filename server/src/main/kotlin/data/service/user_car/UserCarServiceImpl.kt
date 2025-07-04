@@ -5,11 +5,12 @@ import com.carspotter.data.dto.UserDTO
 import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.UserCar
 import com.carspotter.data.repository.user_car.IUserCarRepository
+import java.util.*
 
 class UserCarServiceImpl(
     private val userCarRepository: IUserCarRepository
 ): IUserCarService {
-    override suspend fun createUserCar(userCar: UserCar): Int {
+    override suspend fun createUserCar(userCar: UserCar): UUID {
         return try {
             userCarRepository.createUserCar(userCar)
         } catch (e: IllegalStateException) {
@@ -17,23 +18,23 @@ class UserCarServiceImpl(
         }
     }
 
-    override suspend fun getUserCarById(userCarId: Int): UserCarDTO? {
+    override suspend fun getUserCarById(userCarId: UUID): UserCarDTO? {
         return userCarRepository.getUserCarById(userCarId)?.toDTO()
     }
 
-    override suspend fun getUserCarByUserId(userId: Int): UserCarDTO? {
+    override suspend fun getUserCarByUserId(userId: UUID): UserCarDTO? {
         return userCarRepository.getUserCarByUserId(userId)?.toDTO()
     }
 
-    override suspend fun getUserByUserCarId(userCarId: Int): UserDTO {
+    override suspend fun getUserByUserCarId(userCarId: UUID): UserDTO {
         return userCarRepository.getUserByUserCarId(userCarId).toDTO()
     }
 
-    override suspend fun updateUserCar(userId: Int, imagePath: String?, carModelId: Int?): Int {
+    override suspend fun updateUserCar(userId: UUID, imagePath: String?, carModelId: UUID?): Int {
         return userCarRepository.updateUserCar(userId, imagePath, carModelId)
     }
 
-    override suspend fun deleteUserCar(userId: Int): Int {
+    override suspend fun deleteUserCar(userId: UUID): Int {
         return userCarRepository.deleteUserCar(userId)
     }
 

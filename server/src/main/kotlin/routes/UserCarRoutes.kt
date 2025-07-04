@@ -4,9 +4,11 @@ import com.carspotter.data.dto.request.UserCarRequest
 import com.carspotter.data.dto.request.UserCarUpdateRequest
 import com.carspotter.data.dto.request.toUserCar
 import com.carspotter.data.service.user_car.IUserCarService
+import com.carspotter.data.service.user_car.UserCarCreationException
+import com.carspotter.utils.getUuidClaim
+import com.carspotter.utils.toUuidOrNull
 import io.ktor.http.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -19,26 +21,18 @@ fun Route.userCarRoutes() {
     authenticate("jwt") {
         route("/user-cars") {
             post {
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                val userId = call.getUuidClaim("userId")
                     ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val userCarRequest = call.receive<UserCarRequest>()
                 val userCar = userCarRequest.toUserCar(userId)
 
                 try {
-                    val userCarId = userCarService.createUserCar(userCar)
+                    userCarService.createUserCar(userCar)
+                    return@post call.respond(HttpStatusCode.Created, mapOf("message" to "User car created successfully"))
 
-                    if (userCarId > 0) {
-                        return@post call.respond(
-                            HttpStatusCode.Created,
-                            mapOf("message" to "User car created successfully")
-                        )
-                    } else {
-                        return@post call.respond(
-                            HttpStatusCode.BadRequest,
-                            mapOf("error" to "Failed to create user car")
-                        )
-                    }
+                } catch (e: UserCarCreationException) {
+                    return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to e.message))
                 } catch (e: ExposedSQLException) {
                     return@post call.respond(
                         HttpStatusCode.BadRequest,
@@ -47,13 +41,13 @@ fun Route.userCarRoutes() {
                 } catch (e: Exception) {
                     return@post call.respond(
                         HttpStatusCode.InternalServerError,
-                        mapOf("error" to "Unexpected error")
+                        mapOf("error" to "Failed to create user car")
                     )
                 }
             }
 
             get("/{userCarId}") {
-                val userCarId = call.parameters["userCarId"]?.toIntOrNull()
+                val userCarId = call.parameters["userCarId"].toUuidOrNull()
                     ?: return@get call.respond(
                         HttpStatusCode.BadRequest,
                         mapOf("error" to "Invalid or missing user car ID")
@@ -69,7 +63,7 @@ fun Route.userCarRoutes() {
             }
 
             get("/by-user/{userId}") {
-                val userId = call.parameters["userId"]?.toIntOrNull()
+                val userId = call.parameters["userId"].toUuidOrNull()
                     ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid user ID"))
 
                 val userCar = userCarService.getUserCarByUserId(userId)
@@ -82,7 +76,7 @@ fun Route.userCarRoutes() {
             }
 
             get("/{userCarId}/user") {
-                val userCarId = call.parameters["userCarId"]?.toIntOrNull()
+                val userCarId = call.parameters["userCarId"].toUuidOrNull()
                     ?: return@get call.respond(
                         HttpStatusCode.BadRequest,
                         mapOf("error" to "Invalid or missing user car ID")
@@ -94,7 +88,7 @@ fun Route.userCarRoutes() {
             }
 
             put {
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                val userId = call.getUuidClaim("userId")
                     ?: return@put call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val request = call.receive<UserCarUpdateRequest>()
@@ -109,7 +103,7 @@ fun Route.userCarRoutes() {
             }
 
             delete {
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                val userId = call.getUuidClaim("userId")
                     ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val deletedRows = userCarService.deleteUserCar(userId)

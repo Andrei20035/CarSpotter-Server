@@ -7,9 +7,10 @@ import com.carspotter.data.table.Users
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
 class FriendDaoImpl : IFriendDAO {
-    override suspend fun addFriend(userId: Int, friendId: Int): Int {
+    override suspend fun addFriend(userId: UUID, friendId: UUID): UUID {
         return transaction {
             val primaryInsert = insertFriend(userId, friendId)
             val secondaryInsert = insertFriend(friendId, userId)
@@ -21,14 +22,14 @@ class FriendDaoImpl : IFriendDAO {
         }
     }
 
-    private fun insertFriend(userId: Int, friendId: Int): Int? {
+    private fun insertFriend(userId: UUID, friendId: UUID): UUID? {
         return Friends.insertReturning(listOf(Friends.friendId)) {
             it[Friends.userId] = userId
             it[Friends.friendId] = friendId
         }.singleOrNull()?.get(Friends.friendId)
     }
 
-    override suspend fun deleteFriend(userId: Int, friendId: Int): Int {
+    override suspend fun deleteFriend(userId: UUID, friendId: UUID): Int {
         return transaction {
             Friends.deleteWhere {
                 ((Friends.userId eq userId) and (Friends.friendId eq friendId)) or
@@ -38,7 +39,7 @@ class FriendDaoImpl : IFriendDAO {
     }
 
 
-    override suspend fun getAllFriends(userId: Int): List<User> {
+    override suspend fun getAllFriends(userId: UUID): List<User> {
         return transaction {
             // Query for friends where `userId` is the initiator
             val friendsAsInitiator = Users.alias("u1").let { usersAlias ->
@@ -51,7 +52,7 @@ class FriendDaoImpl : IFriendDAO {
                     .where { Friends.userId eq userId }
                     .map { row ->
                         User(
-                            id = row[usersAlias[Users.id]],
+                            id = row[usersAlias[Users.id]].value,
                             authCredentialId = row[usersAlias[Users.authCredentialId]],
                             profilePicturePath = row[usersAlias[Users.profilePicturePath]],
                             fullName = row[usersAlias[Users.fullName]],
@@ -74,7 +75,7 @@ class FriendDaoImpl : IFriendDAO {
                     .where { Friends.friendId eq userId }
                     .map { row ->
                         User(
-                            id = row[usersAlias[Users.id]],
+                            id = row[usersAlias[Users.id]].value,
                             authCredentialId = row[usersAlias[Users.authCredentialId]],
                             profilePicturePath = row[usersAlias[Users.profilePicturePath]],
                             fullName = row[usersAlias[Users.fullName]],

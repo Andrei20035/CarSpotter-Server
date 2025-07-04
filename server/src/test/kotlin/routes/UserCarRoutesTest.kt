@@ -8,6 +8,7 @@ import com.carspotter.data.dto.UserDTO
 import com.carspotter.data.dto.request.UserCarRequest
 import com.carspotter.data.dto.request.UserCarUpdateRequest
 import com.carspotter.data.service.user_car.IUserCarService
+import com.carspotter.data.service.user_car.UserCarCreationException
 import com.carspotter.routes.userCarRoutes
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -70,8 +71,14 @@ class UserCarRoutesTest : KoinTest {
                         .build()
                 )
                 validate { credential ->
-                    if (credential.payload.getClaim("userId").asInt() != null) {
-                        JWTPrincipal(credential.payload)
+                    val credentialIdString = credential.payload.getClaim("userId").asString()
+                    if (credentialIdString != null) {
+                        try {
+                            UUID.fromString(credentialIdString)
+                            JWTPrincipal(credential.payload)
+                        } catch (e: IllegalArgumentException) {
+                            null
+                        }
                     } else {
                         null
                     }
@@ -99,7 +106,10 @@ class UserCarRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val request = UserCarRequest(userId = 1, carModelId = 1)
+        val userId = UUID.randomUUID()
+        val carModelId = UUID.randomUUID()
+
+        val request = UserCarRequest(userId = userId, carModelId = carModelId)
 
         val response = client.post("/user-cars") {
             contentType(ContentType.Application.Json)
@@ -117,15 +127,17 @@ class UserCarRoutesTest : KoinTest {
 
     @Test
     fun `POST user-cars returns 400 when failed to create user car`() = testApplication {
-        val userId = 1
 
-        coEvery { userCarService.createUserCar(any()) } returns -1
+        val userId = UUID.randomUUID()
+        val carModelId = UUID.randomUUID()
+
+        coEvery { userCarService.createUserCar(any()) } throws UserCarCreationException("Invalid userId or carModelId")
 
         application {
             configureTestApplication()
         }
 
-        val request = UserCarRequest(userId = userId, carModelId = 1)
+        val request = UserCarRequest(userId = userId, carModelId = carModelId)
 
         val token = createTestToken(userId = userId)
 
@@ -137,7 +149,7 @@ class UserCarRoutesTest : KoinTest {
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
 
-        val expectedJson = Json.parseToJsonElement("""{"error":"Failed to create user car"}""").jsonObject
+        val expectedJson = Json.parseToJsonElement("""{"error":"Invalid userId or carModelId"}""").jsonObject
         val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
 
         assertEquals(expectedJson, actualJson)
@@ -147,15 +159,16 @@ class UserCarRoutesTest : KoinTest {
 
     @Test
     fun `POST user-cars returns 500 when unexpected error occurs`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
+        val carModelId = UUID.randomUUID()
 
-        coEvery { userCarService.createUserCar(any()) } throws RuntimeException("Unexpected error")
+        coEvery { userCarService.createUserCar(any()) } throws RuntimeException("Failed to create user car")
 
         application {
             configureTestApplication()
         }
 
-        val request = UserCarRequest(userId = userId, carModelId = 1)
+        val request = UserCarRequest(userId = userId, carModelId = carModelId)
 
         val token = createTestToken(userId = userId)
 
@@ -167,7 +180,7 @@ class UserCarRoutesTest : KoinTest {
 
         assertEquals(HttpStatusCode.InternalServerError, response.status)
 
-        val expectedJson = Json.parseToJsonElement("""{"error":"Unexpected error"}""").jsonObject
+        val expectedJson = Json.parseToJsonElement("""{"error":"Failed to create user car"}""").jsonObject
         val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
 
         assertEquals(expectedJson, actualJson)
@@ -177,15 +190,17 @@ class UserCarRoutesTest : KoinTest {
 
     @Test
     fun `POST user-cars returns 201 when user car created successfully`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
+        val carModelId = UUID.randomUUID()
+        val returned = UUID.randomUUID()
 
-        coEvery { userCarService.createUserCar(any()) } returns 1
+        coEvery { userCarService.createUserCar(any()) } returns returned
 
         application {
             configureTestApplication()
         }
 
-        val request = UserCarRequest(userId = userId, carModelId = 1)
+        val request = UserCarRequest(userId = userId, carModelId = carModelId)
 
         val token = createTestToken(userId = userId)
 
@@ -228,8 +243,10 @@ class UserCarRoutesTest : KoinTest {
         application {
             configureTestApplication()
         }
+        val userId = UUID.randomUUID()
 
-        val token = createTestToken(userId = 1)
+
+        val token = createTestToken(userId = userId)
 
         val response = client.get("/user-cars/invalid") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -245,8 +262,8 @@ class UserCarRoutesTest : KoinTest {
 
     @Test
     fun `GET user-cars-userCarId returns 404 when user car not found`() = testApplication {
-        val userId = 1
-        val userCarId = 123
+        val userId = UUID.randomUUID()
+        val userCarId = UUID.randomUUID()
 
         coEvery { userCarService.getUserCarById(userCarId) } returns null
 
@@ -272,12 +289,14 @@ class UserCarRoutesTest : KoinTest {
 
     @Test
     fun `GET user-cars-userCarId returns 200 with user car details when found`() = testApplication {
-        val userId = 1
-        val userCarId = 123
+        val userId = UUID.randomUUID()
+        val userCarId = UUID.randomUUID()
+        val carModelId = UUID.randomUUID()
+
         val userCar = UserCarDTO(
             id = userCarId,
             userId = userId,
-            carModelId = 1,
+            carModelId = carModelId,
             imagePath = "path/to/image.jpg",
             createdAt = Instant.now(),
             updatedAt = Instant.now()
@@ -329,7 +348,10 @@ class UserCarRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1)
+        val userId = UUID.randomUUID()
+
+
+        val token = createTestToken(userId = userId)
 
         val response = client.get("/user-cars/by-user/invalid") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -345,8 +367,8 @@ class UserCarRoutesTest : KoinTest {
 
     @Test
     fun `GET user-cars-by-user-userId returns 404 when user car not found`() = testApplication {
-        val userId = 1
-        val targetUserId = 2
+        val userId = UUID.randomUUID()
+        val targetUserId = UUID.randomUUID()
 
         coEvery { userCarService.getUserCarByUserId(targetUserId) } returns null
 
@@ -372,12 +394,15 @@ class UserCarRoutesTest : KoinTest {
 
     @Test
     fun `GET user-cars-by-user-userId returns 200 with user car details when found`() = testApplication {
-        val userId = 1
-        val targetUserId = 2
+        val userId = UUID.randomUUID()
+        val userCarId = UUID.randomUUID()
+        val carModelId = UUID.randomUUID()
+        val targetUserId = UUID.randomUUID()
+
         val userCar = UserCarDTO(
-            id = 123,
+            id = userCarId,
             userId = targetUserId,
-            carModelId = 1,
+            carModelId = carModelId,
             imagePath = "path/to/image.jpg",
             createdAt = Instant.now(),
             updatedAt = Instant.now()
@@ -429,7 +454,9 @@ class UserCarRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1)
+        val userId = UUID.randomUUID()
+
+        val token = createTestToken(userId = userId)
 
         val response = client.get("/user-cars/invalid/user") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -445,10 +472,12 @@ class UserCarRoutesTest : KoinTest {
 
     @Test
     fun `GET user-cars-userCarId-user returns 200 with user details`() = testApplication {
-        val userId = 1
-        val userCarId = 123
+        val userId = UUID.randomUUID()
+        val userCarId = UUID.randomUUID()
+        val userId2 = UUID.randomUUID()
+
         val user = UserDTO(
-            id = 2,
+            id = userId2,
             fullName = "John Doe",
             phoneNumber = "0712453678",
             username = "johndoe",
@@ -484,7 +513,9 @@ class UserCarRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val request = UserCarUpdateRequest(carModelId = 1, imagePath = "path/to/image.jpg")
+        val carModelId = UUID.randomUUID()
+
+        val request = UserCarUpdateRequest(carModelId = carModelId, imagePath = "path/to/image.jpg")
 
         val response = client.put("/user-cars") {
             contentType(ContentType.Application.Json)
@@ -502,16 +533,19 @@ class UserCarRoutesTest : KoinTest {
 
     @Test
     fun `PUT user-cars returns 404 when user car not found`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
+        val userCarId = UUID.randomUUID()
+        val carModelId = UUID.randomUUID()
+        val targetUserId = UUID.randomUUID()
 
-        coEvery { userCarService.updateUserCar(userId, "path/to/image.jpg", 1) } returns 0
+        coEvery { userCarService.updateUserCar(userId, "path/to/image.jpg", carModelId) } returns 0
 
         application {
             configureTestApplication()
         }
 
         val token = createTestToken(userId = userId)
-        val request = UserCarUpdateRequest(carModelId = 1, imagePath = "path/to/image.jpg")
+        val request = UserCarUpdateRequest(carModelId = carModelId, imagePath = "path/to/image.jpg")
 
         val response = client.put("/user-cars") {
             contentType(ContentType.Application.Json)
@@ -526,21 +560,24 @@ class UserCarRoutesTest : KoinTest {
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { userCarService.updateUserCar(userId, "path/to/image.jpg", 1) }
+        coVerify(exactly = 1) { userCarService.updateUserCar(userId, "path/to/image.jpg", carModelId) }
     }
 
     @Test
     fun `PUT user-cars returns 200 when user car updated successfully`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
+        val userCarId = UUID.randomUUID()
+        val carModelId = UUID.randomUUID()
+        val targetUserId = UUID.randomUUID()
 
-        coEvery { userCarService.updateUserCar(userId, "path/to/image.jpg", 1) } returns 1
+        coEvery { userCarService.updateUserCar(userId, "path/to/image.jpg", carModelId) } returns 1
 
         application {
             configureTestApplication()
         }
 
         val token = createTestToken(userId = userId)
-        val request = UserCarUpdateRequest(carModelId = 1, imagePath = "path/to/image.jpg")
+        val request = UserCarUpdateRequest(carModelId = carModelId, imagePath = "path/to/image.jpg")
 
         val response = client.put("/user-cars") {
             contentType(ContentType.Application.Json)
@@ -555,7 +592,7 @@ class UserCarRoutesTest : KoinTest {
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { userCarService.updateUserCar(userId, "path/to/image.jpg", 1) }
+        coVerify(exactly = 1) { userCarService.updateUserCar(userId, "path/to/image.jpg", carModelId) }
     }
 
     @Test
@@ -578,7 +615,10 @@ class UserCarRoutesTest : KoinTest {
 
     @Test
     fun `DELETE user-cars returns 404 when user car not found`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
+        val userCarId = UUID.randomUUID()
+        val carModelId = UUID.randomUUID()
+        val targetUserId = UUID.randomUUID()
 
         coEvery { userCarService.deleteUserCar(userId) } returns 0
 
@@ -604,7 +644,10 @@ class UserCarRoutesTest : KoinTest {
 
     @Test
     fun `DELETE user-cars returns 200 when user car deleted successfully`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
+        val userCarId = UUID.randomUUID()
+        val carModelId = UUID.randomUUID()
+        val targetUserId = UUID.randomUUID()
 
         coEvery { userCarService.deleteUserCar(userId) } returns 1
 
@@ -630,19 +673,27 @@ class UserCarRoutesTest : KoinTest {
 
     @Test
     fun `GET user-cars returns 200 with list of all user cars`() = testApplication {
+        val userId = UUID.randomUUID()
+        val userCarId = UUID.randomUUID()
+        val carModelId = UUID.randomUUID()
+        val userId2 = UUID.randomUUID()
+        val userCarId2 = UUID.randomUUID()
+        val carModelId2 = UUID.randomUUID()
+
+
         val userCars = listOf(
             UserCarDTO(
-                id = 1,
-                userId = 1,
-                carModelId = 1,
+                id = userCarId,
+                userId = userId,
+                carModelId = carModelId,
                 imagePath = "path/to/image1.jpg",
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             ),
             UserCarDTO(
-                id = 2,
-                userId = 2,
-                carModelId = 2,
+                id = userCarId2,
+                userId = userId2,
+                carModelId = carModelId2,
                 imagePath = "path/to/image2.jpg",
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
@@ -655,7 +706,7 @@ class UserCarRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1)
+        val token = createTestToken(userId = userId)
 
         val response = client.get("/user-cars") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -671,9 +722,9 @@ class UserCarRoutesTest : KoinTest {
         coVerify(exactly = 1) { userCarService.getAllUserCars() }
     }
 
-    private fun createTestToken(userId: Int): String {
+    private fun createTestToken(userId: UUID): String {
         return JWT.create()
-            .withClaim("userId", userId)
+            .withClaim("userId", userId.toString())
             .withExpiresAt(Date(System.currentTimeMillis() + 60000))
             .sign(Algorithm.HMAC256("test-secret-key"))
 

@@ -32,6 +32,7 @@ import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.time.LocalDate
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserCarServiceTest: KoinTest {
@@ -41,13 +42,13 @@ class UserCarServiceTest: KoinTest {
     private val carModelService: ICarModelService by inject()
     private val authCredentialService: IAuthCredentialService by inject()
 
-    private var credentialId1: Int = 0
-    private var credentialId2: Int = 0
-    private var userId1: Int = 0
-    private var userId2: Int = 0
-    private var userCarId1: Int = 0
-    private var carModelId1: Int = 0
-    private var carModelId2: Int = 0
+    private var credentialId1: UUID = UUID.randomUUID()
+    private var credentialId2: UUID = UUID.randomUUID()
+    private var userId1: UUID = UUID.randomUUID()
+    private var userId2: UUID = UUID.randomUUID()
+    private var userCarId1: UUID = UUID.randomUUID()
+    private var carModelId1: UUID = UUID.randomUUID()
+    private var carModelId2: UUID = UUID.randomUUID()
 
 
     @BeforeAll
@@ -128,7 +129,6 @@ class UserCarServiceTest: KoinTest {
     fun cleanDatabase() {
         transaction {
             UsersCars.deleteAll()
-            exec("ALTER SEQUENCE users_cars_id_seq RESTART WITH 1")
         }
     }
 
@@ -144,7 +144,7 @@ class UserCarServiceTest: KoinTest {
         val userCar = userCarService.getUserCarById(userCarId1)
 
         assertNotNull(userCar)
-        assertEquals(userCarId1, userCar?.userId)
+        assertEquals(userCarId1, userCar?.id)
         assertEquals(carModelId1, userCar?.carModelId)
         assertEquals("path/to/car/image", userCar?.imagePath)
     }

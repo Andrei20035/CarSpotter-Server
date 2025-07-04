@@ -4,11 +4,12 @@ import com.carspotter.data.dto.FriendDTO
 import com.carspotter.data.dto.UserDTO
 import com.carspotter.data.dto.toDTO
 import com.carspotter.data.repository.friend.IFriendRepository
+import java.util.*
 
 class FriendServiceImpl(
     private val friendRepository: IFriendRepository
 ): IFriendService {
-    override suspend fun addFriend(userId: Int, friendId: Int): Int {
+    override suspend fun addFriend(userId: UUID, friendId: UUID): UUID {
         try {
             if(userId == friendId) throw IllegalArgumentException("Cannot add yourself as a friend")
 
@@ -18,11 +19,11 @@ class FriendServiceImpl(
         }
     }
 
-    override suspend fun getAllFriends(userId: Int): List<UserDTO> {
+    override suspend fun getAllFriends(userId: UUID): List<UserDTO> {
         return friendRepository.getAllFriends(userId).map { it.toDTO() }
     }
 
-    override suspend fun deleteFriend(userId: Int, friendId: Int): Int {
+    override suspend fun deleteFriend(userId: UUID, friendId: UUID): Int {
         return friendRepository.deleteFriend(userId, friendId)
     }
 

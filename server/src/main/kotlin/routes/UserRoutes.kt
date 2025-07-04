@@ -1,12 +1,12 @@
 package com.carspotter.routes
 
-import com.carspotter.data.dao.user.UserCreationException
 import com.carspotter.data.dto.request.CreateUserRequest
 import com.carspotter.data.dto.request.UpdateProfilePictureRequest
 import com.carspotter.data.dto.request.toUser
 import com.carspotter.data.dto.response.CreateUserResponse
 import com.carspotter.data.service.auth_credential.JwtService
 import com.carspotter.data.service.user.IUserService
+import com.carspotter.utils.getUuidClaim
 import io.ktor.http.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
@@ -22,8 +22,11 @@ fun Route.userRoutes() {
     authenticate("jwt") {
         route("/user") {
             get("/me") {
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
+                val userId = call.getUuidClaim("userId")
+                    ?: return@get call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("error" to "Invalid or missing userId")
+                    )
 
                 val user = userService.getUserById(userId)
 
@@ -55,44 +58,49 @@ fun Route.userRoutes() {
 
             post {
                 val request = call.receive<CreateUserRequest>()
-                val credentialId = call.principal<JWTPrincipal>()?.payload?.getClaim("credentialId")?.asInt()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing credentialId"))
+                val credentialId = call.getUuidClaim("userId")
+                    ?: return@post call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("error" to "Invalid or missing credentialId")
+                    )
 
                 val email = call.principal<JWTPrincipal>()?.payload?.getClaim("email")?.asString()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing email"))
+                    ?: return@post call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("error" to "Invalid or missing email")
+                    )
 
                 try {
                     val user = request.toUser(credentialId)
                     val newUserId = userService.createUser(user)
-                    if (newUserId > 0) {
-                        val newJwtToken = jwtService.generateJwtToken(
-                            credentialId = credentialId,
-                            userId = newUserId,
-                            email = email
-                        )
+                    val newJwtToken = jwtService.generateJwtToken(
+                        credentialId = credentialId,
+                        userId = newUserId,
+                        email = email
+                    )
 
-                        val response = CreateUserResponse(
-                            jwtToken = newJwtToken.values.first(),
-                            userId = newUserId
-                        )
+                    val response = CreateUserResponse(
+                        jwtToken = newJwtToken.values.first(),
+                        userId = newUserId
+                    )
 
-                        return@post call.respond(
-                            HttpStatusCode.Created,
-                            response
-                        )
-                    } else {
-                        return@post call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to create user"))
-                    }
+                    return@post call.respond(HttpStatusCode.Created, response)
+
                 } catch (e: Exception) {
-                    return@post call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
-
+                    return@post call.respond(
+                        HttpStatusCode.InternalServerError,
+                        mapOf("error" to "Failed to create user")
+                    )
                 }
 
             }
 
             put("/profile-picture") {
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@put call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
+                val userId = call.getUuidClaim("userId")
+                    ?: return@put call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("error" to "Invalid or missing userId")
+                    )
 
                 val request = call.receive<UpdateProfilePictureRequest>()
                 val result = userService.updateProfilePicture(userId, request.imagePath)
@@ -105,8 +113,11 @@ fun Route.userRoutes() {
             }
 
             delete("/me") {
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
-                    ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
+                val userId = call.getUuidClaim("userId")
+                    ?: return@delete call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("error" to "Invalid or missing userId")
+                    )
 
                 val result = userService.deleteUser(userId)
 

@@ -67,8 +67,14 @@ class FriendRoutesTest : KoinTest {
                         .build()
                 )
                 validate { credential ->
-                    if (credential.payload.getClaim("userId").asInt() != null) {
-                        JWTPrincipal(credential.payload)
+                    val credentialIdString = credential.payload.getClaim("userId").asString()
+                    if (credentialIdString != null) {
+                        try {
+                            UUID.fromString(credentialIdString)
+                            JWTPrincipal(credential.payload)
+                        } catch (e: IllegalArgumentException) {
+                            null
+                        }
                     } else {
                         null
                     }
@@ -114,7 +120,9 @@ class FriendRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1, isAdmin = false)
+        val userId = UUID.randomUUID()
+
+        val token = createTestToken(userId = userId, isAdmin = false)
 
         val response = client.get("/friends/admin") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -130,9 +138,14 @@ class FriendRoutesTest : KoinTest {
 
     @Test
     fun `GET friends-admin returns 200 for admin users`() = testApplication {
+        val friend1UserId = UUID.randomUUID()
+        val friend1FriendId = UUID.randomUUID()
+        val friend2UserId = UUID.randomUUID()
+        val friend2FriendId = UUID.randomUUID()
+
         val allFriends = listOf(
-            FriendDTO(userId = 1, friendId = 2, createdAt = Instant.now()),
-            FriendDTO(userId = 3, friendId = 4, createdAt = Instant.now())
+            FriendDTO(userId = friend1UserId, friendId = friend1FriendId, createdAt = Instant.now()),
+            FriendDTO(userId = friend2UserId, friendId = friend2FriendId, createdAt = Instant.now())
         )
 
         coEvery { friendService.getAllFriendsInDb() } returns allFriends
@@ -141,7 +154,7 @@ class FriendRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1, isAdmin = true)
+        val token = createTestToken(userId = friend1UserId, isAdmin = true)
 
         val response = client.get("/friends/admin") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -156,6 +169,7 @@ class FriendRoutesTest : KoinTest {
 
         coVerify(exactly = 1) { friendService.getAllFriendsInDb() }
     }
+
 
     @Test
     fun `POST friends returns 401 when JWT missing or invalid`() = testApplication {
@@ -181,7 +195,9 @@ class FriendRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1)
+        val userId = UUID.randomUUID()
+
+        val token = createTestToken(userId = userId)
 
         val response = client.post("/friends/invalid") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -197,7 +213,7 @@ class FriendRoutesTest : KoinTest {
 
     @Test
     fun `POST friends returns 400 when trying to add yourself as friend`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
 
         application {
             configureTestApplication()
@@ -219,10 +235,11 @@ class FriendRoutesTest : KoinTest {
 
     @Test
     fun `POST friends returns 409 when friendship already exists`() = testApplication {
-        val userId = 1
-        val friendId = 2
+        val userId = UUID.randomUUID()
+        val friendId = UUID.randomUUID()
+        val returned = UUID.randomUUID()
 
-        coEvery { friendService.addFriend(userId, friendId) } returns -1
+        coEvery { friendService.addFriend(userId, friendId) } returns returned
 
         application {
             configureTestApplication()
@@ -246,8 +263,8 @@ class FriendRoutesTest : KoinTest {
 
     @Test
     fun `POST friends returns 201 when friend added successfully`() = testApplication {
-        val userId = 1
-        val friendId = 2
+        val userId = UUID.randomUUID()
+        val friendId = UUID.randomUUID()
 
         coEvery { friendService.addFriend(userId, friendId) } returns friendId
 
@@ -295,7 +312,9 @@ class FriendRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1)
+        val userId = UUID.randomUUID()
+
+        val token = createTestToken(userId = userId)
 
         val response = client.delete("/friends/invalid") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -311,8 +330,8 @@ class FriendRoutesTest : KoinTest {
 
     @Test
     fun `DELETE friends returns 404 when friendship does not exist`() = testApplication {
-        val userId = 1
-        val friendId = 2
+        val userId = UUID.randomUUID()
+        val friendId = UUID.randomUUID()
 
         coEvery { friendService.deleteFriend(userId, friendId) } returns 0
 
@@ -338,8 +357,8 @@ class FriendRoutesTest : KoinTest {
 
     @Test
     fun `DELETE friends returns 200 when friend deleted successfully`() = testApplication {
-        val userId = 1
-        val friendId = 2
+        val userId = UUID.randomUUID()
+        val friendId = UUID.randomUUID()
 
         coEvery { friendService.deleteFriend(userId, friendId) } returns 2
 
@@ -383,7 +402,7 @@ class FriendRoutesTest : KoinTest {
 
     @Test
     fun `GET friends returns 204 when user has no friends`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
 
         coEvery { friendService.getAllFriends(userId) } returns emptyList()
 
@@ -404,10 +423,13 @@ class FriendRoutesTest : KoinTest {
 
     @Test
     fun `GET friends returns 200 with list of friends`() = testApplication {
-        val userId = 1
+        val userId1 = UUID.randomUUID()
+        val userId2 = UUID.randomUUID()
+        val userId3 = UUID.randomUUID()
+
         val friends = listOf(
             UserDTO(
-                id = 2,
+                id = userId2,
                 fullName = "John Doe",
                 phoneNumber = "0712453678",
                 username = "user2", 
@@ -415,7 +437,7 @@ class FriendRoutesTest : KoinTest {
                 country = "USA"
             ),
             UserDTO(
-                id = 3,
+                id = userId3,
                 fullName = "Jane Smith",
                 phoneNumber = "0712453678",
                 username = "user3", 
@@ -424,13 +446,13 @@ class FriendRoutesTest : KoinTest {
             )
         )
 
-        coEvery { friendService.getAllFriends(userId) } returns friends
+        coEvery { friendService.getAllFriends(userId1) } returns friends
 
         application {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = userId)
+        val token = createTestToken(userId = userId1)
 
         val response = client.get("/friends") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -443,12 +465,12 @@ class FriendRoutesTest : KoinTest {
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { friendService.getAllFriends(userId) }
+        coVerify(exactly = 1) { friendService.getAllFriends(userId1) }
     }
 
-    private fun createTestToken(userId: Int, isAdmin: Boolean = false): String {
+    private fun createTestToken(userId: UUID, isAdmin: Boolean = false): String {
         return JWT.create()
-            .withClaim("userId", userId)
+            .withClaim("userId", userId.toString())
             .withClaim("isAdmin", isAdmin)
             .withExpiresAt(Date(System.currentTimeMillis() + 60000))
             .sign(Algorithm.HMAC256("test-secret-key"))

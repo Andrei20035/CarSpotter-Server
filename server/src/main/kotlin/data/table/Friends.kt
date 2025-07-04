@@ -6,8 +6,8 @@ import org.jetbrains.exposed.sql.javatime.CurrentTimestamp
 import org.jetbrains.exposed.sql.javatime.timestamp
 
 object Friends : Table("friends") {
-    val userId = integer("user_id").references(Users.id, onDelete = ReferenceOption.CASCADE)
-    val friendId = integer("friend_id").references(Users.id, onDelete = ReferenceOption.CASCADE)
+    val userId = uuid("user_id").references(Users.id, onDelete = ReferenceOption.CASCADE)
+    val friendId = uuid("friend_id").references(Users.id, onDelete = ReferenceOption.CASCADE)
     val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
 
 

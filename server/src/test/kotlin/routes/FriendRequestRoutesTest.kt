@@ -31,6 +31,7 @@ import org.koin.core.context.GlobalContext.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
 import java.time.Instant
+import java.util.*
 import kotlin.test.assertEquals
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -67,8 +68,14 @@ class FriendRequestRoutesTest : KoinTest {
                         .build()
                 )
                 validate { credential ->
-                    if (credential.payload.getClaim("userId").asInt() != null) {
-                        JWTPrincipal(credential.payload)
+                    val credentialIdString = credential.payload.getClaim("userId").asString()
+                    if (credentialIdString != null) {
+                        try {
+                            UUID.fromString(credentialIdString)
+                            JWTPrincipal(credential.payload)
+                        } catch (e: IllegalArgumentException) {
+                            null
+                        }
                     } else {
                         null
                     }
@@ -120,8 +127,10 @@ class FriendRequestRoutesTest : KoinTest {
             configureTestApplication()
         }
 
+        val userId = UUID.randomUUID()
+
         val token = JWT.create()
-            .withClaim("userId", 1)
+            .withClaim("userId", userId.toString())
             .withClaim("isAdmin", false)
             .sign(Algorithm.HMAC256("test-secret-key"))
 
@@ -139,9 +148,13 @@ class FriendRequestRoutesTest : KoinTest {
 
     @Test
     fun `GET admin friend requests returns 200 OK`() = testApplication {
+        val id1 = UUID.randomUUID()
+        val id2 = UUID.randomUUID()
+        val id3 = UUID.randomUUID()
+
         val mockData = listOf(
-            FriendRequest(1,2, createdAt = Instant.now()).toDTO(),
-            FriendRequest(2,3, createdAt = Instant.now()).toDTO()
+            FriendRequest(id1, id2, createdAt = Instant.now()).toDTO(),
+            FriendRequest(id2, id3, createdAt = Instant.now()).toDTO()
         )
         coEvery { friendRequestService.getAllFriendReqFromDB() } returns mockData
 
@@ -150,7 +163,7 @@ class FriendRequestRoutesTest : KoinTest {
         }
 
         val token = JWT.create()
-            .withClaim("userId", 1)
+            .withClaim("userId", id1.toString())
             .withClaim("isAdmin", true)
             .sign(Algorithm.HMAC256("test-secret-key"))
 
@@ -166,6 +179,7 @@ class FriendRequestRoutesTest : KoinTest {
         assertEquals(expectedJson, actualJson)
         coVerify(exactly = 1) { friendRequestService.getAllFriendReqFromDB() }
     }
+
 
     @Test
     fun `POST friend request returns 401 if invalid JWT`() = testApplication {
@@ -199,8 +213,10 @@ class FriendRequestRoutesTest : KoinTest {
             configureTestApplication()
         }
 
+        val userId = UUID.randomUUID()
+
         val token = JWT.create()
-            .withClaim("userId", 1)
+            .withClaim("userId", userId.toString())
             .sign(Algorithm.HMAC256("test-secret-key"))
 
         val response = client.post("/friend-requests/abc") {
@@ -215,11 +231,13 @@ class FriendRequestRoutesTest : KoinTest {
         application {
             configureTestApplication()
         }
+        val userId = UUID.randomUUID()
+
         val token = JWT.create()
-            .withClaim("userId", 1)
+            .withClaim("userId", userId.toString())
             .sign(Algorithm.HMAC256("test-secret-key"))
 
-        val response = client.post("/friend-requests/1") {
+        val response = client.post("/friend-requests/$userId") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -234,19 +252,20 @@ class FriendRequestRoutesTest : KoinTest {
 
     @Test
     fun `POST friend request returns 201 when successful`() = testApplication {
-        val senderId = 1
-        val receiverId = 2
+        val senderId = UUID.randomUUID()
+        val receiverId = UUID.randomUUID()
+        val returned = UUID.randomUUID()
 
-        coEvery { friendRequestService.sendFriendRequest(senderId, receiverId) } returns 1
+        coEvery { friendRequestService.sendFriendRequest(senderId, receiverId) } returns returned
 
         application {
             configureTestApplication()
         }
         val token = JWT.create()
-            .withClaim("userId", senderId)
+            .withClaim("userId", senderId.toString()) // UUID as string in claim
             .sign(Algorithm.HMAC256("test-secret-key"))
 
-        val response = client.post("/friend-requests/2") {
+        val response = client.post("/friend-requests/${receiverId}") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -301,8 +320,10 @@ class FriendRequestRoutesTest : KoinTest {
             configureTestApplication()
         }
 
+        val userId = UUID.randomUUID()
+
         val token = JWT.create()
-            .withClaim("userId", 1)
+            .withClaim("userId", userId.toString())
             .sign(Algorithm.HMAC256("test-secret-key"))
 
         val response = client.post("friend-requests/abc/accept") {
@@ -319,15 +340,14 @@ class FriendRequestRoutesTest : KoinTest {
 
     @Test
     fun `POST accept friend request returns 400 when senderId matches receiverId`() = testApplication {
-        val senderId = 1
-        val receiverId = 1
+        val senderId = UUID.randomUUID()
 
         application {
             configureTestApplication()
         }
 
         val token = JWT.create()
-            .withClaim("userId", receiverId)
+            .withClaim("userId", senderId.toString())
             .sign(Algorithm.HMAC256("test-secret-key"))
 
         val response = client.post("friend-requests/$senderId/accept") {
@@ -344,8 +364,8 @@ class FriendRequestRoutesTest : KoinTest {
 
     @Test
     fun `POST accept friend request returns 200 when friend request is accepted`() = testApplication {
-        val senderId = 1
-        val receiverId = 2
+        val senderId = UUID.randomUUID()
+        val receiverId = UUID.randomUUID()
 
         coEvery { friendRequestService.acceptFriendRequest(senderId, receiverId) } returns true
 
@@ -354,7 +374,7 @@ class FriendRequestRoutesTest : KoinTest {
         }
 
         val token = JWT.create()
-            .withClaim("userId", receiverId)
+            .withClaim("userId", receiverId.toString())
             .sign(Algorithm.HMAC256("test-secret-key"))
 
         val response = client.post("friend-requests/$senderId/accept") {
@@ -412,41 +432,30 @@ class FriendRequestRoutesTest : KoinTest {
     }
 
     @Test
-    fun `POST decline friend request returns 400 when invalid or missing JWT`() = testApplication {
-        val senderId = "abc"
-        val receiverId = 2
+    fun `POST decline friend request returns 401 when invalid or missing JWT`() = testApplication {
+        val senderId = UUID.randomUUID()
 
         application {
             configureTestApplication()
         }
 
-        val token = JWT.create()
-            .withClaim("userId", receiverId)
-            .sign(Algorithm.HMAC256("test-secret-key"))
-
         val response = client.post("friend-requests/$senderId/decline") {
-            header(HttpHeaders.Authorization, "Bearer $token")
         }
 
-        assertEquals(HttpStatusCode.BadRequest, response.status)
-
-        val expectedJson = Json.encodeToJsonElement(mapOf("error" to "Invalid or missing senderId")).jsonObject
-        val actualJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-
-        assertEquals(expectedJson, actualJson)
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
     }
 
     @Test
     fun `POST decline friend request returns 400 when senderId matches receiverId`() = testApplication {
-        val senderId = 1
-        val receiverId = 1
+
+        val senderId = UUID.randomUUID()
 
         application {
             configureTestApplication()
         }
 
         val token = JWT.create()
-            .withClaim("userId", receiverId)
+            .withClaim("userId", senderId.toString())
             .sign(Algorithm.HMAC256("test-secret-key"))
 
         val response = client.post("friend-requests/$senderId/decline") {
@@ -463,8 +472,8 @@ class FriendRequestRoutesTest : KoinTest {
 
     @Test
     fun `POST decline friend request returns 200 when friend request declined`() = testApplication {
-        val senderId = 1
-        val receiverId = 2
+        val senderId = UUID.randomUUID()
+        val receiverId = UUID.randomUUID()
 
         coEvery { friendRequestService.declineFriendRequest(senderId, receiverId) } returns 1
 
@@ -473,7 +482,7 @@ class FriendRequestRoutesTest : KoinTest {
         }
 
         val token = JWT.create()
-            .withClaim("userId", receiverId)
+            .withClaim("userId", receiverId.toString())
             .sign(Algorithm.HMAC256("test-secret-key"))
 
         val response = client.post("/friend-requests/$senderId/decline") {
@@ -531,7 +540,7 @@ class FriendRequestRoutesTest : KoinTest {
 
     @Test
     fun `GET friend request for user returns 204 when empty`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
 
         val friendRequests = emptyList<UserDTO>()
 
@@ -542,7 +551,7 @@ class FriendRequestRoutesTest : KoinTest {
         }
 
         val token = JWT.create()
-            .withClaim("userId", userId)
+            .withClaim("userId", userId.toString())
             .sign(Algorithm.HMAC256("test-secret-key"))
 
         val response = client.get("/friend-requests") {

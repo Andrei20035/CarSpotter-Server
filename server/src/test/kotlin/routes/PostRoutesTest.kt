@@ -7,6 +7,7 @@ import com.carspotter.data.dto.PostDTO
 import com.carspotter.data.dto.request.PostEditRequest
 import com.carspotter.data.dto.request.PostRequest
 import com.carspotter.data.service.post.IPostService
+import com.carspotter.data.service.post.PostCreationException
 import com.carspotter.routes.postRoutes
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -69,8 +70,14 @@ class PostRoutesTest : KoinTest {
                         .build()
                 )
                 validate { credential ->
-                    if (credential.payload.getClaim("userId").asInt() != null) {
-                        JWTPrincipal(credential.payload)
+                    val credentialIdString = credential.payload.getClaim("userId").asString()
+                    if (credentialIdString != null) {
+                        try {
+                            UUID.fromString(credentialIdString)
+                            JWTPrincipal(credential.payload)
+                        } catch (e: IllegalArgumentException) {
+                            null
+                        }
                     } else {
                         null
                     }
@@ -98,7 +105,9 @@ class PostRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val request = PostRequest(carModelId = 1, imagePath = "path/to/image.jpg")
+        val carModelId = UUID.randomUUID()
+
+        val request = PostRequest(carModelId = carModelId, imagePath = "path/to/image.jpg")
 
         val response = client.post("/posts") {
             contentType(ContentType.Application.Json)
@@ -116,13 +125,15 @@ class PostRoutesTest : KoinTest {
 
     @Test
     fun `POST posts returns 400 when image path is blank`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
+        val carModelId = UUID.randomUUID()
 
         application {
             configureTestApplication()
         }
 
-        val request = PostRequest(carModelId = 1, imagePath = "")
+
+        val request = PostRequest(carModelId = carModelId, imagePath = "")
 
         val token = createTestToken(userId = userId)
 
@@ -142,15 +153,17 @@ class PostRoutesTest : KoinTest {
 
     @Test
     fun `POST posts returns 400 when failed to create post due to invalid input`() = testApplication {
-        val userId = 1
 
-        coEvery { postService.createPost(any()) } returns -1
+        val userId = UUID.randomUUID()
+        val carModelId = UUID.randomUUID()
+
+        coEvery { postService.createPost(any()) } throws PostCreationException("Failed to create post due to invalid input")
 
         application {
             configureTestApplication()
         }
 
-        val request = PostRequest(carModelId = 1, imagePath = "path/to/image.jpg")
+        val request = PostRequest(carModelId = carModelId, imagePath = "path/to/image.jpg")
 
         val token = createTestToken(userId = userId)
 
@@ -172,8 +185,9 @@ class PostRoutesTest : KoinTest {
 
     @Test
     fun `POST posts returns 200 when post created successfully`() = testApplication {
-        val userId = 1
-        val postId = 123
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
+        val carModelId = UUID.randomUUID()
 
         coEvery { postService.createPost(any()) } returns postId
 
@@ -181,7 +195,7 @@ class PostRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val request = PostRequest(carModelId = 1, imagePath = "path/to/image.jpg")
+        val request = PostRequest(carModelId = carModelId, imagePath = "path/to/image.jpg")
 
         val token = createTestToken(userId = userId)
 
@@ -225,7 +239,7 @@ class PostRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1)
+        val token = createTestToken(userId = UUID.randomUUID())
 
         val response = client.get("/posts/invalid") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -241,8 +255,8 @@ class PostRoutesTest : KoinTest {
 
     @Test
     fun `GET posts-postId returns 404 when post not found`() = testApplication {
-        val userId = 1
-        val postId = 123
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
 
         coEvery { postService.getPostById(postId) } returns null
 
@@ -268,12 +282,14 @@ class PostRoutesTest : KoinTest {
 
     @Test
     fun `GET posts-postId returns 200 with post details when found`() = testApplication {
-        val userId = 1
-        val postId = 123
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
+        val carModelId = UUID.randomUUID()
+
         val post = PostDTO(
             id = postId,
             userId = userId,
-            carModelId = 1,
+            carModelId = carModelId,
             imagePath = "path/to/image.jpg",
             description = "Test post",
             createdAt = Instant.now(),
@@ -322,21 +338,26 @@ class PostRoutesTest : KoinTest {
 
     @Test
     fun `GET posts returns 200 with list of posts`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
+        val postId1 = UUID.randomUUID()
+        val postId2 = UUID.randomUUID()
+        val carModel1 = UUID.randomUUID()
+        val carModel2 = UUID.randomUUID()
+
         val posts = listOf(
             PostDTO(
-                id = 1,
+                id = postId1,
                 userId = userId,
-                carModelId = 1,
+                carModelId = carModel1,
                 imagePath = "path/to/image1.jpg",
                 description = "Test post 1",
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             ),
             PostDTO(
-                id = 2,
+                id = postId2,
                 userId = userId,
-                carModelId = 2,
+                carModelId = carModel2,
                 imagePath = "path/to/image2.jpg",
                 description = "Test post 2",
                 createdAt = Instant.now(),
@@ -386,21 +407,26 @@ class PostRoutesTest : KoinTest {
 
     @Test
     fun `GET posts-current-day returns 200 with list of posts`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
+        val postId1 = UUID.randomUUID()
+        val postId2 = UUID.randomUUID()
+        val carModel1 = UUID.randomUUID()
+        val carModel2 = UUID.randomUUID()
+
         val posts = listOf(
             PostDTO(
-                id = 1,
+                id = postId1,
                 userId = userId,
-                carModelId = 1,
+                carModelId = carModel1,
                 imagePath = "path/to/image1.jpg",
                 description = "Test post 1",
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             ),
             PostDTO(
-                id = 2,
+                id = postId2,
                 userId = userId,
-                carModelId = 2,
+                carModelId = carModel2,
                 imagePath = "path/to/image2.jpg",
                 description = "Test post 2",
                 createdAt = Instant.now(),
@@ -459,7 +485,7 @@ class PostRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1)
+        val token = createTestToken(userId = UUID.randomUUID())
         val request = PostEditRequest(newDescription = "Updated description")
 
         val response = client.put("/posts/invalid") {
@@ -478,9 +504,9 @@ class PostRoutesTest : KoinTest {
 
     @Test
     fun `PUT posts-postId returns 403 when user doesn't have permission to edit`() = testApplication {
-        val userId = 1
-        val postId = 123
-        val postOwnerId = 2
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
+        val postOwnerId = UUID.randomUUID()
 
         coEvery { postService.getUserIdByPost(postId) } returns postOwnerId
 
@@ -509,8 +535,8 @@ class PostRoutesTest : KoinTest {
 
     @Test
     fun `PUT posts-postId returns 404 when post not found or failed to update`() = testApplication {
-        val userId = 1
-        val postId = 123
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
 
         coEvery { postService.getUserIdByPost(postId) } returns userId
         coEvery { postService.editPost(postId, "Updated description") } returns 0
@@ -541,8 +567,8 @@ class PostRoutesTest : KoinTest {
 
     @Test
     fun `PUT posts-postId returns 200 when post updated successfully`() = testApplication {
-        val userId = 1
-        val postId = 123
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
 
         coEvery { postService.getUserIdByPost(postId) } returns userId
         coEvery { postService.editPost(postId, "Updated description") } returns 1
@@ -595,7 +621,7 @@ class PostRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1)
+        val token = createTestToken(userId = UUID.randomUUID())
 
         val response = client.delete("/posts/invalid") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -611,9 +637,10 @@ class PostRoutesTest : KoinTest {
 
     @Test
     fun `DELETE posts-postId returns 403 when user doesn't have permission to delete`() = testApplication {
-        val userId = 1
-        val postId = 123
-        val postOwnerId = 2
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
+        val postOwnerId = UUID.randomUUID()
+
 
         coEvery { postService.getUserIdByPost(postId) } returns postOwnerId
 
@@ -639,8 +666,8 @@ class PostRoutesTest : KoinTest {
 
     @Test
     fun `DELETE posts-postId returns 404 when post not found or already deleted`() = testApplication {
-        val userId = 1
-        val postId = 123
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
 
         coEvery { postService.getUserIdByPost(postId) } returns userId
         coEvery { postService.deletePost(postId) } returns 0
@@ -668,8 +695,8 @@ class PostRoutesTest : KoinTest {
 
     @Test
     fun `DELETE posts-postId returns 200 when post deleted successfully`() = testApplication {
-        val userId = 1
-        val postId = 123
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
 
         coEvery { postService.getUserIdByPost(postId) } returns userId
         coEvery { postService.deletePost(postId) } returns 1
@@ -695,9 +722,9 @@ class PostRoutesTest : KoinTest {
         coVerify(exactly = 1) { postService.deletePost(postId) }
     }
 
-    private fun createTestToken(userId: Int): String {
+    private fun createTestToken(userId: UUID): String {
         return JWT.create()
-            .withClaim("userId", userId)
+            .withClaim("userId", userId.toString())
             .withExpiresAt(Date(System.currentTimeMillis() + 60000))
             .sign(Algorithm.HMAC256("test-secret-key"))
 

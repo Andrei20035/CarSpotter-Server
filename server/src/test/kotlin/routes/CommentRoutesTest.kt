@@ -71,8 +71,14 @@ class CommentRoutesTest : KoinTest {
                         .build()
                 )
                 validate { credential ->
-                    if (credential.payload.getClaim("userId").asInt() != null) {
-                        JWTPrincipal(credential.payload)
+                    val credentialIdString = credential.payload.getClaim("userId").asString()
+                    if (credentialIdString != null) {
+                        try {
+                            UUID.fromString(credentialIdString)
+                            JWTPrincipal(credential.payload)
+                        } catch (e: IllegalArgumentException) {
+                            null
+                        }
                     } else {
                         null
                     }
@@ -112,13 +118,16 @@ class CommentRoutesTest : KoinTest {
 
     @Test
     fun `GET comments returns 204 for empty comment list`() = testApplication {
-        coEvery { commentService.getCommentsForPost(1) } returns emptyList()
+        val postId = UUID.randomUUID()
+
+        coEvery { commentService.getCommentsForPost(postId) } returns emptyList()
 
         application {
             configureTestApplication()
         }
 
-        val response = client.get("/comments/1")
+
+        val response = client.get("/comments/${postId}")
 
         assertEquals(HttpStatusCode.NoContent, response.status)
 
@@ -130,19 +139,25 @@ class CommentRoutesTest : KoinTest {
 
     @Test
     fun `GET comments returns 200 for non-empty comment list`() = testApplication {
+        val id1 = UUID.randomUUID()
+        val id2 = UUID.randomUUID()
+        val id3 = UUID.randomUUID()
+        val id4 = UUID.randomUUID()
+
+
         val commentList = listOf(
-            Comment(id = 1, postId = 1, userId = 5, commentText = "Nice car!").toDTO(),
-            Comment(id = 2, postId = 1, userId = 5, commentText = "Socate").toDTO()
+            Comment(id = id1, postId = id1, userId = id4, commentText = "Nice car!").toDTO(),
+            Comment(id = id2, postId = id3, userId = id4, commentText = "Socate").toDTO()
 
         )
 
-        coEvery { commentService.getCommentsForPost(1) } returns commentList
+        coEvery { commentService.getCommentsForPost(id1) } returns commentList
 
         application {
             configureTestApplication()
         }
 
-        val response = client.get("/comments/1")
+        val response = client.get("/comments/${id1}")
 
         assertEquals(HttpStatusCode.OK, response.status)
 
@@ -159,7 +174,9 @@ class CommentRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val request = CommentRequest(postId = 1, commentText = "Hello")
+        val postId = UUID.randomUUID()
+
+        val request = CommentRequest(postId = postId, commentText = "Hello")
 
         val response = client.post("/comments") {
             contentType(ContentType.Application.Json)
@@ -177,13 +194,14 @@ class CommentRoutesTest : KoinTest {
 
     @Test
     fun `POST comment returns 400 when comment text is blank`() = testApplication {
-        val userId = 1
+        val postId = UUID.randomUUID()
+        val userId = UUID.randomUUID()
 
         application {
             configureTestApplication()
         }
 
-        val request = CommentRequest(postId = 1, commentText = "")
+        val request = CommentRequest(postId = postId, commentText = "")
 
         val token = createTestToken(userId)
 
@@ -203,15 +221,17 @@ class CommentRoutesTest : KoinTest {
 
     @Test
     fun `POST comment returns 201 when comment is created successfully`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
+        val commentId = UUID.randomUUID()
 
-        coEvery { commentService.addComment(userId, 1, "Hello!")} returns 1
+        coEvery { commentService.addComment(userId, postId, "Hello!")} returns commentId
 
         application {
             configureTestApplication()
         }
 
-        val request = CommentRequest(postId = 1, commentText = "Hello!")
+        val request = CommentRequest(postId = postId, commentText = "Hello!")
 
         val token = createTestToken(userId)
 
@@ -228,20 +248,22 @@ class CommentRoutesTest : KoinTest {
 
         assertEquals(actualJson, expectedJson)
 
-        coVerify(exactly = 1) { commentService.addComment(userId, 1, "Hello!")}
+        coVerify(exactly = 1) { commentService.addComment(userId, postId, "Hello!")}
     }
 
     @Test
     fun `POST comment returns 500 when comment creation fails`() = testApplication {
-        val userId = 1
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
 
-        coEvery { commentService.addComment(userId, 1, "Hello!") } returns -1
+
+        coEvery { commentService.addComment(userId, postId, "Hello!") } throws RuntimeException("DB Error")
 
         application {
             configureTestApplication()
         }
 
-        val request = CommentRequest(postId = 1, commentText = "Hello!")
+        val request = CommentRequest(postId = postId, commentText = "Hello!")
 
         val token = createTestToken(userId)
         val response = client.post("/comments") {
@@ -257,7 +279,7 @@ class CommentRoutesTest : KoinTest {
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { commentService.addComment(userId, 1, "Hello!") }
+        coVerify(exactly = 1) { commentService.addComment(userId, postId, "Hello!") }
     }
 
     @Test
@@ -266,7 +288,9 @@ class CommentRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(1)
+        val userId = UUID.randomUUID()
+
+        val token = createTestToken(userId)
 
         val response = client.delete("/comments/invalid-id") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -298,15 +322,18 @@ class CommentRoutesTest : KoinTest {
 
     @Test
     fun `DELETE comment returns 404 if comment not found`() = testApplication {
-        coEvery { commentService.getCommentById(1) } returns null
+        val commentId = UUID.randomUUID()
+        val userId = UUID.randomUUID()
 
-        val token = createTestToken(1)
+        coEvery { commentService.getCommentById(commentId) } returns null
+
+        val token = createTestToken(userId)
 
         application {
             configureTestApplication()
         }
 
-        val response = client.delete("/comments/1") {
+        val response = client.delete("/comments/${commentId}") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -315,23 +342,34 @@ class CommentRoutesTest : KoinTest {
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { commentService.getCommentById(1) }
+        coVerify(exactly = 1) { commentService.getCommentById(commentId) }
     }
 
     @Test
     fun `DELETE comment returns 403 when user is not owner or post owner`() = testApplication {
-        val fakeComment = Comment(id = 1, postId = 1, userId = 2, commentText = "Hello").toDTO()
+        val commentId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
+        val commentOwnerId = UUID.randomUUID()
+        val postOwnerId = UUID.randomUUID()
+        val requestingUserId = UUID.randomUUID()
 
-        coEvery { commentService.getCommentById(1) } returns fakeComment
-        coEvery { postService.getUserIdByPost(1) } returns 3
+        val fakeComment = Comment(
+            id = commentId,
+            postId = postId,
+            userId = commentOwnerId,
+            commentText = "Hello"
+        ).toDTO()
 
-        val token = createTestToken(4)
+        coEvery { commentService.getCommentById(commentId) } returns fakeComment
+        coEvery { postService.getUserIdByPost(postId) } returns postOwnerId
+
+        val token = createTestToken(requestingUserId)
 
         application {
             configureTestApplication()
         }
 
-        val response = client.delete("/comments/1") {
+        val response = client.delete("/comments/$commentId") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -340,18 +378,27 @@ class CommentRoutesTest : KoinTest {
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { commentService.getCommentById(1) }
-        coVerify(exactly = 1) { postService.getUserIdByPost(1) }
+        coVerify(exactly = 1) { commentService.getCommentById(commentId) }
+        coVerify(exactly = 1) { postService.getUserIdByPost(postId) }
     }
+
 
     @Test
     fun `DELETE comment returns 200 when successfully deleted`() = testApplication {
-        val userId = 1
-        val fakeComment = Comment(id = 1, postId = 1, userId = userId, commentText = "Hello").toDTO()
+        val commentId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
+        val userId = UUID.randomUUID()
 
-        coEvery { commentService.getCommentById(1) } returns fakeComment
-        coEvery { postService.getUserIdByPost(1) } returns userId
-        coEvery { commentService.deleteComment(1) } returns 1
+        val fakeComment = Comment(
+            id = commentId,
+            postId = postId,
+            userId = userId,
+            commentText = "Hello"
+        ).toDTO()
+
+        coEvery { commentService.getCommentById(commentId) } returns fakeComment
+        coEvery { postService.getUserIdByPost(postId) } returns userId
+        coEvery { commentService.deleteComment(commentId) } returns 1
 
         val token = createTestToken(userId = userId)
 
@@ -359,7 +406,7 @@ class CommentRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val response = client.delete("/comments/1") {
+        val response = client.delete("/comments/$commentId") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -370,25 +417,33 @@ class CommentRoutesTest : KoinTest {
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { commentService.getCommentById(1) }
-        coVerify(exactly = 1) { postService.getUserIdByPost(1) }
-        coVerify(exactly = 1) { commentService.deleteComment(1) }
+        coVerify(exactly = 1) { commentService.getCommentById(commentId) }
+        coVerify(exactly = 1) { postService.getUserIdByPost(postId) }
+        coVerify(exactly = 1) { commentService.deleteComment(commentId) }
     }
 
     @Test
     fun `DELETE comment returns 500 when deletion fails`() = testApplication {
-        val userId = 1
-        val fakeComment = Comment(id = 1, postId = 1, userId = userId, commentText = "Hello").toDTO()
+        val commentId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
+        val userId = UUID.randomUUID()
 
-        coEvery { commentService.getCommentById(1) } returns fakeComment
-        coEvery { postService.getUserIdByPost(1) } returns userId
-        coEvery { commentService.deleteComment(1) } returns 0
+        val fakeComment = Comment(
+            id = commentId,
+            postId = postId,
+            userId = userId,
+            commentText = "Hello"
+        ).toDTO()
 
-        val token = createTestToken(userId = userId)
+        coEvery { commentService.getCommentById(commentId) } returns fakeComment
+        coEvery { postService.getUserIdByPost(postId) } returns userId
+        coEvery { commentService.deleteComment(commentId) } returns 0
+
+        val token = createTestToken(userId)
 
         application { configureTestApplication() }
 
-        val response = client.delete("/comments/1") {
+        val response = client.delete("/comments/$commentId") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -399,14 +454,15 @@ class CommentRoutesTest : KoinTest {
 
         assertEquals(expectedJson, actualJson)
 
-        coVerify(exactly = 1) { commentService.getCommentById(1) }
-        coVerify(exactly = 1) { postService.getUserIdByPost(1) }
-        coVerify(exactly = 1) { commentService.deleteComment(1) }
+        coVerify(exactly = 1) { commentService.getCommentById(commentId) }
+        coVerify(exactly = 1) { postService.getUserIdByPost(postId) }
+        coVerify(exactly = 1) { commentService.deleteComment(commentId) }
     }
 
-    private fun createTestToken(userId: Int): String {
+
+    private fun createTestToken(userId: UUID): String {
         return JWT.create()
-            .withClaim("userId", userId)
+            .withClaim("userId", userId.toString())
             .withExpiresAt(Date(System.currentTimeMillis() + 60000))
             .sign(Algorithm.HMAC256("test-secret-key"))
     }

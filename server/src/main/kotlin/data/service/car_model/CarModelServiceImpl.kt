@@ -2,11 +2,12 @@ package com.carspotter.data.service.car_model
 
 import com.carspotter.data.model.CarModel
 import com.carspotter.data.repository.car_model.ICarModelRepository
+import java.util.*
 
 class CarModelServiceImpl(
     private val carModelRepository: ICarModelRepository
 ): ICarModelService {
-    override suspend fun getCarModelId(brand: String, model: String): Int? {
+    override suspend fun getCarModelId(brand: String, model: String): UUID? {
         return carModelRepository.getCarModelId(brand, model)
     }
 
@@ -18,7 +19,7 @@ class CarModelServiceImpl(
         return carModelRepository.getCarModelsForBrand(brand)
     }
 
-    override suspend fun createCarModel(carModel: CarModel): Int {
+    override suspend fun createCarModel(carModel: CarModel): UUID {
         return try {
             carModelRepository.createCarModel(carModel)
         } catch (e: IllegalStateException) {
@@ -26,7 +27,7 @@ class CarModelServiceImpl(
         }
     }
 
-    override suspend fun getCarModelById(carModelId: Int): CarModel? {
+    override suspend fun getCarModelById(carModelId: UUID): CarModel? {
         return carModelRepository.getCarModel(carModelId)
     }
 
@@ -34,7 +35,7 @@ class CarModelServiceImpl(
         return carModelRepository.getAllCarModels()
     }
 
-    override suspend fun deleteCarModel(carModelId: Int): Int {
+    override suspend fun deleteCarModel(carModelId: UUID): Int {
         return carModelRepository.deleteCarModel(carModelId)
     }
 

@@ -1,6 +1,7 @@
 package com.carspotter.routes
 
 import com.carspotter.data.service.car_model.ICarModelService
+import com.carspotter.utils.toUuidOrNull
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -67,7 +68,7 @@ fun Route.carModelRoutes() {
         }
 
         get("/{modelId}") {
-            val modelId = call.parameters["modelId"]?.toIntOrNull()
+            val modelId = call.parameters["modelId"].toUuidOrNull()
                 ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing modelId"))
 
             val model = carModelService.getCarModelById(modelId)

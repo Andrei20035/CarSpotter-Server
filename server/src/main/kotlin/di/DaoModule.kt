@@ -1,6 +1,6 @@
 package com.carspotter.di
 import com.carspotter.data.dao.auth_credential.AuthCredentialDaoImpl
-import com.carspotter.data.dao.auth_credentials.IAuthCredentialDAO
+import com.carspotter.data.dao.auth_credential.IAuthCredentialDAO
 import com.carspotter.data.dao.car_model.CarModelDaoImpl
 import com.carspotter.data.dao.car_model.ICarModelDAO
 import com.carspotter.data.dao.comment.CommentDaoImpl

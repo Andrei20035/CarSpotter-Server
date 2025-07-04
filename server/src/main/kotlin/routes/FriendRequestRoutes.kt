@@ -1,6 +1,8 @@
 package com.carspotter.routes
 
 import com.carspotter.data.service.friend_request.IFriendRequestService
+import com.carspotter.utils.getUuidClaim
+import com.carspotter.utils.toUuidOrNull
 import io.ktor.http.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
@@ -28,30 +30,30 @@ fun Route.friendRequestRoutes() {
             }
 
             post("/{receiverId}") {
-                val senderId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                val senderId = call.getUuidClaim("userId")
                     ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing senderId"))
 
-                val receiverId = call.parameters["receiverId"]?.toIntOrNull()
+                val receiverId = call.parameters["receiverId"].toUuidOrNull()
                     ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing receiverId"))
 
                 if (senderId == receiverId) {
                     return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "You cannot send a friend request to yourself"))
                 }
 
-                val rowsInserted = friendRequestService.sendFriendRequest(senderId, receiverId)
-
-                if(rowsInserted == 1) {
+                try {
+                    friendRequestService.sendFriendRequest(senderId, receiverId)
                     call.respond(HttpStatusCode.Created, mapOf("message" to "Friend request sent"))
-                } else {
+
+                } catch (e: Exception) {
                     call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "A problem occurred when sending friend request"))
                 }
             }
 
             post("/{senderId}/accept") {
-                val receiverId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                val receiverId = call.getUuidClaim("userId")
                     ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing receiverId"))
 
-                val senderId = call.parameters["senderId"]?.toIntOrNull()
+                val senderId = call.parameters["senderId"].toUuidOrNull()
                     ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing senderId"))
 
                 if (senderId == receiverId) {
@@ -68,10 +70,10 @@ fun Route.friendRequestRoutes() {
             }
 
             post("/{senderId}/decline") {
-                val receiverId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                val receiverId = call.getUuidClaim("userId")
                     ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing receiverId"))
 
-                val senderId = call.parameters["senderId"]?.toIntOrNull()
+                val senderId = call.parameters["senderId"].toUuidOrNull()
                     ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing senderId"))
 
                 if (senderId == receiverId) {
@@ -88,7 +90,7 @@ fun Route.friendRequestRoutes() {
             }
 
             get {
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                val userId = call.getUuidClaim("userId")
                     ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val friendRequests = friendRequestService.getAllFriendRequests(userId)

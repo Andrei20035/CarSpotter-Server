@@ -4,6 +4,7 @@ import com.carspotter.data.model.User
 import com.carspotter.serialization.LocalDateSerializer
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
+import java.util.*
 
 @Serializable
 data class CreateUserRequest(
@@ -16,7 +17,7 @@ data class CreateUserRequest(
     val country: String
 )
 
-fun CreateUserRequest.toUser(credentialId: Int) = User(
+fun CreateUserRequest.toUser(credentialId: UUID) = User(
     authCredentialId = credentialId,
     profilePicturePath = this.profilePicturePath,
     fullName = this.fullName,

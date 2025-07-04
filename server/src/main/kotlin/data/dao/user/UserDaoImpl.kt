@@ -6,10 +6,11 @@ import com.carspotter.data.table.Users
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
 
 class UserDaoImpl : IUserDAO {
-    override suspend fun createUser(user: User): Int {
+    override suspend fun createUser(user: User): UUID {
         return transaction {
             Users.insertReturning(listOf(Users.id)) {
                 it[authCredentialId] = user.authCredentialId
@@ -20,18 +21,18 @@ class UserDaoImpl : IUserDAO {
                 it[username] = user.username
                 it[country] = user.country
                 it[spotScore] = user.spotScore
-            }.singleOrNull()?.get(Users.id) ?: throw UserCreationException("Failed to insert user")
+            }.singleOrNull()?.get(Users.id)?.value ?: throw UserCreationException("Failed to insert user")
         }
     }
 
-    override suspend fun getUserByID(userId: Int): User? {
+    override suspend fun getUserByID(userId: UUID): User? {
         return transaction {
             Users
                 .selectAll()
                 .where { Users.id eq userId }
                 .mapNotNull { row ->
                     User(
-                        id = row[Users.id],
+                        id = row[Users.id].value,
                         authCredentialId = row[Users.authCredentialId],
                         profilePicturePath = row[Users.profilePicturePath],
                         fullName = row[Users.fullName],
@@ -54,7 +55,7 @@ class UserDaoImpl : IUserDAO {
                 .where { Users.username.lowerCase() like "${username.lowercase()}%" }
                 .map { row ->
                     User(
-                        id = row[Users.id],
+                        id = row[Users.id].value,
                         authCredentialId = row[Users.authCredentialId],
                         profilePicturePath = row[Users.profilePicturePath],
                         fullName = row[Users.fullName],
@@ -76,7 +77,7 @@ class UserDaoImpl : IUserDAO {
                 .selectAll()
                 .mapNotNull { row ->
                     User(
-                        id = row[Users.id],
+                        id = row[Users.id].value,
                         authCredentialId = row[Users.authCredentialId],
                         profilePicturePath = row[Users.profilePicturePath],
                         fullName = row[Users.fullName],
@@ -92,7 +93,7 @@ class UserDaoImpl : IUserDAO {
         }
     }
 
-    override suspend fun updateProfilePicture(userId: Int, imagePath: String): Int {
+    override suspend fun updateProfilePicture(userId: UUID, imagePath: String): Int {
         return transaction {
             Users
                 .update({ Users.id eq userId }) {
@@ -101,7 +102,7 @@ class UserDaoImpl : IUserDAO {
         }
     }
 
-    override suspend fun deleteUser(credentialId: Int): Int {
+    override suspend fun deleteUser(credentialId: UUID): Int {
         return transaction {
             AuthCredentials.deleteWhere { id eq credentialId }
         }

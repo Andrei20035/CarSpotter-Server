@@ -1,6 +1,8 @@
 package com.carspotter.routes
 
 import com.carspotter.data.service.friend.IFriendService
+import com.carspotter.utils.getUuidClaim
+import com.carspotter.utils.toUuidOrNull
 import io.ktor.http.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
@@ -27,10 +29,10 @@ fun Route.friendRoutes() {
             }
 
             post("/{friendId}") {
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                val userId = call.getUuidClaim("userId")
                     ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
-                val friendId = call.parameters["friendId"]?.toIntOrNull()
+                val friendId = call.parameters["friendId"].toUuidOrNull()
                     ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing friendId"))
 
                 if (userId == friendId) {
@@ -47,10 +49,10 @@ fun Route.friendRoutes() {
             }
 
             delete("/{friendId}") {
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                val userId = call.getUuidClaim("userId")
                     ?: return@delete call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
-                val friendId = call.parameters["friendId"]?.toIntOrNull()
+                val friendId = call.parameters["friendId"].toUuidOrNull()
                     ?: return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid or missing friendId"))
 
                 val deletedRows = friendService.deleteFriend(userId, friendId)
@@ -63,7 +65,7 @@ fun Route.friendRoutes() {
             }
 
             get {
-                val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                val userId = call.getUuidClaim("userId")
                     ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
 
                 val friends = friendService.getAllFriends(userId)

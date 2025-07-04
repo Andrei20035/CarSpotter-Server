@@ -9,20 +9,21 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
 class LikeDaoImpl : ILikeDAO {
-    override suspend fun likePost(userId: Int, postId: Int): Int {
+    override suspend fun likePost(userId: UUID, postId: UUID): UUID {
         return transaction {
             Likes
                 .insertReturning(listOf(Likes.id)) {
                     it[Likes.userId] = userId
                     it[Likes.postId] = postId
-                }.singleOrNull()?.get(Likes.id)
+                }.singleOrNull()?.get(Likes.id)?.value
                 ?: throw IllegalStateException("Failed to insert like for user $userId and post $postId")
         }
     }
 
-    override suspend fun unlikePost(userId: Int, postId: Int): Int {
+    override suspend fun unlikePost(userId: UUID, postId: UUID): Int {
         return transaction {
             Likes.deleteWhere {
                 (Likes.userId eq userId) and (Likes.postId eq postId)
@@ -30,14 +31,14 @@ class LikeDaoImpl : ILikeDAO {
         }
     }
 
-    override suspend fun getLikesForPost(postId: Int): List<User> {
+    override suspend fun getLikesForPost(postId: UUID): List<User> {
         return transaction {
             (Likes innerJoin Users)
                 .selectAll()
                 .where { Likes.postId eq postId }
                 .mapNotNull { row ->
                     User(
-                        id = row[Users.id],
+                        id = row[Users.id].value,
                         authCredentialId = row[Users.authCredentialId],
                         profilePicturePath = row[Users.profilePicturePath],
                         fullName = row[Users.fullName],
@@ -53,7 +54,7 @@ class LikeDaoImpl : ILikeDAO {
         }
     }
 
-    override suspend fun hasUserLikedPost(userId: Int, postId: Int): Boolean {
+    override suspend fun hasUserLikedPost(userId: UUID, postId: UUID): Boolean {
         return transaction {
             Likes
                 .selectAll()

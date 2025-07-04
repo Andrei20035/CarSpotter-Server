@@ -27,6 +27,7 @@ import org.koin.test.inject
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PostServiceTest: KoinTest {
@@ -36,12 +37,12 @@ class PostServiceTest: KoinTest {
     private val carModelService: ICarModelService by inject()
     private val authCredentialService: IAuthCredentialService by inject()
 
-    private var credentialId1: Int = 0
-    private var credentialId2: Int = 0
-    private var userId1: Int = 0
-    private var userId2: Int = 0
-    private var carModelId1: Int = 0
-    private var carModelId2: Int = 0
+    private var credentialId1: UUID = UUID.randomUUID()
+    private var credentialId2: UUID = UUID.randomUUID()
+    private var userId1: UUID = UUID.randomUUID()
+    private var userId2: UUID = UUID.randomUUID()
+    private var carModelId1: UUID = UUID.randomUUID()
+    private var carModelId2: UUID = UUID.randomUUID()
 
     @BeforeAll
     fun setupDatabase() {
@@ -123,13 +124,11 @@ class PostServiceTest: KoinTest {
         println("Clearing database")
         transaction {
             Posts.deleteAll()
-            exec("ALTER SEQUENCE posts_id_seq RESTART WITH 1")
         }
     }
 
     @Test
     fun `create and get post by ID`() = runBlocking {
-        println("Starting test: create and get post by ID")
         val postID = postService.createPost(
             Post(
                 userId = userId1,
@@ -151,7 +150,6 @@ class PostServiceTest: KoinTest {
 
     @Test
     fun `get all posts`() = runBlocking {
-        println("Starting test: get all posts")
         postService.createPost(
             Post(
                 userId = userId1,

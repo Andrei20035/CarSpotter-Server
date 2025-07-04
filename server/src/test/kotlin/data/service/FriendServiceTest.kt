@@ -25,6 +25,7 @@ import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.time.LocalDate
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FriendServiceTest: KoinTest {
@@ -33,10 +34,10 @@ class FriendServiceTest: KoinTest {
     private val authCredentialService: IAuthCredentialService by inject()
     private val userService: IUserService by inject()
 
-    private var credentialId1: Int = 0
-    private var credentialId2: Int = 0
-    private var userId1: Int = 0
-    private var userId2: Int = 0
+    private var credentialId1: UUID = UUID.randomUUID()
+    private var credentialId2: UUID = UUID.randomUUID()
+    private var userId1: UUID = UUID.randomUUID()
+    private var userId2: UUID = UUID.randomUUID()
 
     @BeforeAll
     fun setupDatabase() {

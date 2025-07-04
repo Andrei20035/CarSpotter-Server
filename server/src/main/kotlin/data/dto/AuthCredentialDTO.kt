@@ -2,9 +2,10 @@ package com.carspotter.data.dto
 
 import com.carspotter.data.model.AuthCredential
 import com.carspotter.data.model.AuthProvider
+import java.util.*
 
 data class AuthCredentialDTO(
-    val id: Int = 0,
+    val id: UUID = UUID.randomUUID(),
     val email: String,
     val provider: AuthProvider,
 )

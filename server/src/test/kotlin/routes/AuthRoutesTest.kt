@@ -70,8 +70,14 @@ class AuthRoutesTest : KoinTest {
                         .build()
                 )
                 validate { credential ->
-                    if (credential.payload.getClaim("credentialId").asInt() != null) {
-                        JWTPrincipal(credential.payload)
+                    val credentialIdString = credential.payload.getClaim("credentialId").asString()
+                    if (credentialIdString != null) {
+                        try {
+                            UUID.fromString(credentialIdString)
+                            JWTPrincipal(credential.payload)
+                        } catch (e: IllegalArgumentException) {
+                            null
+                        }
                     } else {
                         null
                     }
@@ -95,7 +101,7 @@ class AuthRoutesTest : KoinTest {
         val email = "test@example.com"
         val password = "password123"
         val provider = AuthProvider.REGULAR
-        val credentialId = 1
+        val credentialId = UUID.randomUUID()
 
         val mockCredential = AuthCredentialDTO(
             id = credentialId,
@@ -130,7 +136,7 @@ class AuthRoutesTest : KoinTest {
         val password = "password123"
         val provider = AuthProvider.REGULAR
         val googleId = "1234"
-        val credentialId = 1
+        val credentialId = UUID.randomUUID()
 
         val mockCredential = AuthCredentialDTO(
             id = credentialId,
@@ -177,7 +183,7 @@ class AuthRoutesTest : KoinTest {
     fun `google login with valid credentials returns token`() = testApplication {
         val email = "test@example.com"
         val googleId = "google123"
-        val credentialId = 1
+        val credentialId = UUID.randomUUID()
         val provider = AuthProvider.GOOGLE
 
         val mockCredential = AuthCredentialDTO(
@@ -212,7 +218,7 @@ class AuthRoutesTest : KoinTest {
         val email = "newuser@example.com"
         val password = "newpassword123"
         val provider = AuthProvider.REGULAR
-        val credentialId = 2
+        val credentialId = UUID.randomUUID()
 
         coEvery {
             authCredentialService.createCredentials(match {
@@ -251,7 +257,7 @@ class AuthRoutesTest : KoinTest {
 
     @Test
     fun `update password with valid token returns success`() = testApplication {
-        val credentialId = 1
+        val credentialId = UUID.randomUUID()
         val newPassword = "newpassword456"
 
         System.setProperty("JWT_SECRET", "test-secret-key")
@@ -263,7 +269,7 @@ class AuthRoutesTest : KoinTest {
         }
 
         val token = JWT.create()
-            .withClaim("credentialId", credentialId)
+            .withClaim("credentialId", credentialId.toString())
             .withExpiresAt(Date(System.currentTimeMillis() + 60000))
             .sign(Algorithm.HMAC256("test-secret-key"))
 
@@ -286,7 +292,7 @@ class AuthRoutesTest : KoinTest {
 
     @Test
     fun `delete account should return success`() = testApplication {
-        val credentialId = 1
+        val credentialId = UUID.randomUUID()
 
         System.setProperty("JWT_SECRET", "test-secret-key")
 
@@ -299,7 +305,7 @@ class AuthRoutesTest : KoinTest {
         }
 
         val token = JWT.create()
-            .withClaim("credentialId", credentialId)
+            .withClaim("credentialId", credentialId.toString())
             .withExpiresAt(Date(System.currentTimeMillis() + 60000))
             .sign(Algorithm.HMAC256("test-secret-key"))
 

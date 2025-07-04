@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.carspotter.configureSerialization
 import com.carspotter.data.dto.UserDTO
+import com.carspotter.data.service.like.DuplicateLikeException
 import com.carspotter.data.service.like.ILikeService
 import com.carspotter.routes.likeRoutes
 import io.ktor.client.request.*
@@ -66,8 +67,14 @@ class LikeRoutesTest : KoinTest {
                         .build()
                 )
                 validate { credential ->
-                    if (credential.payload.getClaim("userId").asInt() != null) {
-                        JWTPrincipal(credential.payload)
+                    val credentialIdString = credential.payload.getClaim("userId").asString()
+                    if (credentialIdString != null) {
+                        try {
+                            UUID.fromString(credentialIdString)
+                            JWTPrincipal(credential.payload)
+                        } catch (e: IllegalArgumentException) {
+                            null
+                        }
                     } else {
                         null
                     }
@@ -113,7 +120,9 @@ class LikeRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1)
+        val userId = UUID.randomUUID()
+
+        val token = createTestToken(userId = userId)
 
         val response = client.post("/likes/invalid") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -129,10 +138,11 @@ class LikeRoutesTest : KoinTest {
 
     @Test
     fun `POST likes returns 409 when user has already liked the post`() = testApplication {
-        val userId = 1
-        val postId = 2
 
-        coEvery { likeService.likePost(userId, postId) } returns 0
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
+
+        coEvery { likeService.likePost(userId, postId) } throws DuplicateLikeException("User $userId has already liked post $postId")
 
         application {
             configureTestApplication()
@@ -156,10 +166,11 @@ class LikeRoutesTest : KoinTest {
 
     @Test
     fun `POST likes returns 200 when post liked successfully`() = testApplication {
-        val userId = 1
-        val postId = 2
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
+        val returned = UUID.randomUUID()
 
-        coEvery { likeService.likePost(userId, postId) } returns 1
+        coEvery { likeService.likePost(userId, postId) } returns returned
 
         application {
             configureTestApplication()
@@ -205,7 +216,9 @@ class LikeRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1)
+        val userId = UUID.randomUUID()
+
+        val token = createTestToken(userId = userId)
 
         val response = client.delete("/likes/invalid") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -221,8 +234,8 @@ class LikeRoutesTest : KoinTest {
 
     @Test
     fun `DELETE likes returns 404 when like not found or already removed`() = testApplication {
-        val userId = 1
-        val postId = 2
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
 
         coEvery { likeService.unlikePost(userId, postId) } returns 0
 
@@ -248,8 +261,8 @@ class LikeRoutesTest : KoinTest {
 
     @Test
     fun `DELETE likes returns 200 when post unliked successfully`() = testApplication {
-        val userId = 1
-        val postId = 2
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
 
         coEvery { likeService.unlikePost(userId, postId) } returns 1
 
@@ -297,7 +310,9 @@ class LikeRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val token = createTestToken(userId = 1)
+        val userId = UUID.randomUUID()
+
+        val token = createTestToken(userId = userId)
 
         val response = client.get("/likes/posts/invalid") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -313,8 +328,8 @@ class LikeRoutesTest : KoinTest {
 
     @Test
     fun `GET likes-posts returns 204 when no likes for the post`() = testApplication {
-        val userId = 1
-        val postId = 2
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
 
         coEvery { likeService.getLikesForPost(postId) } returns emptyList()
 
@@ -340,11 +355,14 @@ class LikeRoutesTest : KoinTest {
 
     @Test
     fun `GET likes-posts returns 200 with list of users who liked the post`() = testApplication {
-        val userId = 1
-        val postId = 2
+        val userId = UUID.randomUUID()
+        val postId = UUID.randomUUID()
+        val userId2 = UUID.randomUUID()
+        val userId3 = UUID.randomUUID()
+
         val users = listOf(
             UserDTO(
-                id = 2,
+                id = userId2,
                 fullName = "John Doe",
                 phoneNumber = "0712453678",
                 username = "user2", 
@@ -352,7 +370,7 @@ class LikeRoutesTest : KoinTest {
                 country = "USA"
             ),
             UserDTO(
-                id = 3,
+                id = userId3,
                 fullName = "Jane Smith",
                 phoneNumber = "0712453678",
                 username = "user3", 
@@ -383,9 +401,9 @@ class LikeRoutesTest : KoinTest {
         coVerify(exactly = 1) { likeService.getLikesForPost(postId) }
     }
 
-    private fun createTestToken(userId: Int): String {
+    private fun createTestToken(userId: UUID): String {
         return JWT.create()
-            .withClaim("userId", userId)
+            .withClaim("userId", userId.toString())
             .withExpiresAt(Date(System.currentTimeMillis() + 60000))
             .sign(Algorithm.HMAC256("test-secret-key"))
 

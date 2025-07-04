@@ -26,6 +26,7 @@ import org.koin.test.inject
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PostRepositoryTest: KoinTest {
@@ -35,12 +36,12 @@ class PostRepositoryTest: KoinTest {
     private val carModelRepository: ICarModelRepository by inject()
     private val authCredentialRepository: IAuthCredentialRepository by inject()
 
-    private var credentialId1: Int = 0
-    private var credentialId2: Int = 0
-    private var userId1: Int = 0
-    private var userId2: Int = 0
-    private var carModelId1: Int = 0
-    private var carModelId2: Int = 0
+    private var credentialId1: UUID = UUID.randomUUID()
+    private var credentialId2: UUID = UUID.randomUUID()
+    private var userId1: UUID = UUID.randomUUID()
+    private var userId2: UUID = UUID.randomUUID()
+    private var carModelId1: UUID = UUID.randomUUID()
+    private var carModelId2: UUID = UUID.randomUUID()
 
     @BeforeAll
     fun setupDatabase() {
