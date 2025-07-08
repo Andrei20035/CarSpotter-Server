@@ -17,6 +17,8 @@ data class PostDTO(
     val carModelId: UUID,
     val imagePath: String,
     val description: String? = null,
+    val latitude: Double,
+    val longitude: Double,
     @Serializable(with = InstantSerializer::class)
     val createdAt: Instant? = null,
     @Serializable(with = InstantSerializer::class)
@@ -29,6 +31,8 @@ fun Post.toDTO() = PostDTO(
     carModelId = this.carModelId,
     imagePath = this.imagePath,
     description = this.description,
+    latitude = this.latitude,
+    longitude = this.longitude,
     createdAt = this.createdAt,
     updatedAt = this.updatedAt
 )

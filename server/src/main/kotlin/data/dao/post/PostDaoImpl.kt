@@ -16,6 +16,8 @@ class PostDaoImpl : IPostDAO {
                 it[carModelId] = post.carModelId
                 it[imagePath] = post.imagePath
                 it[description] = post.description
+                it[longitude] = post.longitude
+                it[latitude] = post.latitude
             }.singleOrNull()?.get(Posts.id)?.value ?: throw IllegalStateException("Failed to insert post")
         }
     }
@@ -32,6 +34,8 @@ class PostDaoImpl : IPostDAO {
                         carModelId = row[Posts.carModelId],
                         imagePath = row[Posts.imagePath],
                         description = row[Posts.description],
+                        latitude = row[Posts.latitude],
+                        longitude = row[Posts.longitude],
                         createdAt = row[Posts.createdAt],
                         updatedAt = row[Posts.updatedAt]
                     )
@@ -51,6 +55,8 @@ class PostDaoImpl : IPostDAO {
                         carModelId = row[Posts.carModelId],
                         imagePath = row[Posts.imagePath],
                         description = row[Posts.description],
+                        latitude = row[Posts.latitude],
+                        longitude = row[Posts.longitude],
                         createdAt = row[Posts.createdAt],
                         updatedAt = row[Posts.updatedAt]
                     )
@@ -74,6 +80,8 @@ class PostDaoImpl : IPostDAO {
                         carModelId = row[Posts.carModelId],
                         imagePath = row[Posts.imagePath],
                         description = row[Posts.description],
+                        latitude = row[Posts.latitude],
+                        longitude = row[Posts.longitude],
                         createdAt = row[Posts.createdAt],
                         updatedAt = row[Posts.updatedAt]
                     )

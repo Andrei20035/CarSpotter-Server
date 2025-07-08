@@ -10,6 +10,8 @@ object Posts : UUIDTable("posts") {
     val carModelId = uuid("car_model_id").references(CarModels.id, onDelete = ReferenceOption.NO_ACTION)
     val imagePath = text("image_path")
     val description = text("description").nullable()
+    val latitude = double("latitude")
+    val longitude = double("longitude")
     val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
     val updatedAt = timestamp("updated_at").defaultExpression(CurrentTimestamp)
 }
