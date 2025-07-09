@@ -1,12 +1,15 @@
 package data.repository
 
+import com.carspotter.data.dto.CreatePostDTO
 import com.carspotter.data.model.*
 import com.carspotter.data.repository.auth_credential.IAuthCredentialRepository
 import com.carspotter.data.repository.car_model.ICarModelRepository
+import com.carspotter.data.repository.friend.IFriendRepository
 import com.carspotter.data.repository.post.IPostRepository
 import com.carspotter.data.repository.user.IUserRepository
 import com.carspotter.data.table.AuthCredentials
 import com.carspotter.data.table.CarModels
+import com.carspotter.data.table.Friends
 import com.carspotter.data.table.Posts
 import com.carspotter.data.table.Users
 import com.carspotter.di.daoModule
@@ -19,10 +22,13 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.inject
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -35,11 +41,16 @@ class PostRepositoryTest: KoinTest {
     private val postRepository: IPostRepository by inject()
     private val carModelRepository: ICarModelRepository by inject()
     private val authCredentialRepository: IAuthCredentialRepository by inject()
+    private val friendRepository: IFriendRepository by inject()
 
     private var credentialId1: UUID = UUID.randomUUID()
     private var credentialId2: UUID = UUID.randomUUID()
+    private var credentialId3: UUID = UUID.randomUUID()
+    private var credentialId4: UUID = UUID.randomUUID()
     private var userId1: UUID = UUID.randomUUID()
     private var userId2: UUID = UUID.randomUUID()
+    private var userId3: UUID = UUID.randomUUID()
+    private var userId4: UUID = UUID.randomUUID()
     private var carModelId1: UUID = UUID.randomUUID()
     private var carModelId2: UUID = UUID.randomUUID()
 
@@ -59,6 +70,7 @@ class PostRepositoryTest: KoinTest {
         SchemaSetup.createUsersTable(Users)
         SchemaSetup.createPostsTable(Posts)
         SchemaSetup.createCarModelsTable(CarModels)
+        SchemaSetup.createFriendsTableWithConstraint(Friends)
         SchemaSetup.createAuthCredentialsTableWithConstraint(AuthCredentials)
 
         runBlocking {
@@ -78,6 +90,25 @@ class PostRepositoryTest: KoinTest {
                     provider = AuthProvider.REGULAR
                 )
             )
+
+            credentialId3 = authCredentialRepository.createCredentials(
+                AuthCredential(
+                    email = "test3@test.com",
+                    password = null,
+                    googleId = "331122",
+                    provider = AuthProvider.GOOGLE
+                )
+            )
+
+            credentialId4 = authCredentialRepository.createCredentials(
+                AuthCredential(
+                    email = "global@test.com",
+                    password = "global",
+                    googleId = null,
+                    provider = AuthProvider.REGULAR
+                )
+            )
+
             userId1 = userRepository.createUser(
                 User(
                     authCredentialId = credentialId1,
@@ -98,6 +129,28 @@ class PostRepositoryTest: KoinTest {
                     country = "USA"
                 )
             )
+
+            userId3 = userRepository.createUser(
+                User(
+                    authCredentialId = credentialId3,
+                    fullName = "Tony Stark",
+                    phoneNumber = "0722123456",
+                    birthDate = LocalDate.of(1980, 5, 29),
+                    username = "IronMan",
+                    country = "USA"
+                )
+            )
+
+            userId4 = userRepository.createUser(
+            User(
+                authCredentialId = credentialId4,
+                fullName = "Bruce Banner",
+                phoneNumber = "0700000000",
+                birthDate = LocalDate.of(1982, 12, 1),
+                username = "Hulk",
+                country = "USA"
+            )
+        )
 
             carModelId1 = carModelRepository.createCarModel(
                 CarModel(
@@ -126,12 +179,78 @@ class PostRepositoryTest: KoinTest {
     }
 
     @Test
+    fun `getFeedPostsForUser returns ordered posts with pagination from friends, nearby and global`() = runBlocking {
+
+        // Make friends
+        friendRepository.addFriend(userId1, userId2)
+
+        // Create friend post (Peter’s friends)
+        val friendPost = CreatePostDTO(
+            userId = userId2,
+            carModelId = carModelId1,
+            imagePath = "path/friend.jpg",
+            latitude = 40.0,
+            longitude = -74.0,
+            description = "Friend post",
+        )
+        postRepository.createPost(friendPost)
+
+        // Create nearby post (not friend, but in location)
+        val nearbyPost = CreatePostDTO(
+            userId = userId3,
+            carModelId = carModelId2,
+            imagePath = "path/nearby.jpg",
+            latitude = 40.01, // ~1.1 km away
+            longitude = -74.0,
+            description = "Nearby post",
+        )
+        postRepository.createPost(nearbyPost)
+
+        // Create global post (not friend, not nearby)
+        val globalPost = CreatePostDTO(
+            userId = userId4,
+            carModelId = carModelId1,
+            imagePath = "path/global.jpg",
+            latitude = 0.0,
+            longitude = 0.0,
+            description = "Global post",
+        )
+        val postIdGlobal = postRepository.createPost(globalPost)
+
+        // Act: Call repository function to fetch feed
+        val response = postRepository.getFeedPostsForUser(
+            userId = userId1,
+            latitude = 40.0,
+            longitude = -74.0,
+            radiusKm = 5,
+            country = "USA",
+            limit = 10,
+            cursor = null
+        )
+
+        println("Friend post createdAt: ${response.posts[0].createdAt}")
+        println("Nearby post createdAt: ${response.posts[1].createdAt}")
+        println("Global post createdAt: ${response.posts[2].createdAt}")
+
+        // Assert
+        assertEquals(3, response.posts.size)
+        assertEquals("Friend post", response.posts[0].description)
+        assertEquals("Nearby post", response.posts[1].description)
+        assertEquals("Global post", response.posts[2].description)
+        assertTrue(response.hasMore.not())
+        assertNotNull(response.nextCursor)
+    }
+
+
+    @Test
     fun `create and get post by ID`() = runBlocking {
         val postID = postRepository.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image1",
                 description = "Description1",
+                latitude = 40.0,
+                longitude = 40.0,
                 carModelId = carModelId1
             )
         )
@@ -149,18 +268,22 @@ class PostRepositoryTest: KoinTest {
     @Test
     fun `get all posts`() = runBlocking {
         postRepository.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image1",
                 description = "Description1",
+                latitude = 40.0,
+                longitude = 40.0,
                 carModelId = carModelId1
             )
         )
         postRepository.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId2,
                 imagePath = "path/to/image2",
                 description = "Description2",
+                latitude = 40.0,
+                longitude = 40.0,
                 carModelId = carModelId2
             )
         )
@@ -179,18 +302,22 @@ class PostRepositoryTest: KoinTest {
         val endOfDay = ZonedDateTime.now(userTimeZone).toLocalDate().plusDays(1).atStartOfDay(userTimeZone).toInstant()
 
         postRepository.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image1",
                 description = "Description1",
+                latitude = 40.0,
+                longitude = 40.0,
                 carModelId = carModelId1
             )
         )
         postRepository.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image2",
                 description = "Description2",
+                latitude = 40.0,
+                longitude = 40.0,
                 carModelId = carModelId2
             )
         )
@@ -202,7 +329,7 @@ class PostRepositoryTest: KoinTest {
 
         currentDayPosts.forEach { post ->
             Assertions.assertTrue(
-                post.createdAt!! >= startOfDay && post.createdAt < endOfDay,
+                post.createdAt >= startOfDay && post.createdAt < endOfDay,
                 "Post createdAt should be within the current day range."
             )
         }
@@ -212,10 +339,12 @@ class PostRepositoryTest: KoinTest {
     @Test
     fun `edit post description`() = runBlocking {
         val postId = postRepository.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image1",
                 description = "Description1",
+                latitude = 40.0,
+                longitude = 40.0,
                 carModelId = carModelId1
             )
         )
@@ -232,10 +361,12 @@ class PostRepositoryTest: KoinTest {
     @Test
     fun `delete post`() = runBlocking {
         val postId = postRepository.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image1",
                 description = "Description1",
+                latitude = 40.0,
+                longitude = 40.0,
                 carModelId = carModelId1
             )
         )
@@ -248,7 +379,7 @@ class PostRepositoryTest: KoinTest {
     @AfterAll
     fun tearDown() {
         transaction {
-            SchemaUtils.drop(CarModels, Users, Posts, AuthCredentials)
+            SchemaUtils.drop(CarModels, Friends, Users, Posts, AuthCredentials)
         }
         stopKoin()
     }

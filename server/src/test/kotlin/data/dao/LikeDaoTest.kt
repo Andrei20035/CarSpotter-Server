@@ -5,6 +5,7 @@ import com.carspotter.data.dao.car_model.ICarModelDAO
 import com.carspotter.data.dao.like.ILikeDAO
 import com.carspotter.data.dao.post.IPostDAO
 import com.carspotter.data.dao.user.IUserDAO
+import com.carspotter.data.dto.CreatePostDTO
 import com.carspotter.data.model.*
 import com.carspotter.data.table.*
 import com.carspotter.di.daoModule
@@ -106,11 +107,13 @@ class LikeDaoTest: KoinTest {
                 )
             )
             postId1 = postDao.createPost(
-                Post(
+                CreatePostDTO(
                     userId = userId1,
                     imagePath = "path/to/image1",
                     description = "Description1",
-                    carModelId = carModelId1
+                    carModelId = carModelId1,
+                    latitude = 40.0,
+                    longitude = 40.0
                 )
             )
         }

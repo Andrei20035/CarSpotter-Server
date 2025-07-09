@@ -9,4 +9,5 @@ interface IFriendDAO {
     suspend fun getAllFriends(userId: UUID): List<User>
     suspend fun deleteFriend(userId: UUID, friendId: UUID): Int
     suspend fun getAllFriendsInDb(): List<Friend>
+    suspend fun getFriendIdsForUser(userId: UUID): List<UUID>
 }

@@ -107,7 +107,7 @@ class PostRoutesTest : KoinTest {
 
         val carModelId = UUID.randomUUID()
 
-        val request = PostRequest(carModelId = carModelId, imagePath = "path/to/image.jpg")
+        val request = PostRequest(carModelId = carModelId, imagePath = "path/to/image.jpg", latitude = 40.0, longitude = 40.0)
 
         val response = client.post("/posts") {
             contentType(ContentType.Application.Json)
@@ -133,7 +133,7 @@ class PostRoutesTest : KoinTest {
         }
 
 
-        val request = PostRequest(carModelId = carModelId, imagePath = "")
+        val request = PostRequest(carModelId = carModelId, imagePath = "", latitude = 40.0, longitude = 40.0)
 
         val token = createTestToken(userId = userId)
 
@@ -163,7 +163,7 @@ class PostRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val request = PostRequest(carModelId = carModelId, imagePath = "path/to/image.jpg")
+        val request = PostRequest(carModelId = carModelId, imagePath = "path/to/image.jpg",  latitude = 40.0, longitude = 40.0)
 
         val token = createTestToken(userId = userId)
 
@@ -195,7 +195,7 @@ class PostRoutesTest : KoinTest {
             configureTestApplication()
         }
 
-        val request = PostRequest(carModelId = carModelId, imagePath = "path/to/image.jpg")
+        val request = PostRequest(carModelId = carModelId, imagePath = "path/to/image.jpg",  latitude = 40.0, longitude = 40.0)
 
         val token = createTestToken(userId = userId)
 
@@ -292,6 +292,8 @@ class PostRoutesTest : KoinTest {
             carModelId = carModelId,
             imagePath = "path/to/image.jpg",
             description = "Test post",
+            latitude = 12.3456,
+            longitude = -12.3456,
             createdAt = Instant.now(),
             updatedAt = Instant.now()
         )
@@ -351,6 +353,8 @@ class PostRoutesTest : KoinTest {
                 carModelId = carModel1,
                 imagePath = "path/to/image1.jpg",
                 description = "Test post 1",
+                latitude = 12.3456,
+                longitude = -12.3456,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             ),
@@ -360,6 +364,8 @@ class PostRoutesTest : KoinTest {
                 carModelId = carModel2,
                 imagePath = "path/to/image2.jpg",
                 description = "Test post 2",
+                latitude = 12.3456,
+                longitude = -12.3456,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             )
@@ -420,6 +426,8 @@ class PostRoutesTest : KoinTest {
                 carModelId = carModel1,
                 imagePath = "path/to/image1.jpg",
                 description = "Test post 1",
+                latitude = 12.3456,
+                longitude = -12.3456,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             ),
@@ -429,6 +437,8 @@ class PostRoutesTest : KoinTest {
                 carModelId = carModel2,
                 imagePath = "path/to/image2.jpg",
                 description = "Test post 2",
+                latitude = 12.3456,
+                longitude = -12.3456,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             )

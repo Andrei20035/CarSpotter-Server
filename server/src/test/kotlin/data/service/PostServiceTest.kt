@@ -1,5 +1,6 @@
 package data.service
 
+import com.carspotter.data.dto.CreatePostDTO
 import com.carspotter.data.model.*
 import com.carspotter.data.service.auth_credential.IAuthCredentialService
 import com.carspotter.data.service.car_model.ICarModelService
@@ -130,11 +131,13 @@ class PostServiceTest: KoinTest {
     @Test
     fun `create and get post by ID`() = runBlocking {
         val postID = postService.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image1",
                 description = "Description1",
-                carModelId = carModelId1
+                carModelId = carModelId1,
+                latitude = 40.0,
+                longitude = 40.0
             )
         )
 
@@ -151,19 +154,23 @@ class PostServiceTest: KoinTest {
     @Test
     fun `get all posts`() = runBlocking {
         postService.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image1",
                 description = "Description1",
-                carModelId = carModelId1
+                carModelId = carModelId1,
+                latitude = 40.0,
+                longitude = 40.0
             )
         )
         postService.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId2,
                 imagePath = "path/to/image2",
                 description = "Description2",
-                carModelId = carModelId2
+                carModelId = carModelId2,
+                latitude = 40.0,
+                longitude = 40.0
             )
         )
 
@@ -178,19 +185,23 @@ class PostServiceTest: KoinTest {
     fun `get current day posts`() = runBlocking {
         println("Starting test: get current day posts")
         postService.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image1",
                 description = "Description1",
-                carModelId = carModelId1
+                carModelId = carModelId1,
+                latitude = 40.0,
+                longitude = 40.0
             )
         )
         postService.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image2",
                 description = "Description2",
-                carModelId = carModelId2
+                carModelId = carModelId2,
+                latitude = 40.0,
+                longitude = 40.0
             )
         )
 
@@ -217,11 +228,13 @@ class PostServiceTest: KoinTest {
     fun `edit post description`() = runBlocking {
         println("Starting test: edit post description")
         val postId = postService.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image1",
                 description = "Description1",
-                carModelId = carModelId1
+                carModelId = carModelId1,
+                latitude = 40.0,
+                longitude = 40.0
             )
         )
 
@@ -238,11 +251,13 @@ class PostServiceTest: KoinTest {
     fun `delete post`() = runBlocking {
         println("Starting test: delete post")
         val postId = postService.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image1",
                 description = "Description1",
-                carModelId = carModelId1
+                carModelId = carModelId1,
+                latitude = 40.0,
+                longitude = 40.0
             )
         )
         postService.deletePost(postId)

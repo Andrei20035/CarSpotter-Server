@@ -1,5 +1,6 @@
 package data.repo
 
+import com.carspotter.data.dto.CreatePostDTO
 import com.carspotter.data.model.*
 import com.carspotter.data.repository.auth_credential.IAuthCredentialRepository
 import com.carspotter.data.repository.car_model.ICarModelRepository
@@ -107,11 +108,13 @@ class CommentRepositoryTest: KoinTest {
                 )
             )
             postId1 = postRepository.createPost(
-                Post(
+                CreatePostDTO(
                     userId = userId1,
                     imagePath = "path/to/image_repo",
                     description = "Tony’s car",
-                    carModelId = carModelId1
+                    carModelId = carModelId1,
+                    latitude = 40.0,
+                    longitude = 40.0
                 )
             )
         }

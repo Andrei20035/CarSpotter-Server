@@ -20,9 +20,9 @@ data class PostDTO(
     val latitude: Double,
     val longitude: Double,
     @Serializable(with = InstantSerializer::class)
-    val createdAt: Instant? = null,
+    val createdAt: Instant,
     @Serializable(with = InstantSerializer::class)
-    val updatedAt: Instant? = null,
+    val updatedAt: Instant,
 )
 
 fun Post.toDTO() = PostDTO(
@@ -36,3 +36,7 @@ fun Post.toDTO() = PostDTO(
     createdAt = this.createdAt,
     updatedAt = this.updatedAt
 )
+
+fun List<Post>.toDTO(): List<PostDTO> {
+    return map { it.toDTO() }
+}

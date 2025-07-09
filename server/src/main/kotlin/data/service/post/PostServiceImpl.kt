@@ -1,5 +1,6 @@
 package com.carspotter.data.service.post
 
+import com.carspotter.data.dto.CreatePostDTO
 import com.carspotter.data.dto.PostDTO
 import com.carspotter.data.dto.toDTO
 import com.carspotter.data.model.Post
@@ -11,11 +12,11 @@ import java.util.*
 class PostServiceImpl(
     private val postRepository: IPostRepository
 ): IPostService {
-    override suspend fun createPost(post: Post): UUID {
+    override suspend fun createPost(createPostDTO: CreatePostDTO): UUID {
         return try {
-            postRepository.createPost(post)
+            postRepository.createPost(createPostDTO)
         } catch (e: IllegalStateException) {
-            throw PostCreationException("Failed to create post for user ${post.userId}", e)
+            throw PostCreationException("Failed to create post for user ${createPostDTO.userId}", e)
         }
     }
 

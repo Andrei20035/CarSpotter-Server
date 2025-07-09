@@ -2,7 +2,7 @@ package com.carspotter.routes
 
 import com.carspotter.data.dto.request.PostEditRequest
 import com.carspotter.data.dto.request.PostRequest
-import com.carspotter.data.dto.request.toPost
+import com.carspotter.data.dto.request.addId
 import com.carspotter.data.service.post.IPostService
 import com.carspotter.utils.getUuidClaim
 import com.carspotter.utils.toUuidOrNull
@@ -30,7 +30,7 @@ fun Route.postRoutes() {
                 }
 
                 try {
-                    postService.createPost(postRequest.toPost(userId))
+                    postService.createPost(postRequest.addId(userId))
                     call.respond(HttpStatusCode.OK, mapOf("message" to "Post created successfully"))
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Failed to create post due to invalid input"))

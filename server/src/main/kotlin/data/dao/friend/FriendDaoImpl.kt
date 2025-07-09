@@ -39,61 +39,42 @@ class FriendDaoImpl : IFriendDAO {
     }
 
 
-    override suspend fun getAllFriends(userId: UUID): List<User> {
-        return transaction {
-            // Query for friends where `userId` is the initiator
-            val friendsAsInitiator = Users.alias("u1").let { usersAlias ->
-                Friends
-                    .join(
-                        usersAlias,
-                        JoinType.INNER,
-                        additionalConstraint = { Friends.friendId eq usersAlias[Users.id] })
-                    .selectAll()
-                    .where { Friends.userId eq userId }
-                    .map { row ->
-                        User(
-                            id = row[usersAlias[Users.id]].value,
-                            authCredentialId = row[usersAlias[Users.authCredentialId]],
-                            profilePicturePath = row[usersAlias[Users.profilePicturePath]],
-                            fullName = row[usersAlias[Users.fullName]],
-                            phoneNumber = row[usersAlias[Users.phoneNumber]],
-                            birthDate = row[usersAlias[Users.birthDate]],
-                            username = row[usersAlias[Users.username]],
-                            country = row[usersAlias[Users.country]],
-                            spotScore = row[usersAlias[Users.spotScore]],
-                            createdAt = row[usersAlias[Users.createdAt]],
-                            updatedAt = row[usersAlias[Users.updatedAt]],
-                        )
-                    }
+    override suspend fun getAllFriends(userId: UUID): List<User> = transaction {
+        val usersAlias = Users.alias("u")
+        Friends
+            .join(usersAlias, JoinType.INNER, additionalConstraint = { Friends.friendId eq usersAlias[Users.id] })
+            .selectAll()
+            .where { Friends.userId eq userId}
+            .map { row ->
+                User(
+                    id = row[usersAlias[Users.id]].value,
+                    authCredentialId = row[usersAlias[Users.authCredentialId]],
+                    profilePicturePath = row[usersAlias[Users.profilePicturePath]],
+                    fullName = row[usersAlias[Users.fullName]],
+                    phoneNumber = row[usersAlias[Users.phoneNumber]],
+                    birthDate = row[usersAlias[Users.birthDate]],
+                    username = row[usersAlias[Users.username]],
+                    country = row[usersAlias[Users.country]],
+                    spotScore = row[usersAlias[Users.spotScore]],
+                    createdAt = row[usersAlias[Users.createdAt]],
+                    updatedAt = row[usersAlias[Users.updatedAt]],
+                )
             }
-
-            // Query for friends where `userId` is the recipient
-            val friendsAsRecipient = Users.alias("u2").let { usersAlias ->
-                Friends
-                    .join(usersAlias, JoinType.INNER, additionalConstraint = { Friends.userId eq usersAlias[Users.id] })
-                    .selectAll()
-                    .where { Friends.friendId eq userId }
-                    .map { row ->
-                        User(
-                            id = row[usersAlias[Users.id]].value,
-                            authCredentialId = row[usersAlias[Users.authCredentialId]],
-                            profilePicturePath = row[usersAlias[Users.profilePicturePath]],
-                            fullName = row[usersAlias[Users.fullName]],
-                            phoneNumber = row[usersAlias[Users.phoneNumber]],
-                            birthDate = row[usersAlias[Users.birthDate]],
-                            username = row[usersAlias[Users.username]],
-                            country = row[usersAlias[Users.country]],
-                            spotScore = row[usersAlias[Users.spotScore]],
-                            createdAt = row[usersAlias[Users.createdAt]],
-                            updatedAt = row[usersAlias[Users.updatedAt]],
-                        )
-                    }
-            }
-
-            // Combine results and remove duplicates
-            (friendsAsInitiator + friendsAsRecipient).distinctBy { it.id }
-        }
     }
+
+
+    override suspend fun getFriendIdsForUser(userId: UUID): List<UUID> = transaction {
+        val friendsAsUser = Friends.select(Friends.friendId)
+            .where { Friends.userId eq userId }
+            .map { it[Friends.friendId] }
+
+        val friendsAsFriend = Friends.select(Friends.userId)
+            .where { Friends.friendId eq userId }
+            .map { it[Friends.userId] }
+
+        (friendsAsUser + friendsAsFriend).distinct()
+    }
+
 
 
     override suspend fun getAllFriendsInDb(): List<Friend> {

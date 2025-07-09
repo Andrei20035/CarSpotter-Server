@@ -18,12 +18,14 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.time.LocalDate
 import java.util.*
+import kotlin.test.assertTrue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FriendDaoTest: KoinTest {
@@ -100,6 +102,20 @@ class FriendDaoTest: KoinTest {
         transaction {
             Friends.deleteAll()
         }
+    }
+
+    @Test
+    fun `getFriendIdsForUser returns correct friend IDs`() = runBlocking {
+        friendDao.addFriend(userId1, userId2)
+
+        val friendIds1 = friendDao.getFriendIdsForUser(userId1)
+        val friendIds2 = friendDao.getFriendIdsForUser(userId2)
+
+        assertTrue(friendIds1.contains(userId2), "Friend list should contain userId2")
+        assertTrue(friendIds2.contains(userId1), "Friend list should contain userId1")
+
+        assertEquals(1, friendIds1.size)
+        assertEquals(1, friendIds2.size)
     }
 
     @Test

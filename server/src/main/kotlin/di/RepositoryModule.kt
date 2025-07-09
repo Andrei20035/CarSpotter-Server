@@ -24,7 +24,7 @@ import org.koin.dsl.module
 val repositoryModule = module {
     single<IUserRepository> { UserRepositoryImpl(get()) }
     single<ICommentRepository> { CommentRepositoryImpl(get()) }
-    single<IPostRepository> { PostRepositoryImpl(get()) }
+    single<IPostRepository> { PostRepositoryImpl(get(), get()) }
     single<ICarModelRepository> { CarModelRepositoryImpl(get()) }
     single<IAuthCredentialRepository> { AuthCredentialRepositoryImpl(get()) }
     single<IFriendRepository> { FriendRepositoryImpl(get()) }

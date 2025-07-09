@@ -1,5 +1,6 @@
 package data.service
 
+import com.carspotter.data.dto.CreatePostDTO
 import com.carspotter.data.model.*
 import com.carspotter.data.service.auth_credential.IAuthCredentialService
 import com.carspotter.data.service.car_model.ICarModelService
@@ -108,11 +109,13 @@ class LikeServiceTest: KoinTest {
                 )
             )
             postId1 = postService.createPost(
-                Post(
+                CreatePostDTO(
                     userId = userId1,
                     imagePath = "path/to/image1",
                     description = "Description1",
-                    carModelId = carModelId1
+                    carModelId = carModelId1,
+                    latitude = 40.0,
+                    longitude = 40.0
                 )
             )
         }

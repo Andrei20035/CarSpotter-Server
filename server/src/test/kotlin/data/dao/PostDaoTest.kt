@@ -4,6 +4,7 @@ import com.carspotter.data.dao.auth_credential.IAuthCredentialDAO
 import com.carspotter.data.dao.car_model.ICarModelDAO
 import com.carspotter.data.dao.post.IPostDAO
 import com.carspotter.data.dao.user.IUserDAO
+import com.carspotter.data.dto.CreatePostDTO
 import com.carspotter.data.model.*
 import com.carspotter.data.table.AuthCredentials
 import com.carspotter.data.table.CarModels
@@ -22,6 +23,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.inject
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -126,12 +128,116 @@ class PostDaoTest: KoinTest {
     }
 
     @Test
+    fun `getFriendPosts returns correct posts`() = runBlocking {
+        val postId1 = postDao.createPost(
+            CreatePostDTO(
+                userId = userId1,
+                carModelId = carModelId1,
+                imagePath = "path",
+                latitude = 40.0,
+                longitude = 40.0
+            )
+        )
+        val postId2 = postDao.createPost(
+            CreatePostDTO(
+                userId = userId2,
+                carModelId = carModelId2,
+                imagePath = "path",
+                latitude = 40.0,
+                longitude = 40.0
+
+            )
+        )
+
+        val result = postDao.getFriendPosts(listOf(userId1, userId2), after = null, limit = 10)
+
+        Assertions.assertEquals(2, result.size)
+        Assertions.assertTrue(result.any { it.id == postId1 })
+        Assertions.assertTrue(result.any { it.id == postId2 })
+    }
+
+    @Test
+    fun `getNearbyPosts returns only nearby posts`() = runBlocking {
+        val lat = 40.0
+        val lon = -74.0
+
+        postDao.createPost(
+            CreatePostDTO(
+                userId = userId1,
+                carModelId = carModelId1,
+                imagePath = "path",
+                latitude = lat,
+                longitude = lon,
+            )
+        )
+        postDao.createPost(
+            CreatePostDTO(
+                userId = userId2,
+                carModelId = carModelId2,
+                imagePath = "path",
+                latitude = lat + 0.001,
+                longitude = lon + 0.001,
+            )
+        )
+        postDao.createPost(
+            CreatePostDTO(
+                userId = userId2,
+                carModelId = carModelId2,
+                imagePath = "path",
+                latitude = lat + 2.0,
+                longitude = lon + 2.0,
+            )
+        )
+
+        val result = postDao.getNearbyPosts(
+            excludedIds = listOf(userId1),
+            lat = lat,
+            lon = lon,
+            radiusKm = 5,
+            after = null,
+            limit = 10
+        )
+
+        Assertions.assertEquals(1, result.size)
+        Assertions.assertTrue(result.all { it.latitude in (lat - 0.05)..(lat + 0.05) })
+    }
+
+    @Test
+    fun `getGlobalPosts returns non-excluded user posts`() = runBlocking {
+        val postId1 = postDao.createPost(
+            CreatePostDTO(
+                userId = userId1,
+                carModelId = carModelId1,
+                imagePath = "path",
+                latitude = 40.0,
+                longitude = 40.0,
+            )
+        )
+        val postId2 = postDao.createPost(
+            CreatePostDTO(
+                userId = userId2,
+                carModelId = carModelId2,
+                imagePath = "path",
+                latitude = 40.0,
+                longitude = 40.0,
+            )
+        )
+
+        val result = postDao.getGlobalPosts(excludedIds = listOf(userId1), after = null, limit = 10)
+
+        Assertions.assertEquals(1, result.size)
+        Assertions.assertEquals(postId2, result[0].id)
+    }
+
+    @Test
     fun `create and get post by ID`() = runBlocking {
         val postID = postDao.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image1",
                 description = "Description1",
+                latitude = 40.0,
+                longitude = 40.0,
                 carModelId = carModelId1
             )
         )
@@ -149,18 +255,22 @@ class PostDaoTest: KoinTest {
     @Test
     fun `get all posts`() = runBlocking {
         postDao.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image1",
                 description = "Description1",
+                latitude = 40.0,
+                longitude = 40.0,
                 carModelId = carModelId1
             )
         )
         postDao.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId2,
                 imagePath = "path/to/image2",
                 description = "Description2",
+                latitude = 40.0,
+                longitude = 40.0,
                 carModelId = carModelId2
             )
         )
@@ -179,18 +289,22 @@ class PostDaoTest: KoinTest {
         val endOfDay = ZonedDateTime.now(userTimeZone).toLocalDate().plusDays(1).atStartOfDay(userTimeZone).toInstant()
 
         postDao.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image1",
                 description = "Description1",
+                latitude = 40.0,
+                longitude = 40.0,
                 carModelId = carModelId1
             )
         )
         postDao.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image2",
                 description = "Description2",
+                latitude = 40.0,
+                longitude = 40.0,
                 carModelId = carModelId2
             )
         )
@@ -202,7 +316,7 @@ class PostDaoTest: KoinTest {
 
         currentDayPosts.forEach { post ->
             Assertions.assertTrue(
-                post.createdAt!! >= startOfDay && post.createdAt < endOfDay,
+                post.createdAt >= startOfDay && post.createdAt < endOfDay,
                 "Post createdAt should be within the current day range."
             )
         }
@@ -212,10 +326,12 @@ class PostDaoTest: KoinTest {
     @Test
     fun `edit post description`() = runBlocking {
         val postId = postDao.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image1",
                 description = "Description1",
+                latitude = 40.0,
+                longitude = 40.0,
                 carModelId = carModelId1
             )
         )
@@ -232,10 +348,12 @@ class PostDaoTest: KoinTest {
     @Test
     fun `delete post`() = runBlocking {
         val postId = postDao.createPost(
-            Post(
+            CreatePostDTO(
                 userId = userId1,
                 imagePath = "path/to/image1",
                 description = "Description1",
+                latitude = 40.0,
+                longitude = 40.0,
                 carModelId = carModelId1
             )
         )
