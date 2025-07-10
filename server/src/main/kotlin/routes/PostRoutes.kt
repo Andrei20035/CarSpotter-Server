@@ -1,5 +1,6 @@
 package com.carspotter.routes
 
+import com.carspotter.data.dto.request.FeedRequest
 import com.carspotter.data.dto.request.PostEditRequest
 import com.carspotter.data.dto.request.PostRequest
 import com.carspotter.data.dto.request.addId
@@ -12,13 +13,38 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import org.slf4j.LoggerFactory
 import java.time.ZoneId
+
+private val logger = LoggerFactory.getLogger("PostRoutes")
 
 fun Route.postRoutes() {
     val postService: IPostService by application.inject()
 
     authenticate("jwt") {
         route("/posts") {
+            get("/feed") {
+                val userId = call.getUuidClaim("userId")
+                    ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))
+                val request = call.receive<FeedRequest>().addId(userId)
+
+                try {
+                    val response = postService.getFeedPostsForUser(
+                        userId = request.userId!!,
+                        latitude = request.latitude,
+                        longitude = request.longitude,
+                        radiusKm = request.radiusKm,
+                        limit = request.limit,
+                        cursor = request.cursor
+                    )
+                    call.respond(HttpStatusCode.OK, response)
+                } catch (e: Exception) {
+                    logger.error("Error fetching feed for user ${request.userId}", e)
+                    call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Unable to fetch feed. Please try again later."))
+                }
+
+            }
+
             post {
                 val userId = call.getUuidClaim("userId")
                     ?: return@post call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid or missing userId"))

@@ -2,7 +2,9 @@ package com.carspotter.data.service.post
 
 import com.carspotter.data.dto.CreatePostDTO
 import com.carspotter.data.dto.PostDTO
+import com.carspotter.data.dto.response.FeedResponse
 import com.carspotter.data.dto.toDTO
+import com.carspotter.data.model.FeedCursor
 import com.carspotter.data.model.Post
 import com.carspotter.data.repository.post.IPostRepository
 import java.time.ZoneId
@@ -52,6 +54,17 @@ class PostServiceImpl(
         } catch (e: IllegalStateException) {
             throw IllegalArgumentException("Cannot fetch user: post does not exist", e)
         }
+    }
+
+    override suspend fun getFeedPostsForUser(
+        userId: UUID,
+        latitude: Double?,
+        longitude: Double?,
+        radiusKm: Int?,
+        limit: Int,
+        cursor: FeedCursor?
+    ): FeedResponse {
+        return postRepository.getFeedPostsForUser(userId, latitude, longitude, radiusKm, limit, cursor)
     }
 }
 

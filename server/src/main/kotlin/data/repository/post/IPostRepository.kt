@@ -15,5 +15,5 @@ interface IPostRepository {
     suspend fun editPost(postId: UUID, postText: String?): Int
     suspend fun deletePost(postId: UUID): Int
     suspend fun getUserIdByPost(postId: UUID): UUID
-    suspend fun getFeedPostsForUser(userId: UUID, latitude: Double?, longitude: Double?, radiusKm: Int?, country: String, limit: Int, cursor: FeedCursor?): FeedResponse
+    suspend fun getFeedPostsForUser(userId: UUID, latitude: Double?, longitude: Double?, radiusKm: Int?, limit: Int, cursor: FeedCursor?): FeedResponse
 }

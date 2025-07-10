@@ -17,6 +17,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInList
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
 import java.util.*
+import kotlin.math.cos
 
 class PostDaoImpl : IPostDAO {
     override suspend fun createPost(createPostDTO: CreatePostDTO): UUID {
@@ -99,8 +100,12 @@ class PostDaoImpl : IPostDAO {
         after: Instant?,
         limit: Int
     ): List<Post> {
+        println("getFriendPosts called with: friendIds=$friendIds, after=$after, limit=$limit")
         return transaction {
-            if (friendIds.isEmpty()) return@transaction emptyList()
+            if (friendIds.isEmpty()) {
+                println("No friend IDs provided")
+                return@transaction emptyList()
+            }
 
             val condition = if (after != null) {
                 (Posts.userId inList friendIds) and (Posts.createdAt less after)
@@ -108,12 +113,15 @@ class PostDaoImpl : IPostDAO {
                 Posts.userId inList friendIds
             }
 
-            Posts
+            val posts = Posts
                 .selectAll()
                 .where{ condition }
                 .orderBy(Posts.createdAt, SortOrder.DESC)
                 .limit(limit)
                 .map { it.toPost() }
+
+            println("getFriendPosts returning ${posts.size} posts")
+            return@transaction posts
         }
     }
 
@@ -125,14 +133,18 @@ class PostDaoImpl : IPostDAO {
         after: Instant?,
         limit: Int
     ): List<Post> {
+        println("getNearbyPosts called with: excludedIds=$excludedIds, lat=$lat, lon=$lon, radiusKm=$radiusKm, after=$after, limit=$limit")
         return transaction {
             val radiusDegrees = radiusKm / 111.0
+            println("Calculated radius in degrees: $radiusDegrees")
+            println("Search bounds: lat ${lat - radiusDegrees} to ${lat + radiusDegrees}, lon ${lon - radiusDegrees} to ${lon + radiusDegrees}")
+
             val condition = {
                 (Posts.userId notInList excludedIds) and
-                (Posts.latitude greaterEq (lat - radiusDegrees)) and
-                (Posts.latitude lessEq (lat + radiusDegrees)) and
-                (Posts.longitude greaterEq (lon - radiusDegrees)) and
-                (Posts.longitude lessEq (lon + radiusDegrees))
+                        (Posts.latitude greaterEq (lat - radiusDegrees)) and
+                        (Posts.latitude lessEq (lat + radiusDegrees)) and
+                        (Posts.longitude greaterEq (lon - radiusDegrees)) and
+                        (Posts.longitude lessEq (lon + radiusDegrees))
             }
 
             val baseQuery = Posts
@@ -143,10 +155,13 @@ class PostDaoImpl : IPostDAO {
                 baseQuery.andWhere { Posts.createdAt less after }
             } else baseQuery
 
-            filteredQuery
+            val posts = filteredQuery
                 .orderBy(Posts.createdAt, SortOrder.DESC)
                 .limit(limit)
                 .map { it.toPost() }
+
+            println("getNearbyPosts returning ${posts.size} posts")
+            return@transaction posts
         }
     }
 
@@ -155,18 +170,22 @@ class PostDaoImpl : IPostDAO {
         after: Instant?,
         limit: Int
     ): List<Post> {
+        println("getGlobalPosts called with: excludedIds=$excludedIds, after=$after, limit=$limit")
         return transaction {
             val baseCondition = Posts.userId notInList excludedIds
             val condition = if (after != null) {
                 baseCondition and (Posts.createdAt less after)
             } else baseCondition
 
-            Posts
+            val posts = Posts
                 .selectAll()
                 .where { condition }
                 .orderBy(Posts.createdAt, SortOrder.DESC)
                 .limit(limit)
                 .map { it.toPost() }
+
+            println("getGlobalPosts returning ${posts.size} posts")
+            return@transaction posts
         }
     }
 }

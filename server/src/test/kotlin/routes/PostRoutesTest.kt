@@ -4,8 +4,11 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.carspotter.configureSerialization
 import com.carspotter.data.dto.PostDTO
+import com.carspotter.data.dto.request.FeedRequest
 import com.carspotter.data.dto.request.PostEditRequest
 import com.carspotter.data.dto.request.PostRequest
+import com.carspotter.data.dto.response.FeedResponse
+import com.carspotter.data.model.FeedCursor
 import com.carspotter.data.service.post.IPostService
 import com.carspotter.data.service.post.PostCreationException
 import com.carspotter.routes.postRoutes
@@ -731,6 +734,121 @@ class PostRoutesTest : KoinTest {
         coVerify(exactly = 1) { postService.getUserIdByPost(postId) }
         coVerify(exactly = 1) { postService.deletePost(postId) }
     }
+
+    @Test
+    fun `GET feed returns 200 and feed response when request is valid`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val userId = UUID.randomUUID()
+
+        val mockFeedResponse = FeedResponse(
+            posts = listOf(
+                PostDTO(
+                    id = UUID.randomUUID(),
+                    userId = userId,
+                    carModelId = UUID.randomUUID(),
+                    imagePath = "path/to/image.jpg",
+                    latitude = 40.0,
+                    longitude = -74.0,
+                    description = "Mock post",
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now()
+                )
+            ),
+            nextCursor = null,
+            hasMore = false
+        )
+
+        coEvery {
+            postService.getFeedPostsForUser(
+                userId = userId,
+                latitude = 40.0,
+                longitude = -74.0,
+                radiusKm = 5,
+                limit = 10,
+                cursor = null,
+            )
+        } returns mockFeedResponse
+
+        val request = FeedRequest(
+            latitude = 40.0,
+            longitude = -74.0,
+            radiusKm = 5,
+            limit = 10,
+            userId = userId,
+        )
+
+        val token = createTestToken(userId)
+
+        val response = client.get("/posts/feed") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(request))
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        val returnedFeed = Json.decodeFromString<FeedResponse>(response.bodyAsText())
+        assertEquals(mockFeedResponse.posts.size, returnedFeed.posts.size)
+        assertEquals(mockFeedResponse.posts.first().description, returnedFeed.posts.first().description)
+    }
+
+    @Test
+    fun `GET feed returns 401 when JWT is missing or invalid`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val response = client.get("/posts/feed") {
+            header(HttpHeaders.Authorization, "Bearer invalid.token.here")
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        val expectedJson = Json.parseToJsonElement("""{"error":"Missing or invalid JWT token"}""")
+        val actualJson = Json.parseToJsonElement(response.bodyAsText())
+        assertEquals(expectedJson, actualJson)
+    }
+
+    @Test
+    fun `GET feed returns 500 when service throws exception`() = testApplication {
+        application {
+            configureTestApplication()
+        }
+
+        val userId = UUID.randomUUID()
+
+        val jwt = JWT.create()
+            .withClaim("userId", userId.toString())
+            .sign(Algorithm.HMAC256("test-secret-key"))
+
+        val request = FeedRequest(
+            latitude = 40.0,
+            longitude = -74.0,
+            radiusKm = 5,
+            limit = 10,
+            cursor = null
+        )
+
+        coEvery {
+            postService.getFeedPostsForUser(any(), any(), any(), any(), any(), any())
+        } throws RuntimeException("Service failed")
+
+        val response = client.get("/posts/feed") {
+            header(HttpHeaders.Authorization, "Bearer $jwt")
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(request))
+        }
+
+        assertEquals(HttpStatusCode.InternalServerError, response.status)
+        val expectedJson = Json.parseToJsonElement("""{"error":"Unable to fetch feed. Please try again later."}""")
+        val actualJson = Json.parseToJsonElement(response.bodyAsText())
+        assertEquals(expectedJson, actualJson)
+    }
+
+
+
 
     private fun createTestToken(userId: UUID): String {
         return JWT.create()

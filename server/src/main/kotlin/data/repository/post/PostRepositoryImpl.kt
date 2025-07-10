@@ -49,43 +49,65 @@ class PostRepositoryImpl(
         latitude: Double?,
         longitude: Double?,
         radiusKm: Int?,
-        country: String,
         limit: Int,
         cursor: FeedCursor?
     ): FeedResponse {
         val friendsIds = friendDao.getFriendIdsForUser(userId)
         val collectedPosts = mutableListOf<Post>()
+        val collectedUserIds = mutableSetOf<UUID>() // Track users we've already collected posts from
         var remaining = limit
-        var currentCursor = cursor
+        var lastCursor: FeedCursor? = cursor
 
-        // Friend posts
+        // 1. Friend posts first
         if (remaining > 0) {
             val friendPosts = postDao.getFriendPosts(friendsIds, cursor?.lastCreatedAt, remaining)
             collectedPosts.addAll(friendPosts)
+            collectedUserIds.addAll(friendPosts.map { it.userId }) // Track collected users
             remaining -= friendPosts.size
-            currentCursor = friendPosts.lastOrNull()?.toCursor() ?: currentCursor
+
+            if (friendPosts.isNotEmpty()) {
+                lastCursor = friendPosts.last().toCursor()
+            }
         }
 
-        // Nearby posts
+        // 2. Nearby posts second
         if (remaining > 0 && latitude != null && longitude != null && radiusKm != null) {
-            val nearbyPosts = postDao.getNearbyPosts(friendsIds + userId, latitude, longitude, radiusKm, currentCursor?.lastCreatedAt, remaining)
+            val nearbyPosts = postDao.getNearbyPosts(
+                friendsIds + userId + collectedUserIds.toList(), // Exclude already collected users
+                latitude,
+                longitude,
+                radiusKm,
+                cursor?.lastCreatedAt,
+                remaining
+            )
             collectedPosts.addAll(nearbyPosts)
+            collectedUserIds.addAll(nearbyPosts.map { it.userId }) // Track collected users
             remaining -= nearbyPosts.size
-            currentCursor = nearbyPosts.lastOrNull()?.toCursor() ?: currentCursor
+
+            if (nearbyPosts.isNotEmpty()) {
+                lastCursor = nearbyPosts.last().toCursor()
+            }
         }
 
-        // Global posts
+        // 3. Global posts last
         if (remaining > 0) {
-            val globalPosts = postDao.getGlobalPosts(friendsIds + userId, currentCursor?.lastCreatedAt, remaining)
+            val globalPosts = postDao.getGlobalPosts(
+                friendsIds + userId + collectedUserIds.toList(), // Exclude already collected users
+                cursor?.lastCreatedAt,
+                remaining
+            )
             collectedPosts.addAll(globalPosts)
-            currentCursor = globalPosts.lastOrNull()?.toCursor() ?: currentCursor
+
+            if (globalPosts.isNotEmpty()) {
+                lastCursor = globalPosts.last().toCursor()
+            }
         }
 
         val hasMore = collectedPosts.size == limit
 
         return FeedResponse(
             posts = collectedPosts.toDTO(),
-            nextCursor = if (hasMore) currentCursor else null,
+            nextCursor = if (hasMore) lastCursor else null,
             hasMore = hasMore
         )
     }

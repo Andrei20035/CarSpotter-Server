@@ -193,7 +193,7 @@ class PostRepositoryTest: KoinTest {
             longitude = -74.0,
             description = "Friend post",
         )
-        postRepository.createPost(friendPost)
+        val friendPostId = postRepository.createPost(friendPost)
 
         // Create nearby post (not friend, but in location)
         val nearbyPost = CreatePostDTO(
@@ -204,7 +204,7 @@ class PostRepositoryTest: KoinTest {
             longitude = -74.0,
             description = "Nearby post",
         )
-        postRepository.createPost(nearbyPost)
+        val nearbyPostId = postRepository.createPost(nearbyPost)
 
         // Create global post (not friend, not nearby)
         val globalPost = CreatePostDTO(
@@ -215,7 +215,7 @@ class PostRepositoryTest: KoinTest {
             longitude = 0.0,
             description = "Global post",
         )
-        val postIdGlobal = postRepository.createPost(globalPost)
+        val globalPostId = postRepository.createPost(globalPost)
 
         // Act: Call repository function to fetch feed
         val response = postRepository.getFeedPostsForUser(
@@ -223,14 +223,18 @@ class PostRepositoryTest: KoinTest {
             latitude = 40.0,
             longitude = -74.0,
             radiusKm = 5,
-            country = "USA",
             limit = 10,
             cursor = null
         )
 
-        println("Friend post createdAt: ${response.posts[0].createdAt}")
-        println("Nearby post createdAt: ${response.posts[1].createdAt}")
-        println("Global post createdAt: ${response.posts[2].createdAt}")
+        println("Total posts returned: ${response.posts.size}")
+        response.posts.forEachIndexed { index, post ->
+            println("Post $index: id=${post.id}, userId=${post.userId}, description='${post.description}', createdAt=${post.createdAt}")
+        }
+
+        println("Has more: ${response.hasMore}")
+        println("Next cursor: ${response.nextCursor}")
+
 
         // Assert
         assertEquals(3, response.posts.size)
@@ -238,7 +242,7 @@ class PostRepositoryTest: KoinTest {
         assertEquals("Nearby post", response.posts[1].description)
         assertEquals("Global post", response.posts[2].description)
         assertTrue(response.hasMore.not())
-        assertNotNull(response.nextCursor)
+        assertNull(response.nextCursor)
     }
 
 
